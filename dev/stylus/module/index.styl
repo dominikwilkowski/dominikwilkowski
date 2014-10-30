@@ -6,15 +6,47 @@
 
 	.main
 		text-align center
+
 		.main-headline
 		.main-subline
-			color #555
+			color font-color
 			text-transform uppercase
+			margin 0
+			padding 0
+
+		.main-headline
+			font-family vollkorn-italic, sarif
+			font-size 2em
+			padding 0 2em
+			margin-bottom 0.1em
+			@media media-md
+				font-size 3em
+			@media media-lg
+				font-size 4em
+			@media media-xxl
+				font-size 5em
+
+		.main-subline
+			font-family vollkorn, sanserif
+
+		.main-link
+			color #ef4723
+			background-image -webkit-linear-gradient(92deg, #ef4723, #efb72f)
+			-webkit-background-clip text
+			-webkit-text-fill-color transparent
+			animation hue 60s infinite linear
+
+	.main-list
+		list-style none
+		padding 0
+		margin 1em 0
+
 
 	.no-flexbox &
 		position relative
+
 		.main
 			position absolute
 			top 50%
-			left 50%
-			transform translate(-50%, -50%)
+			margin-top -110px
+			width 100%

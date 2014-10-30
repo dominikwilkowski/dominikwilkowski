@@ -5,7 +5,23 @@ html
 	line-height 1.2
 	padding 0
 	margin 0
-	background-color #eee
+	background-color #fcfaf2
+	background-image linear-gradient(
+			45deg, rgba(257, 255, 247, 0.6) 25%,
+			transparent 25%,
+			transparent 75%,
+			rgba(257, 255, 247, 0.6) 75%,
+			rgba(257, 255, 247, 0.6)
+		),
+		linear-gradient(
+			-45deg,
+			rgba(257, 255, 247, 0.6) 25%,
+			transparent 25%,
+			transparent 75%,
+			rgba(257, 255, 247, 0.6) 75%,
+			rgba(257, 255, 247, 0.6)
+		)
+	background-size 100px 100px
 
 body
 	line-height 1.2
@@ -19,5 +35,7 @@ html
 	-ms-text-size-adjust 100%
 
 a
-	color #000
+	color link-color
 	text-decoration none
+	&:hover
+		color lighten(link-color, 20%)
