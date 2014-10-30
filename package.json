@@ -1,6 +1,6 @@
 {
   "name": "dominikwilkowski",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "private": true,
   "devDependencies": {
     "grunt": "^0.4.5",
