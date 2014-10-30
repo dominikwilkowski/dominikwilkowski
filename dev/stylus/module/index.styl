@@ -16,16 +16,38 @@
 
 		.main-headline
 			font-family vollkorn-italic, sarif
-			font-size 2em
-			padding 0 2em
+			font-size 1em
+			padding 0 0.5em
 			margin-bottom 0.1em
+			&.is-large
+				font-size 2.5em
+			@media media-xs
+				font-size 1em
+				padding 0
+				&.is-large
+					font-size 4em
+			@media media-sm
+				font-size 2em
+				&.is-large
+					font-size 6em
 			@media media-md
 				font-size 3em
+				&.is-large
+					font-size 6em
 			@media media-lg
 				font-size 4em
-			@media media-xxl
+				&.is-large
+					font-size 7em
+			@media media-xl
 				font-size 5em
+				&.is-large
+					font-size 8em
+			@media media-xxl
+				font-size 6em
+				&.is-large
+					font-size 10em
 
+		.main-link
 		.main-subline
 			font-family vollkorn, sanserif
 
@@ -34,7 +56,7 @@
 			background-image -webkit-linear-gradient(92deg, #ef4723, #efb72f)
 			-webkit-background-clip text
 			-webkit-text-fill-color transparent
-			animation hue 60s infinite linear
+			animation hue 50s infinite linear
 
 	.main-list
 		list-style none
