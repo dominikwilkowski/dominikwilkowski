@@ -1,21 +1,24 @@
 {
-  "name": "dominikwilkowski",
-  "version": "0.0.3",
-  "private": true,
-  "devDependencies": {
-    "grunt": "^0.4.5",
-    "grunt-autoprefixer": "^1.0.0",
-    "grunt-contrib-clean": "^0.6.0",
-    "grunt-contrib-connect": "^0.6.0",
-    "grunt-contrib-watch": "^0.5.3",
-    "grunt-copy-to": "0.0.10",
-    "grunt-includes": "^0.4.5",
-    "grunt-contrib-stylus": "^0.19.0",
-    "grunt-svgmin": "^1.0.0",
-    "grunt-grunticon": "^1.2.13",
-    "grunt-contrib-uglify": "^0.5.1",
-    "grunt-contrib-imagemin": "^0.8.1",
-    "grunt-text-replace": "^0.3.12",
-    "grunt-bumpup": "^0.6.1"
-  }
+	"name": "dominikwilkowski",
+	"version": "0.0.7",
+	"private": true,
+	"devDependencies": {
+		"grunt": "^0.4.5",
+		"grunt-autoprefixer": "^2.2.0",
+		"grunt-bumpup": "^0.6.2",
+		"grunt-contrib-clean": "^0.6.0",
+		"grunt-contrib-connect": "^0.9.0",
+		"grunt-contrib-copy": "^0.8.0",
+		"grunt-contrib-imagemin": "^0.9.3",
+		"grunt-contrib-stylus": "^0.20.0",
+		"grunt-contrib-uglify": "^0.8.0",
+		"grunt-contrib-watch": "^0.6.1",
+		"grunt-font": "^0.0.9",
+		"grunt-grunticon": "^1.4.0",
+		"grunt-includes": "^0.4.5",
+		"grunt-mkdir": "^0.1.2",
+		"grunt-svgmin": "^2.0.1",
+		"grunt-text-replace": "^0.4.0",
+		"grunt-wakeup": "^0.0.6"
+	}
 }

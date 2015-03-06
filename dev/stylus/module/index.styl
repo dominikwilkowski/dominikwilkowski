@@ -6,15 +6,61 @@
 
 	.main
 		text-align center
+
 		.main-headline
 		.main-subline
-			color #555
+			color font-color
 			text-transform uppercase
+			margin 0
+			padding 0 10px
+			line-height 0.75
+		.main-subline
+			font-size 1.3em
+			color #444
+			@media media-xs
+				font-size 1.5em
 
-	.no-flexbox &
-		position relative
-		.main
-			position absolute
-			top 50%
-			left 50%
-			transform translate(-50%, -50%)
+		.main-headline
+			font-family vollkorn-italic, sarif
+			font-size 1em
+			padding 0 10px
+			margin-bottom 0.1em
+			&.is-large
+				font-size 2.5em
+			@media media-xs
+				font-size 1em
+				&.is-large
+					font-size 4em
+			@media media-sm
+				font-size 2em
+				&.is-large
+					font-size 6em
+			@media media-md
+				font-size 2.5em
+				&.is-large
+					font-size 7em
+			@media media-lg
+				font-size 2.5em
+				&.is-large
+					font-size 8em
+			@media media-xl
+				font-size 3em
+				&.is-large
+					font-size 9em
+			@media media-xxl
+				font-size 3em
+				&.is-large
+					font-size 10em
+
+		.main-link
+		.main-subline
+			font-family vollkorn, sanserif
+
+		.main-link
+			color #ef4723
+			animation hue 80s infinite linear
+
+	.main-list
+		list-style none
+		padding 0
+		margin 1em 0
