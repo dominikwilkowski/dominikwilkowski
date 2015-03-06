@@ -27,7 +27,6 @@
  * └── svg                          // all svg files will be minified and run through grunt-grunticon to ./prod/css/
  *     └── symbole.svg
  *
- *
  *******************************************************************************************************/
 
 module.exports = function(grunt) {
@@ -43,10 +42,12 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-imagemin');
 	grunt.loadNpmTasks('grunt-grunticon');
 	grunt.loadNpmTasks('grunt-svgmin');
-	grunt.loadNpmTasks('grunt-copy-to');
+	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-bumpup');
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-mkdir');
+	grunt.loadNpmTasks('grunt-font');
+	grunt.loadNpmTasks('grunt-wakeup');
 
 
 	grunt.initConfig({
@@ -216,41 +217,49 @@ module.exports = function(grunt) {
 		//----------------------------------------------------------------------------------------------------------------------------------------------------------
 		// copy all files to prod
 		//----------------------------------------------------------------------------------------------------------------------------------------------------------
-		copyto: {
+		copy: {
 
 			//js folder
 			JS: {
 				files: [{
-					cwd: 'dev/js/libs',
+					expand: true,
+					cwd: './dev/js/libs',
 					src: ['**/*'],
-					dest: ['prod/js/libs/']
+					dest: './prod/js/libs/',
+					filter: 'isFile',
 				}]
 			},
 
 			//fonts
 			Fonts: {
 				files: [{
-					cwd: 'dev/fonts',
+					expand: true,
+					cwd: './dev/fonts',
 					src: ['**/*'],
-					dest: ['prod/fonts/'],
+					dest: './prod/fonts/',
+					filter: 'isFile',
 				}],
 			},
 
 			//html template
 			Templates: {
 				files: [{
-					cwd: 'tmp',
+					expand: true,
+					cwd: './tmp',
 					src: ['*.html'],
-					dest: ['prod/'],
+					dest: './prod/',
+					filter: 'isFile',
 				}],
 			},
 
 			//php files
 			PHP: {
 				files: [{
-					cwd: 'dev/php/**',
+					expand: true,
+					cwd: './dev/php/**',
 					src: ['*.php'],
-					dest: ['prod/php/'],
+					dest: './prod/php/',
+					filter: 'isFile',
 				}],
 			},
 		},
@@ -278,6 +287,27 @@ module.exports = function(grunt) {
 
 
 		//----------------------------------------------------------------------------------------------------------------------------------------------------------
+		// wake up
+		//----------------------------------------------------------------------------------------------------------------------------------------------------------
+		wakeup: {
+			wakeme: {},
+		},
+
+
+		//----------------------------------------------------------------------------------------------------------------------------------------------------------
+		// banner font
+		//----------------------------------------------------------------------------------------------------------------------------------------------------------
+		font: {
+			dev: {
+				text: " Welcome",
+				options: {
+					colors: ['magenta', 'red'],
+				},
+			},
+		},
+
+
+		//----------------------------------------------------------------------------------------------------------------------------------------------------------
 		// watch for changes
 		//----------------------------------------------------------------------------------------------------------------------------------------------------------
 		watch: {
@@ -290,9 +320,9 @@ module.exports = function(grunt) {
 	});
 
 
-	//----------------------------------------------------------------------------------------------------------------------------------------------------------
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// TASKS
-	//----------------------------------------------------------------------------------------------------------------------------------------------------------
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------
 	grunt.registerTask('build', [
 		'clean:pre',
 		'includes',
@@ -303,12 +333,14 @@ module.exports = function(grunt) {
 		'svgmin',
 		'grunticon',
 		'imagemin',
-		'copyto',
-		'clean:post'
+		'copy',
+		'clean:post',
+		'font',
+		'wakeup',
 	]);
 
 
 	grunt.registerTask('bump', ['bumpup', 'build']);  // bump up to new version
-	grunt.registerTask('scaffold', ['mkdir']);  // create basic folder structure
+	grunt.registerTask('scaffold', ['mkdir', 'wakeup']);  // create basic folder structure
 	grunt.registerTask('default', ['connect', 'build', 'watch']);  // work
 };
