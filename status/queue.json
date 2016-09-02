@@ -1,0 +1,28 @@
+[{
+	"ID": "dominikwilkowski",
+	"options": {
+		"uri": "https://dominik-wilkowski.com/",
+		"method": "GET"
+	}
+},
+{
+	"ID": "muddels",
+	"options": {
+		"uri": "https://muddels.com/",
+		"method": "GET"
+	}
+},
+{
+	"ID": "bronzies",
+	"options": {
+		"uri": "https://bronzies.com/",
+		"method": "GET"
+	}
+},
+{
+	"ID": "bronziesAPI",
+	"options": {
+		"uri": "https://bronzies.com/api/questions",
+		"method": "GET"
+	}
+}]
