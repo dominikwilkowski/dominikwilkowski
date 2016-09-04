@@ -34,7 +34,7 @@
 			height: 270px;
 		}
 
-		.graph::after {
+		.graph.is-loading::after {
 			content: 'LOADING';
 			position: absolute;
 			font-family: sans-serif;
@@ -46,7 +46,6 @@
 			animation: hue 0.7s infinite linear;
 		}
 
-		.graph.is-rendered::after,
 		.graph.has-error::after {
 			display: none;
 		}
@@ -479,6 +478,50 @@
 			This code it open source under the <a href="https://raw.githubusercontent.com/dominikwilkowski/status/master/LICENSE">GLPv3 license</a>.
 		</p>
 
+	<script src="jquery-3.1.0.min.js"></script>
+	<script src="moment.min.js"></script>
+	<script src="google-charts.js"></script>
 	<script src="page.js"></script>
+	<script type="text/javascript">
+		Page.ENDPOINTS = 'https://dominik-wilkowski.com/status/api/';
+		Page.GRAPH = {
+			title: 'The network response time', //not sure where this is used
+			titlePosition: 'none', //we certainly don’t want to show it
+			colors: ['#000'], //the line color
+			backgroundColor: '#F6F7EB', //background color duh!
+			lineWidth: 1,  //looks nicer with the amount of data
+			hAxis: {
+				slantedText: false, //nah that looks weird
+				maxAlternation: 1, //no alternating multiple lines
+				gridlines: {
+					color: '#556E79',
+				},
+			},
+			vAxis: {
+				title: 'Response time',
+				gridlines: {
+					color: '#556E79',
+				},
+			},
+			legend: {
+				position: 'none' //ugly
+			},
+			chartArea: {
+				height: '200' //height is fixed so annotations can be positioned
+			},
+			annotations: {
+				textStyle: {
+					color: '#E94F37',
+				},
+				stem: {
+					color: '#E94F37',
+					length: 202, //position the "down" markers nicely
+				},
+			},
+			height: 270, //seems like a sweet spot
+		};
+
+		Page.init();
+	</script>
 </body>
 </html>
