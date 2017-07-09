@@ -38,8 +38,8 @@ server {
 	server_name  www.dominik-wilkowski.com;
 
 	ssl on;
-	ssl_certificate            /etc/letsencrypt/live/dominik-wilkowski.com/fullchain.pem;
-	ssl_certificate_key        /etc/letsencrypt/live/dominik-wilkowski.com/privkey.pem;
+	ssl_certificate            /etc/letsencrypt/live/bronzies.com/fullchain.pem;
+	ssl_certificate_key        /etc/letsencrypt/live/bronzies.com/privkey.pem;
 	ssl_session_timeout        1d;
 	ssl_session_cache          shared:SSL:50m;
 	ssl_session_tickets        off;
@@ -67,8 +67,8 @@ server {
 	root         /var/www/html/dominikwilkowski;
 
 	ssl on;
-	ssl_certificate      /etc/letsencrypt/live/dominik-wilkowski.com/fullchain.pem;
-	ssl_certificate_key  /etc/letsencrypt/live/dominik-wilkowski.com/privkey.pem;
+	ssl_certificate      /etc/letsencrypt/live/bronzies.com/fullchain.pem;
+	ssl_certificate_key  /etc/letsencrypt/live/bronzies.com/privkey.pem;
 
 	ssl_session_timeout  1d;
 	ssl_session_cache    shared:SSL:50m;
