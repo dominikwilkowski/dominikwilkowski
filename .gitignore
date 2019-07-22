@@ -8,3 +8,5 @@ node_modules
 prod/
 temp/
 dev/img/*
+
+yarn.lock
