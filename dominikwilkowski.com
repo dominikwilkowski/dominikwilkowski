@@ -100,7 +100,7 @@ server {
 	}
 
 
-	# NodeJS proxy
+	# NodeJS proxy for status page
 	#
 	location /status/api/ {
 		proxy_redirect          off;
@@ -115,5 +115,44 @@ server {
 		proxy_intercept_errors  on;
 
 		proxy_pass              http://127.0.0.1:8080;
+	}
+
+	# NodeJS proxy for dash
+	#
+	location /dash/ {
+		if ($request_method = 'OPTIONS') {
+			add_header 'Access-Control-Allow-Origin' '*';
+			add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+			add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+			add_header 'Access-Control-Max-Age' 1728000;
+			add_header 'Content-Type' 'text/plain; charset=utf-8';
+			add_header 'Content-Length' 0;
+			return 204;
+		}
+		if ($request_method = 'POST') {
+			add_header 'Access-Control-Allow-Origin' '*';
+			add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+			add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+			add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range';
+		}
+		if ($request_method = 'GET') {
+			add_header 'Access-Control-Allow-Origin' '*';
+			add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+			add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+			add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range';
+		}
+
+		proxy_redirect          off;
+		proxy_pass_header       Server;
+		proxy_set_header        X-Real-IP $remote_addr;
+		proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header        X-Scheme $scheme;
+		proxy_set_header        Host $http_host;
+		proxy_set_header        X-NginX-Proxy true;
+		proxy_connect_timeout   5;
+		proxy_read_timeout      240;
+		proxy_intercept_errors  on;
+
+		proxy_pass              http://127.0.0.1:5556;
 	}
 }
