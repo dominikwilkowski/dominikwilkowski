@@ -42,7 +42,7 @@
 	"dependencies": {
 		"chalk": "^1.0.0",
 		"moment": "^2.14.1",
-		"mongodb": "^2.2.8",
+		"mongodb": "^3.6.1",
 		"mongojs": "^2.4.0",
 		"node-slack": "0.0.7",
 		"request": "^2.74.0",
