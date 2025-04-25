@@ -13,17 +13,17 @@
 <link rel="apple-touch-icon" sizes="180x180" href="{{ $faviconPath }}/apple-touch-icon.png">
 
 {{ with .OutputFormats.Get "rss" -}}
-{{ printf `<link rel=%q type=%q href=%q title=%q>` .Rel .MediaType.Type .Permalink site.Title | safeHTML }}
+	{{ printf `<link rel=%q type=%q href=%q title=%q>` .Rel .MediaType.Type .Permalink site.Title | safeHTML }}
 {{ end }}
 
 {{- if .IsHome -}}
-<meta name="description" content="{{ site.Params.Description }}"/>
+	<meta name="description" content="{{ site.Params.Description }}"/>
 {{- else -}}
-<meta name="description" content="{{ .Params.Description }}"/>
+	<meta name="description" content="{{ .Params.Description }}"/>
 {{- end }}
 
 {{ if .Param "fediverse" }}
-<meta name="fediverse:creator" content="{{ .Params.Fediverse }}">
+	<meta name="fediverse:creator" content="{{ .Params.Fediverse }}">
 {{ end }}
 
 <title>
@@ -42,11 +42,11 @@
 {{ partialCached "head/js.html" . }}
 
 {{ if hugo.IsProduction }}
-{{ template "_internal/google_analytics.html" . }}
+	{{ template "_internal/google_analytics.html" . }}
 
-{{ if .Site.Params.umami.enable }}
-{{ partial "umami.html" . }}
-{{ end }}
+	{{ if .Site.Params.umami.enable }}
+		{{ partial "umami.html" . }}
+	{{ end }}
 {{ end }}
 
 {{/* Head end hook */}}

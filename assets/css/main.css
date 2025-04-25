@@ -335,7 +335,6 @@ footer a {
 .line-summary {
 	font-size: small;
 	margin-top: 0.2rem !important;
-	/* font-style: italic; */
 	color: var(--content-secondary);
 }
 
@@ -408,6 +407,7 @@ footer a {
 }
 
 .single-summary {
+	font-size: 1.5rem;
 	margin-bottom: 0;
 	color: var(--content-secondary);
 }
@@ -417,7 +417,15 @@ footer a {
 }
 
 .single-tags {
-	margin-top: -1rem;
+	display: flex;
+	gap: 1rem;
+	list-style: none;
+	margin: -1rem 0 0 0;
+	padding: 0;
+}
+
+.single-tags li {
+	margin: 0;
 }
 
 .single-tags span {
@@ -526,7 +534,7 @@ footer a {
 		"\00a0\00a0";
 }
 
-/* images */
+/* Images */
 
 figure {
 	.img-container {
@@ -612,7 +620,7 @@ figcaption {
 	margin: 6rem 0 -3rem 0;
 }
 
-/* breadcrumbs */
+/* Breadcrumbs */
 
 .breadcrumbs {
 	display: flex;
@@ -636,7 +644,6 @@ figcaption {
 	font-family: var(--font-mono);
 	font-size: small;
 	margin-bottom: 2rem;
-	/* margin-top: -3rem; */
 }
 
 /* Tables */
@@ -688,4 +695,19 @@ blockquote {
 blockquote p {
 	margin-left: 1rem;
 	margin-right: 1rem;
+}
+
+/* Text */
+
+.text-muted {
+	font-size: small;
+	font-style: italic;
+}
+
+ul li + li {
+	margin-top: 0.5rem;
+}
+
+ul li + li + li {
+	margin-top: 0.5rem;
 }
