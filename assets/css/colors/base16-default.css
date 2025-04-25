@@ -1,0 +1,15 @@
+:root {
+	--content-primary: rgb(24, 26, 28);
+	--content-secondary: rgb(86, 88, 90);
+	--background: rgb(250, 248, 246);
+	--code-background: rgb(244, 242, 240);
+	--code-border: rgb(206, 206, 206);
+}
+
+.dark {
+	--content-primary: rgb(248, 248, 248);
+	--content-secondary: rgb(184, 184, 184);
+	--background: rgb(24, 24, 24);
+	--code-background: rgb(40, 40, 40);
+	--code-border: rgb(56, 56, 56);
+}

@@ -1,9 +1,0 @@
-{
-	"name": "dominikwilkowski",
-	"version": "1.0.0",
-	"private": true,
-	"devDependencies": {},
-	"scripts": {
-		"nuke": "rm -rf node_modules && rm yarn.lock"
-	}
-}

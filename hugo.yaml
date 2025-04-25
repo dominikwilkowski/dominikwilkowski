@@ -1,0 +1,50 @@
+baseURL: "https://dominik-wilkowski.com/"
+languageCode: en-us
+title: blog
+
+googleAnalytics: G-xxxxxxxxx
+taxonomies:
+  tag: tags
+params:
+  description: A Tech Blog
+  theme: light
+  hideHeader: false
+  homeIntroTitle: TODO
+  homeIntroContent: >
+    TODO
+  homeCollectionTitle: Posts
+  homeCollection: posts
+  paginationSize: 100
+  listSummaries: true
+  listDateFormat: 2 Jan 2006
+  breadcrumbs:
+    enabled: true
+    showCurrentPage: true
+    home: Home
+  social:
+    - name: github
+      url: "https://github.com/dominikwilkowski"
+    - name: bluesky
+      url: "https://bsky.app/profile/dominik-wilkowski.com"
+    - name: linkedin
+      url: "https://www.linkedin.com/in/dominikwilkowski/"
+  menu:
+    - name: home
+      url: /
+    - name: posts
+      url: /posts
+    - name: about
+      url: /about
+  giscus:
+    enable: false
+  mermaidTheme: light
+  mermaidDarkTheme: light
+markup:
+  highlight:
+    style: monokailight
+    tabWidth: 2
+    lineNos: true
+    anchorLineNos: true
+  goldmark:
+    renderer:
+      unsafe: true
