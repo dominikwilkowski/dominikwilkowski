@@ -26,6 +26,8 @@ params:
       url: "https://github.com/dominikwilkowski"
     - name: bluesky
       url: "https://bsky.app/profile/dominik-wilkowski.com"
+    - name: mastodon
+      url: "https://mastodon.social/@wilkowskidom"
     - name: linkedin
       url: "https://www.linkedin.com/in/dominikwilkowski/"
   menu:
