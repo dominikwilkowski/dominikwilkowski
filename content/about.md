@@ -7,7 +7,7 @@ hideBackToTop: true
 hideBreadcrumbs: true
 ---
 
-```rust {hl_lines=[3,"6-9"]}
+```rust {hl_lines=[3,"11-13"]}
 fn main() {
 	let cli_flags = env::args().skip(1).collect::<Vec<String>>();
 	if cli_flags.contains(&String::from("--version"))
@@ -22,6 +22,11 @@ fn main() {
 	let mut game = crate::game::Game::new();
 	game.play();
 }
+```
+
+```diff
+- let mut game = crate::game::Game::new();
++ dotenv().ok();
 ```
 
 <br><br>

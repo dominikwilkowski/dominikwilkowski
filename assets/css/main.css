@@ -123,23 +123,38 @@ input {
 	scrollbar-width: none;
 }
 
+.highlight table {
+	display: table;
+	border-collapse: collapse;
+	border: 0 !important;
+}
+
 .highlight pre {
 	margin: 0.5rem 0;
 }
 
 pre {
+	background-color: var(--code-background) !important;
 	font-family: var(--font-mono);
 }
 
 pre code > span {
-	padding-top: 7px;
-	padding-bottom: 5px;
+	padding-top: 6px;
+	padding-bottom: 4px;
 	vertical-align: baseline;
 }
 
 pre code > span[style="background-color:#e1e1e1"],
 pre code > span[style="display:flex; background-color:#e1e1e1"] {
-	background-color: rgba(225, 225, 225, 0.5) !important;
+	background-color: rgba(40, 96, 225, 0.1) !important;
+}
+
+pre code > span[style="display:flex; background-color:#e1e1e1"],
+.diff-add,
+.diff-del {
+	padding-right: 6px;
+	border-top-right-radius: 3px;
+	border-bottom-right-radius: 3px;
 }
 
 .highlight tbody tr {
@@ -172,6 +187,17 @@ p code {
 	background-color: var(--code-background);
 	border-radius: 3px;
 	padding: 2px;
+}
+
+table code {
+	padding: 0;
+}
+
+.diff-add {
+	background: #e6ffed;
+}
+.diff-del {
+	background: #ffeef0;
 }
 
 /* Latex */
@@ -578,8 +604,8 @@ figcaption {
 .not-found div h1 {
 	font-family: var(--font-mono);
 	font-weight: 100;
-	font-size: 24rem;
-	margin: 6rem 0 -6rem 0;
+	font-size: clamp(1rem, 40vw, 25rem);
+	margin: 6rem 0 -3rem 0;
 }
 
 /* breadcrumbs */

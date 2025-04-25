@@ -1,6 +1,6 @@
 baseURL: "https://dominik-wilkowski.com/"
 languageCode: en-us
-title: blog
+title: Dominik Wilkowski rust blog
 
 googleAnalytics: G-xxxxxxxxx
 taxonomies:
@@ -46,7 +46,10 @@ markup:
     style: monokailight
     tabWidth: 2
     lineNos: true
-    anchorLineNos: true
+    noClasses: true
+    anchorLineNos: false
+    lineNumbersInTable: true
+    wrapperClass: highlight
   goldmark:
     renderer:
       unsafe: true
