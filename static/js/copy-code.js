@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-	const codeBlocks = document.querySelectorAll("pre");
+	const codeBlocks = document.querySelectorAll(".highlight");
 
 	codeBlocks.forEach((codeBlock) => {
 		if (codeBlock.className == "mermaid") return;
@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		codeBlock.appendChild(copyButton);
 
 		copyButton.addEventListener("click", function () {
-			const code = codeBlock.querySelector("code");
+			const code = codeBlock.querySelector("td + td code");
 			// Get the code content
 			const textToCopy = code.textContent || code.innerText;
 
