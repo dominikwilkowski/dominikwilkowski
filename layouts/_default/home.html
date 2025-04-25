@@ -7,7 +7,7 @@
 {{ if or .Site.Params.homeIntroTitle .Site.Params.homeIntroContent }}
 <div class="intro">
 	{{ with .Site.Params.homeIntroTitle }}
-	<h1>{{ . }}</h1>
+	<h2>{{ . }}</h2>
 	{{ end }}
 
 	{{ with .Site.Params.homeIntroContent }}
@@ -36,7 +36,7 @@
 
 <div class="list-container">
 	{{ with .Site.Params.homeCollectionTitle}}
-	<h1> {{ . }} </h1>
+	<h2 class="posts-heading">{{ . }}</h2>
 	{{ end }}
 
 	{{ $pages := where .Site.RegularPages "Section" .Site.Params.homeCollection

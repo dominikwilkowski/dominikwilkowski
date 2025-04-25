@@ -1,10 +1,16 @@
 ---
-title: "About"
+title: 'Rust_tutorial'
+date: '2025-04-25T21:11:29+10:00'
+draft: true
+summary: "TODO"
 description: "TODO"
+toc: true
+readTime: true
 autonumber: true
-showTags: false
-hideBackToTop: true
-hideBreadcrumbs: true
+math: true
+tags: ["TODO"]
+showTags: true
+hideBackToTop: false
 ---
 
 ```rust {hl_lines=[3,"11-13"]}
@@ -28,6 +34,3 @@ fn main() {
 - let mut game = crate::game::Game::new();
 + dotenv().ok();
 ```
-
-<br><br>
-_This site was built with <a href="https://gohugo.io/" target="_blank">Hugo</a> and <a href="https://github.com/tomfran/typo" target="_blank">tomfran/typo</a> and is <a href="https://github.com/dominikwilkowski/dominikwilkowski" target="_blank">open source</a>._

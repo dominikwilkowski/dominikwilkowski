@@ -9,9 +9,9 @@ params:
   description: A Tech Blog
   theme: light
   hideHeader: false
-  homeIntroTitle: TODO
-  homeIntroContent: >
-    TODO
+  # homeIntroTitle: TODO
+  # homeIntroContent: >
+  # TODO
   homeCollectionTitle: Posts
   homeCollection: posts
   paginationSize: 100
@@ -35,8 +35,6 @@ params:
       url: /
     - name: posts
       url: /posts
-    - name: about
-      url: /about
   giscus:
     enable: false
   mermaidTheme: light
