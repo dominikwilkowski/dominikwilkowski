@@ -1,6 +1,6 @@
 ---
 title: 'Rust_tutorial'
-date: '2025-04-27T21:11:29+10:00'
+date: '2025-04-25T21:11:29+10:00'
 draft: true
 summary: "TODO"
 description: "TODO"

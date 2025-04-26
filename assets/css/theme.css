@@ -1,6 +1,7 @@
 :root {
 	--content-primary: rgb(24, 26, 28);
 	--content-secondary: rgb(86, 88, 90);
+	--focus: #ff0000;
 	--background: rgb(250, 248, 246);
 	--code-background: rgb(244, 242, 240);
 	--code-border: rgb(140, 142, 144);
