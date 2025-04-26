@@ -2,7 +2,6 @@ baseURL: "https://dominik-wilkowski.com/"
 languageCode: en-us
 title: Dominik Wilkowski rust blog
 
-googleAnalytics: G-xxxxxxxxx
 taxonomies:
   tag: tags
 params:
