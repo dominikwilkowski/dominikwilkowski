@@ -4,6 +4,6 @@
 	{{ partial "functions/get_hook.html" (dict "hook" "footer_start" "context" .) }}
 
 	{{ with .Site.Params.footerContent }}
-	<p>{{ . | markdownify }}</p>
+		<p>{{ . | markdownify }}</p>
 	{{ end }}
 {{ end }}

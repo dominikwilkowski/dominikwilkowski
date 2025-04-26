@@ -11,25 +11,27 @@
 			</a>
 		</h1>
 
-		<div class="header-nav flex">
-			{{ $currentPage := . }}
+		<nav class="header-nav">
+			<ul>
+				{{ $currentPage := . }}
 
-			{{ with site.Params.menu }}
-				{{ range . }}
-					{{ $link := .url | relURL }}
-					{{ $curr := $currentPage.RelPermalink }}
-					{{ $isExact := eq $link $curr }}
-					{{ $isPrefix := and (ne $link "/") (hasPrefix $curr $link) }}
-					{{ $active := or $isExact $isPrefix }}
+				{{ with site.Params.menu }}
+					{{ range . }}
+						{{ $link := .url | relURL }}
+						{{ $curr := $currentPage.RelPermalink }}
+						{{ $isExact := eq $link $curr }}
+						{{ $isPrefix := and (ne $link "/") (hasPrefix $curr $link) }}
+						{{ $active := or $isExact $isPrefix }}
 
-					<span class="small {{ if $active }}bold{{ end }}">
-						<a href="{{ .url }}" {{ if and (isset . "newTab") .newTab }}target="_blank" rel="noopener noreferrer"{{ end }}>
-							{{.name }}
-						</a>
-					</span>
+						<li class="small {{ if $active }}bold{{ end }}">
+							<a href="{{ .url }}" {{ if and (isset . "newTab") .newTab }}target="_blank" rel="noopener noreferrer"{{ end }}>
+								{{ .name }}
+							</a>
+						</li>
+					{{ end }}
 				{{ end }}
-			{{ end }}
-		</div>
+			</ul>
+		</nav>
 
 	{{ end }}
 

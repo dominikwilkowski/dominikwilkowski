@@ -9,9 +9,8 @@ params:
   description: A Tech Blog
   theme: light
   hideHeader: false
-  # homeIntroTitle: TODO
-  # homeIntroContent: >
-  # TODO
+  # homeIntroTitle: homepage heading
+  # homeIntroContent: homepage intro
   homeCollectionTitle: Posts
   homeCollection: posts
   paginationSize: 100

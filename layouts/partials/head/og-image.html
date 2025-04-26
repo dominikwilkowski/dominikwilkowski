@@ -1,5 +1,5 @@
 {{- if (or .IsHome .IsPage) -}}
 	{{- with resources.GetMatch "images/og-image.{webp,png,jpg}" -}}
-	{{- .RelPermalink -}}
+		{{- .RelPermalink -}}
 	{{- end -}}
 {{- end -}}

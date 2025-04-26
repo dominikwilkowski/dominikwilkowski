@@ -1,32 +1,28 @@
 {{ define "main" }}
+	<div class="list-container">
 
-<div class="list-container">
+		{{ partial "breadcrumbs.html" . }}
 
-	{{ partial "breadcrumbs.html" . }}
+		<h1 class="posts-heading">{{ .Title }}</h1>
+		{{ .Content }}
 
-	<h1 class="posts-heading">{{ .Title }}</h1>
-	{{ .Content }}
+		{{ $tagsPage := eq .Title "Tags" }}
 
-	{{ $tagsPage := eq .Title "Tags"}}
+		{{ $paginationSize := 1 }}
+		{{ if (gt .Site.Params.paginationSize 0) }}
+			{{ $paginationSize = .Site.Params.paginationSize }}
+		{{ end }}
 
-	{{ $paginationSize := 1}}
-	{{ if (gt .Site.Params.paginationSize 0) }}
-	{{ $paginationSize = .Site.Params.paginationSize }}
-	{{ end }}
+		{{ $paginator := .Paginate (.Pages) $paginationSize }}
 
-	{{ $paginator := .Paginate (.Pages) $paginationSize }}
+		{{ range $index, $page := $paginator.Pages }}
+			{{ if $tagsPage }}
+				{{ partial "tag-entry.html" $page }}
+			{{ else }}
+				{{ partial "post-entry.html" $page }}
+			{{ end }}
+		{{ end }}
 
-	{{ range $index, $page := $paginator.Pages }}
-
-	{{ if $tagsPage }}
-	{{ partial "tag-entry.html" $page}}
-	{{ else }}
-	{{ partial "post-entry.html" $page}}
-	{{ end }}
-
-	{{ end }}
-
-	{{ partial "pagination-controls.html" $paginator}}
-
-</div>
+		{{ partial "pagination-controls.html" $paginator }}
+	</div>
 {{ end }}

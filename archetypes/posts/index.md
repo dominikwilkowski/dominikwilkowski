@@ -4,11 +4,11 @@ date: '{{ .Date }}'
 draft: true
 summary: "TODO"
 description: "TODO"
-toc: true
-readTime: true
-autonumber: true
-math: true
 tags: ["TODO"]
+toc: true
+autonumber: false
+readTime: true
+math: true
 showTags: true
 hideBackToTop: false
 ---
