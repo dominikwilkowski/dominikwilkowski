@@ -1,15 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-	document
-		.querySelectorAll('code.language-diff span[style*="display:flex"]')
-		.forEach((line) => {
-			const txt = line.textContent.trim();
-			if (txt.startsWith("+")) {
-				line.classList.add("diff-add");
-			} else if (txt.startsWith("-")) {
-				line.classList.add("diff-del");
-			}
-		});
-
 	const codeBlocks = document.querySelectorAll(".highlight");
 
 	codeBlocks.forEach((codeBlock) => {

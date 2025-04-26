@@ -167,6 +167,27 @@ input {
 		-ms-overflow-style: none;
 		scrollbar-width: none;
 	}
+
+	.diff-del,
+	.diff-add {
+		display: inline-block;
+		padding-left: 1.2em;
+		position: relative;
+		vertical-align: middle;
+	}
+
+	.diff-del::before,
+	.diff-add::before {
+		content: "–";
+		position: absolute;
+		left: 0;
+		user-select: none;
+		vertical-align: middle;
+	}
+
+	.diff-add::before {
+		content: "+";
+	}
 }
 
 pre {
@@ -306,8 +327,7 @@ hr {
 		list-style: none;
 		padding: 0;
 		margin: 0;
-		display: inline-grid;
-		grid-template-columns: auto auto;
+		display: flex;
 		gap: 1rem;
 	}
 
@@ -659,7 +679,7 @@ figcaption {
 		h1 {
 			font-family: var(--font-mono);
 			font-weight: 100;
-			font-size: clamp(1rem, 40vw, 25rem);
+			font-size: clamp(1rem, 36vw, 25rem);
 			margin: 6rem 0 -3rem 0;
 		}
 	}
