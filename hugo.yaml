@@ -5,7 +5,7 @@ title: Dominik Wilkowski Blog
 taxonomies:
   tag: tags
 params:
-  description: A Tech Blog
+  description: This blog is a chronicle of my (Dominik Wilkowski) ongoing coding adventures and write-ups of tutorials I've given to teams about a technology
   theme: light
   hideHeader: false
   # homeIntroTitle: homepage heading
