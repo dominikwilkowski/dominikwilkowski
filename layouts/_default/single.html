@@ -27,14 +27,14 @@
 					{{end}}
 				</li>
 
-				<li>
-					{{ with .Params.updated }}
-						{{/* parse and format the “updated” timestamp */}}
-						{{ $dateMachine := . | time.Format "2006-01-02T15:04:05-07:00" }}
-						{{ $dateHuman := . | time.Format (default "January 2, 2006 3:04pm") }}
+				{{ with .Params.updated }}
+					{{/* parse and format the “updated” timestamp */}}
+					{{ $dateMachine := . | time.Format "2006-01-02T15:04:05-07:00" }}
+					{{ $dateHuman := . | time.Format (default "January 2, 2006 3:04pm") }}
+					<li>
 						<time itemprop="dateModified" datetime="{{ $dateMachine }}">Updated: {{ $dateHuman }}</time>
-					{{ end }}
-				</li>
+					</li>
+				{{ end }}
 
 				<li>
 					{{ if .Param "readTime" }}
