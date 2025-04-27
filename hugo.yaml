@@ -1,6 +1,6 @@
 baseURL: "https://dominik-wilkowski.com/"
 languageCode: en-us
-title: Dominik Wilkowski rust blog
+title: Dominik Wilkowski Blog
 
 taxonomies:
   tag: tags
