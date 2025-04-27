@@ -5,7 +5,7 @@ updated: '2025-04-26T08:21:04+10:00'
 draft: false
 summary: "This is a README about what's it like to work with me. I've asked past teams to review this document as I work with more people to keep this as accurate and fair as possible."
 description: "This is a README about Dominik Wilkowski where you can learn how to work with me"
-tags: ["README", "management", "communication"]
+tags: ["README", "Management", "Self"]
 readTime: true
 showTags: true
 ---
