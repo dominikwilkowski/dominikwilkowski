@@ -34,7 +34,17 @@
 			{{ partialCached "math.html" . }}
 		{{ end }}
 
-		<script src="{{ "js/theme-switch.js" | relURL }}"></script>
-		<script defer src="{{ "js/copy-code.js" | relURL }}"></script>
+		{{ $js := slice
+			(resources.Get "js/theme-switch.js")
+			(resources.Get "js/copy-code.js")
+		}}
+
+		{{ $combined := $js
+			| resources.Concat "assets/combined.js"
+			| minify
+			| fingerprint
+		}}
+
+		<script defer src="{{ $combined.RelPermalink }}"></script>
 	</body>
 </html>

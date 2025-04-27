@@ -1,21 +1,30 @@
-<div class="post-line">
-
-	{{ $dateFormat := "2 Jan 2006"}}
-	{{ with .Site.Params.listDateFormat }}
-		{{ $dateFormat = .}}
-	{{ end }}
-
-	<p class="line-date">{{ .Date | time.Format $dateFormat }}</p>
-
-	<div>
-		<p class="line-title">
-			<a href="{{ .RelPermalink }}">
-				{{ .Title }}
-			</a>
-		</p>
-
-		{{ if .Site.Params.listSummaries }}
-			<p class="line-summary">{{ .Summary }}</p>
+<li class="post-line">
+	<article itemscope itemprop="blogPost" itemtype="https://schema.org/BlogPosting">
+		{{ $dateFormat := "2 Jan 2006"}}
+		{{ with .Site.Params.listDateFormat }}
+			{{ $dateFormat = .}}
 		{{ end }}
-	</div>
-</div>
+
+		<time itemprop="datePublished" datetime="{{ .Date | time.Format "2025-09-20" }}" class="line-date">{{ .Date | time.Format $dateFormat }}</time>
+
+		<div>
+			<h3 itemprop="headline" class="line-title">
+				<a itemprop="url" href="{{ .RelPermalink }}">
+					{{ .Title }}
+				</a>
+			</h3>
+
+			{{ if .Site.Params.listSummaries }}
+				<p itemprop="description" class="line-summary">{{ .Summary }}</p>
+			{{ end }}
+		</div>
+
+		<div itemprop="author" itemscope itemtype="https://schema.org/Person" class="author">
+			<span itemprop="name">Dominik Wilkowski</span>
+		</div>
+
+		{{ with .Params.tags }}
+			<meta itemprop="keywords" content="{{ delimit . ", " }}">
+		{{ end }}
+	</article>
+</li>

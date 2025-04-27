@@ -1,9 +1,9 @@
 {{ define "main" }}
-	<div class="list-container">
+	<section itemscope itemtype="http://schema.org/Blog" class="list-container">
 
 		{{ partial "breadcrumbs.html" . }}
 
-		<h1 class="posts-heading">{{ .Title }}</h1>
+		<h2 class="posts-heading">{{ .Title }}</h2>
 		{{ .Content }}
 
 		{{ $tagsPage := eq .Title "Tags" }}
@@ -15,14 +15,16 @@
 
 		{{ $paginator := .Paginate (.Pages) $paginationSize }}
 
-		{{ range $index, $page := $paginator.Pages }}
-			{{ if $tagsPage }}
-				{{ partial "tag-entry.html" $page }}
-			{{ else }}
-				{{ partial "post-entry.html" $page }}
+		<ul>
+			{{ range $index, $page := $paginator.Pages }}
+				{{ if $tagsPage }}
+					{{ partial "tag-entry.html" $page }}
+				{{ else }}
+					{{ partial "post-entry.html" $page }}
+				{{ end }}
 			{{ end }}
-		{{ end }}
+		</ul>
 
 		{{ partial "pagination-controls.html" $paginator }}
-	</div>
+	</section>
 {{ end }}

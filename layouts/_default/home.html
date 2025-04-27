@@ -1,7 +1,5 @@
 {{ define "main" }}
-	{{ .Content }}
-
-	{{/* Intro summary section */}}
+	<section itemprop="description">{{ .Content }}</section>
 
 	{{ if or .Site.Params.homeIntroTitle .Site.Params.homeIntroContent }}
 		<div class="intro">

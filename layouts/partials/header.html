@@ -4,10 +4,10 @@
 
 	{{ if or (not (.Param "hideHeader")) .IsHome }}
 
-		<h1 class="header-title">
-			<a href="{{ site.BaseURL }}">
+		<h1 itemprop="name" itemscope itemtype="https://schema.org/Blog" class="header-title">
+			<a itemprop="url" href="{{ site.BaseURL }}">
 				blog
-				<span>Dominik Wilkowski</span>
+				<span itemprop="name">Dominik Wilkowski</span>
 			</a>
 		</h1>
 
