@@ -479,9 +479,26 @@ footer {
 }
 
 .single-readtime {
+	list-style: none;
 	font-size: small;
 	margin-top: 0.5rem;
 	color: var(--content-secondary);
+
+	li {
+		display: block;
+		margin: 0;
+	}
+}
+
+@media (min-width: 480px) {
+	.single-readtime li {
+		display: inline-block;
+	}
+
+	.single-readtime li + li:before {
+		content: "•";
+		margin: 0 0.5rem;
+	}
 }
 
 .single-summary {

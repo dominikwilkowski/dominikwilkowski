@@ -12,6 +12,6 @@ As I've transitioned into leadership, I've remained deeply connected to coding, 
 
 <span class="text-muted">
 
-This site was built with [Hugo](https://gohugo.io/) and [tomfran/typo](https://github.com/tomfran/typo) and is [open-source](https://github.com/dominikwilkowski/dominikwilkowski).
+This site was built with [Hugo](https://gohugo.io/), [tomfran/typo](https://github.com/tomfran/typo) and is [open-source](https://github.com/dominikwilkowski/dominikwilkowski).
 
 </span>

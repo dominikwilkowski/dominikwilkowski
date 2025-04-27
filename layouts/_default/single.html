@@ -18,28 +18,32 @@
 		<div class="single-intro-container">
 			<h1 itemprop="headline" class="single-title">{{ .Title }}</h1>
 
-			<p class="single-readtime">
-				{{ with .Date }}
-					{{ $dateMachine := . | time.Format "2006-01-02T15:04:05-07:00" }}
-					{{ $dateHuman := . | time.Format (default ":date_long" $.Site.Params.singleDateFormat) }}
-					<time itemprop="datePublished" datetime="{{ $dateMachine }}">{{ $dateHuman }}</time>
-				{{end}}
+			<ul class="single-readtime">
+				<li>
+					{{ with .Date }}
+						{{ $dateMachine := . | time.Format "2006-01-02T15:04:05-07:00" }}
+						{{ $dateHuman := . | time.Format (default ":date_long" $.Site.Params.singleDateFormat) }}
+						<time itemprop="datePublished" datetime="{{ $dateMachine }}">{{ $dateHuman }}</time>
+					{{end}}
+				</li>
 
-				{{ with .Params.updated }}
-					&nbsp; &bull; &nbsp;
-					{{/* parse and format the “updated” timestamp */}}
-					{{ $dateMachine := . | time.Format "2006-01-02T15:04:05-07:00" }}
-					{{ $dateHuman := . | time.Format (default "January 2, 2006 3:04pm") }}
-					<time itemprop="dateModified" datetime="{{ $dateMachine }}">Updated: {{ $dateHuman }}</time>
-				{{ end }}
+				<li>
+					{{ with .Params.updated }}
+						{{/* parse and format the “updated” timestamp */}}
+						{{ $dateMachine := . | time.Format "2006-01-02T15:04:05-07:00" }}
+						{{ $dateHuman := . | time.Format (default "January 2, 2006 3:04pm") }}
+						<time itemprop="dateModified" datetime="{{ $dateMachine }}">Updated: {{ $dateHuman }}</time>
+					{{ end }}
+				</li>
 
-				{{ if .Param "readTime" }}
-					&nbsp; &bull; &nbsp;
-					<span itemprop="timeRequired" content="PT{{ .ReadingTime }}M">
-						{{ .ReadingTime }} min read
-					</span>
-				{{end}}
-			</p>
+				<li>
+					{{ if .Param "readTime" }}
+						<span itemprop="timeRequired" content="PT{{ .ReadingTime }}M">
+							{{ .ReadingTime }} min read
+						</span>
+					{{end}}
+				</li>
+			</ul>
 
 			{{ with .Param "summary" }}
 				<p itemprop="description" class="single-summary">{{ . | markdownify }}</p>
