@@ -8,6 +8,7 @@ description: "This is a README about Dominik Wilkowski where you can learn how t
 tags: ["README", "Management", "Self"]
 readTime: true
 showTags: true
+og_image: '/og-image-readme.png'
 ---
 
 ## Focus

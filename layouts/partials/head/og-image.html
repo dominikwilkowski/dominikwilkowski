@@ -1,7 +1,9 @@
-{{- if or .IsHome .IsPage }}
-	{{- $img := .Resources.GetMatch "assets/og-image.{png,jpg,webp}" -}}
+{{- if .Params.og_image }}
+	{{- .Params.og_image -}}
+{{- else if or .IsHome .IsPage }}
+	{{- $img := .Resources.GetMatch "assets/og-image.{png,jpg,webp,svg}" -}}
 	{{- if not $img }}
-		{{- $img = resources.GetMatch "images/og-image.{png,jpg,webp}" -}}
+		{{- $img = resources.GetMatch "images/og-image.{png,jpg,webp,svg}" -}}
 	{{- end }}
 
 	{{- if not $img }}

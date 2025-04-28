@@ -1,5 +1,6 @@
 ---
 title: 'Home'
+og_image: '/og-image-home.svg'
 ---
 
 ## Hi there
