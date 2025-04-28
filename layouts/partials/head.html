@@ -40,7 +40,7 @@
 {{- if or .IsHome .IsPage }}
 	{{- $img := partial "head/og-image.html" . | strings.TrimSpace -}}
 	{{- if $img -}}
-		<meta property="og:image" content="{{ $img }}">
+		<meta property="og:image" content="{{ $img | absURL }}">
 	{{- end }}
 {{- end }}
 
