@@ -10,6 +10,12 @@
 hugo server --buildDrafts --disableFastRender
 ```
 
+or to make sure you get the absolute latest (from the repo root folder)
+
+```sh
+rm -rf public && hugo --gc --ignoreCache && hugo server --buildDrafts --disableFastRender
+```
+
 ## Add new blog posts
 
 ```sh
