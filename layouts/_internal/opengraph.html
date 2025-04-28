@@ -40,27 +40,6 @@
 	<meta property="og:type" content="website">
 {{- end }}
 
-{{- with partial "_funcs/get-page-images" . }}
-	{{- range . | first 6 }}
-	<meta property="og:image" content="{{ .Permalink }}">
-		{{- end }}
-{{- else -}}
-
-	{{- /*
-	Source modified to load `assets/images/og-image.{webp,png,jpg}` files if any of them exists.
-	og-image.html can be modified in Hugo project if custom image generation logic is desired such
-	as using an external service.
-	*/ -}}
-
-	{{- if (and (or .IsHome .IsPage) (templates.Exists "partials/head/og-image.html")) -}}
-	{{- $ogImage := partial "head/og-image.html" . -}}
-	{{- with $ogImage -}}
-		<meta property="og:image" content="{{ . }}">
-	{{- end -}}
-	{{- end }}
-
-{{- end }}
-
 {{- with .Params.audio }}
 	{{- range . | first 6	 }}
 	<meta property="og:audio" content="{{ . | absURL }}">

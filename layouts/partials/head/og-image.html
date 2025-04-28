@@ -1,5 +1,16 @@
-{{- if (or .IsHome .IsPage) -}}
-	{{- with resources.GetMatch "images/og-image.{webp,png,jpg}" -}}
+{{- if or .IsHome .IsPage }}
+	{{- $img := .Resources.GetMatch "assets/og-image.{png,jpg,webp}" -}}
+	{{- if not $img }}
+		{{- $img = resources.GetMatch "images/og-image.{png,jpg,webp}" -}}
+	{{- end }}
+
+	{{- if not $img }}
+		{{- $target := cond .IsPage (printf "%s/og-image.svg" (strings.TrimSuffix .File.Dir "/")) "og-image.svg" -}}
+		{{- $svg := resources.Get "images/og-image.svg" | resources.ExecuteAsTemplate $target . | resources.Fingerprint "sha512" }}
+		{{- $img = $svg -}}
+	{{- end }}
+
+	{{- with $img }}
 		{{- .RelPermalink -}}
-	{{- end -}}
-{{- end -}}
+	{{- end }}
+{{- end }}
