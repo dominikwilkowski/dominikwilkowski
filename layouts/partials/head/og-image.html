@@ -1,18 +1,23 @@
 {{- if .Params.og_image }}
+	{{- /* 1. front-matter override */ -}}
 	{{- .Params.og_image -}}
 {{- else if or .IsHome .IsPage }}
+	{{- /* 2. post/page bundle image from assets/og-image.png */ -}}
 	{{- $img := .Resources.GetMatch "assets/og-image.{png,jpg,webp}" -}}
-	{{- if not $img }}
+	{{- if $img }}
+    {{- $finger := $img | resources.Fingerprint "sha256" -}}
+    {{- $img = $finger.RelPermalink -}}
+  {{- else }}
+		{{- /* 3. theme/static image */ -}}
 		{{- $img = resources.GetMatch "images/og-image.{png,jpg,webp}" -}}
 	{{- end }}
 
 	{{- if not $img }}
-		{{- $target := cond .IsPage (printf "%s/og-image.svg" (strings.TrimSuffix .File.Dir "/")) "og-image.svg" -}}
-		{{- $svg := resources.Get "images/og-image.svg" | resources.ExecuteAsTemplate $target . | resources.Fingerprint "sha512" }}
-		{{- $img = $svg -}}
+		{{- /* 4 render & fingerprint SVG fallback */ -}}
+		{{- $svg := resources.Get "images/og-image-svg.svg" | resources.ExecuteAsTemplate "og-image-svg.svg" . | resources.Fingerprint "sha256" -}}
+		{{- /* pretend it’s a .png because our Makefile will convert them */ -}}
+		{{- $img = replaceRE `\.svg$` ".png" $svg.RelPermalink -}}
 	{{- end }}
 
-	{{- with $img }}
-		{{- .RelPermalink -}}
-	{{- end }}
+	{{- $img | relURL -}}
 {{- end }}

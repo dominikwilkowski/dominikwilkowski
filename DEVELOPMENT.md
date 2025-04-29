@@ -6,6 +6,11 @@
 
 ## Local development
 
+Make sure you install the latest hugo version and tools we will need to convert our og-images:
+```sh
+brew install hugo librsvg optipng
+```
+
 ```sh
 hugo server --buildDrafts --disableFastRender
 ```
