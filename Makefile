@@ -27,4 +27,5 @@ convert: build
 	done
 
 deploy: build
+	@printf '\033[43m\033[37m → sync with server \033[0m\n'
 	rsync -avzhe ssh --progress ./public/* deploy@dominik-wilkowski.com:/var/www/html/dominikwilkowski/

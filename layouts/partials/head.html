@@ -11,6 +11,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="{{ path.Join $faviconPath "favicon-32x32.png" }}">
 <link rel="icon" type="image/png" sizes="192x192" href="{{ path.Join $faviconPath "android-chrome-192x192.png" }}">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ path.Join $faviconPath "apple-touch-icon.png" }}">
+<link rel="icon" type="image/png" href="{{ path.Join $faviconPath "favicon-96x96.png" }}" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="{{ path.Join $faviconPath "favicon.svg" }}" />
+<link rel="shortcut icon" href="{{ path.Join $faviconPath "favicon.ico" }}" />
+<link rel="manifest" href="{{ path.Join $faviconPath "site.webmanifest" }}" />
 
 {{ with .OutputFormats.Get "rss" -}}
 	{{ printf `<link rel=%q type=%q href=%q title=%q>` .Rel .MediaType.Type .Permalink site.Title | safeHTML }}
