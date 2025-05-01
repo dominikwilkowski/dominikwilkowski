@@ -5,11 +5,11 @@ Replacing the - and + lines with spans and classes so that the + and - can be ad
 {{ $raw := highlight $.Inner "diff" }}
 
 {{ $delPat := `(?ms)<span([^>]*)>\s*<span>\s*-\s*(.*?)</span>\s*</span>` }}
-{{ $delRepl := `<span$1><span class="diff-del">$2</span></span>` }}
+{{ $delRepl := `<span$1><span class="diff-del">- $2</span></span>` }}
 {{ $noDelSign := replaceRE $delPat $delRepl $raw }}
 
 {{ $addPat := `(?ms)<span([^>]*)>\s*<span>\s*\+\s*(.*?)</span>\s*</span>` }}
-{{ $addRepl := `<span$1><span class="diff-add">$2</span></span>` }}
+{{ $addRepl := `<span$1><span class="diff-add">+ $2</span></span>` }}
 {{ $noSigns := replaceRE $addPat $addRepl $noDelSign }}
 
 {{ $noSigns | safeHTML }}
