@@ -117,6 +117,51 @@ input {
 	}
 }
 
+.emoji {
+	position: relative;
+}
+
+.emoji:focus:after,
+.emoji:hover:after {
+	content: attr(aria-label);
+	position: absolute;
+	display: block;
+	z-index: 1;
+	bottom: 100%;
+	left: 0;
+	font-family: var(--font-mono);
+	font-weight: normal;
+	padding: 0.6em 0.75em 0.5em 0.75em;
+	border-radius: 0.5em;
+	box-shadow: 0 0 0.2em rgba(0, 0, 0, 0.5);
+	background-color: rgba(0, 0, 0, 0.85);
+	color: #fff;
+	text-align: center;
+	font-size: 0.8rem;
+	opacity: 0;
+	animation: fadeIn 0.1s ease-out 0.3s 1 forwards;
+	white-space: nowrap;
+}
+
+@media print {
+	.emoji:after {
+		content: " (" attr(aria-label) ") ";
+		font-size: 0.75em;
+		font-weight: normal;
+	}
+}
+
+@keyframes fadeIn {
+	from {
+		bottom: -0.5em;
+		opacity: 0;
+	}
+	to {
+		bottom: 100%;
+		opacity: 1;
+	}
+}
+
 .main {
 	iframe {
 		margin: 1.5rem auto;

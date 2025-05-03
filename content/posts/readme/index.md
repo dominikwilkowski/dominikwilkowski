@@ -49,7 +49,7 @@ Best productivity is created in curious and psychologically safe places.
 - I love working early and across different time zones. The Earth's rotation really makes my day.
 Details matter greatly to me.
 
-## The magic 🪄
+## The magic <span role="img" aria-label="A magic wand" tabIndex="0" class="emoji">🪄</span>
 I believe the most amazing things can happen when you bridge disciplines that traditionally have been kept apart.
 Like design/UX and engineering or hardware and software.
 I'll always foster an environment where this is as easy and natural as possible to make "handovers" redundant.
