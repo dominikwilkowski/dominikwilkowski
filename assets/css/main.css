@@ -286,6 +286,7 @@ p code {
 	padding: 3px 6px;
 	border: 1px solid var(--content-primary);
 	border-radius: 3px;
+	vertical-align: middle;
 }
 
 table code {
@@ -622,7 +623,15 @@ footer {
 	font-size: var(--p-font-size);
 	line-height: calc(0.9 * var(--p-line-height));
 	margin-top: var(--toc-margin-top);
-	margin-bottom: var(--toc-margin-bottom);
+	margin-bottom: var(--toc-margin-top);
+
+	&[open] {
+		margin-bottom: var(--toc-margin-bottom);
+	}
+
+	summary {
+		margin-bottom: 0.5rem;
+	}
 
 	ul {
 		margin-top: 0.1rem;
@@ -632,6 +641,42 @@ footer {
 	li {
 		margin-top: 0.1rem;
 		margin-bottom: 0.1rem;
+	}
+}
+
+/* Details Summary animation */
+
+summary {
+	cursor: pointer;
+	border-radius: 3px;
+}
+
+@supports (interpolate-size: allow-keywords) {
+	:root {
+		interpolate-size: allow-keywords;
+	}
+
+	[open]::details-content {
+		height: auto;
+	}
+}
+
+::details-content {
+	transition:
+		height 0.5s ease,
+		content-visibility 0.5s ease allow-discrete;
+	height: 0;
+	overflow: clip;
+}
+
+@keyframes animateDown {
+	0% {
+		opacity: 0;
+		transform: translatey(-15px);
+	}
+	100% {
+		opacity: 1;
+		transform: translatey(0);
 	}
 }
 
@@ -672,8 +717,8 @@ footer {
 
 figure {
 	display: grid;
-	align-items: center;
-	margin-top: 2rem;
+	margin-top: 1rem;
+	align-items: start;
 
 	.img-container {
 		aspect-ratio: var(--w) / var(--h);
@@ -698,20 +743,25 @@ figure {
 }
 
 .img-small {
-	div {
+	.img-container {
 		display: flex;
 		align-items: center;
-		justify-content: center;
+		justify-content: start;
 	}
 
 	img {
-		max-height: calc(var(--figure-img-max-height) * 0.8);
+		max-height: calc(var(--h) / 2);
+		max-width: calc(var(--w) / 2);
 	}
 
-	div:first-child {
-		height: 80%;
-		width: 80%;
-		margin: auto;
+	.img-container {
+		margin: auto 0;
+	}
+
+	&.img-center .img-container {
+		margin-left: auto;
+		margin-right: auto;
+		justify-content: center;
 	}
 }
 
@@ -741,6 +791,19 @@ figcaption {
 	font-size: var(--caption-font-size);
 	margin-top: 1rem;
 	margin-bottom: 1rem;
+}
+
+.header-img-wrapper {
+	height: 220px;
+
+	.header-img {
+		position: absolute;
+		left: 0;
+		right: 0;
+		height: 220px;
+		background-size: cover;
+		background-position: center;
+	}
 }
 
 /* 404 */

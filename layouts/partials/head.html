@@ -4,17 +4,15 @@
 {{/* Head start hook */}}
 {{ partial "functions/get_hook.html" (dict "hook" "head_start" "context" .) }}
 
-{{ $faviconPath := (.Site.Params.faviconPath | default "" | absURL) }}
-
-<link rel="icon" type="image/ico" href="{{ path.Join $faviconPath "favicon.ico" }}">
-<link rel="icon" type="image/png" sizes="16x16" href="{{ path.Join $faviconPath "favicon-16x16.png" }}">
-<link rel="icon" type="image/png" sizes="32x32" href="{{ path.Join $faviconPath "favicon-32x32.png" }}">
-<link rel="icon" type="image/png" sizes="192x192" href="{{ path.Join $faviconPath "android-chrome-192x192.png" }}">
-<link rel="apple-touch-icon" sizes="180x180" href="{{ path.Join $faviconPath "apple-touch-icon.png" }}">
-<link rel="icon" type="image/png" href="{{ path.Join $faviconPath "favicon-96x96.png" }}" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="{{ path.Join $faviconPath "favicon.svg" }}" />
-<link rel="shortcut icon" href="{{ path.Join $faviconPath "favicon.ico" }}" />
-<link rel="manifest" href="{{ path.Join $faviconPath "site.webmanifest" }}" />
+<link rel="icon" type="image/ico" href="{{ "favicon.ico" | absURL }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ "favicon-16x16.png" | absURL }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ "favicon-32x32.png" | absURL }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ "android-chrome-192x192.png" | absURL }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ "apple-touch-icon.png" | absURL }}">
+<link rel="icon" type="image/png" sizes="96x96" href="{{ "favicon-96x96.png" | absURL }}">
+<link rel="icon" type="image/svg+xml" href="{{ "favicon.svg" | absURL }}">
+<link rel="shortcut icon" href="{{ "favicon.ico" | absURL }}">
+<link rel="manifest" href="{{ "site.webmanifest" | absURL }}">
 
 {{ with .OutputFormats.Get "rss" -}}
 	{{ printf `<link rel=%q type=%q href=%q title=%q>` .Rel .MediaType.Type .Permalink site.Title | safeHTML }}

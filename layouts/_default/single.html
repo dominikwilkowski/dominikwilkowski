@@ -69,16 +69,21 @@
 		{{ end }}
 
 		{{/* Table of Content */}}
-
 		{{ if .Param "toc" }}
-			<aside itemprop="tableOfContents" class="toc">
-				<p><strong>Table of contents</strong></p>
+			<details itemprop="tableOfContents" class="toc">
+				<summary><strong>Table of contents</strong></summary>
 				{{ .TableOfContents }}
-			</aside>
+			</details>
+		{{ end }}
+
+		{{/* Header image */}}
+		{{ if .Param "header" }}
+			<div class="header-img-wrapper">
+				<div class="header-img" style="background-image: url({{ .Param "header" }});"></div>
+			</div>
 		{{ end }}
 
 		{{/* Page content */}}
-
 		<div itemprop="articleBody" class="single-content">
 			{{ .Content }}
 			{{ if .Site.Params.giscus.enable }}
