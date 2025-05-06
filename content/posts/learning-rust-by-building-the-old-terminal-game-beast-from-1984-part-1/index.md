@@ -39,7 +39,7 @@ all comes together.
 
 But if you don't know the bits, I recommend you start with the [official book](https://doc.rust-lang.org/book/).
 And if you're so inclined, do have a look at [easy_rust](github.com/Dhghomon/easy_rust) which is a great way to learn
-rust as it is organized in small chapters not longer than 20min each with videos in simple language.
+rust as it is organized in small chapters not longer than 20min each with videos in plain language.
 Lastely you should check out [rustlings](https://github.com/rust-lang/rustlings) to get a feel for the language.
 
 ## What we're building
@@ -51,9 +51,10 @@ and computers were monochrome)_.
 
 <iframe src="https://archive.org/embed/Beast_1020" width="560" height="384" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen></iframe>
 
-To get a feel for the game, play it in the iframe above or on [archive.org](https://archive.org/embed/Beast_1020).
+To get a feel for the game, play it in the iframe above or on [archive.org](https://archive.org/embed/Beast_1020)
+directly.
 
-But generally, it's simple
+But generally, it's simple:
 
 ![Animated scene from the 1984 ASCII game BEAST, showing a blue diamond-shaped player character navigating a maze-like environment made of green block clusters, avoiding obstacles and moving toward a yellow target area in the top right corner. The screen features a classic DOS-style black background with retro text-based graphics](assets/board.gif#small)
 

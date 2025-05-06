@@ -1,5 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
+<meta name="description" content="{{ .Params.Description }}"/>
 
 {{/* Head start hook */}}
 {{ partial "functions/get_hook.html" (dict "hook" "head_start" "context" .) }}
@@ -17,12 +18,6 @@
 {{ with .OutputFormats.Get "rss" -}}
 	{{ printf `<link rel=%q type=%q href=%q title=%q>` .Rel .MediaType.Type .Permalink site.Title | safeHTML }}
 {{ end }}
-
-{{- if .IsHome -}}
-	<meta name="description" content="{{ site.Params.Description }}"/>
-{{- else -}}
-	<meta name="description" content="{{ .Params.Description }}"/>
-{{- end }}
 
 {{ if .Param "fediverse" }}
 	<meta name="fediverse:creator" content="{{ .Params.Fediverse }}">

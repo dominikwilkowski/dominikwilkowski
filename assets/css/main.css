@@ -10,6 +10,7 @@ body {
 	padding-right: var(--main-padding);
 	color: var(--content-primary);
 	background: var(--background);
+	font-variant: no-common-ligatures proportional-nums;
 }
 
 .content {
@@ -78,12 +79,13 @@ h6 {
 p {
 	margin-top: var(--p-margin-top);
 	margin-bottom: var(--p-margin-bottom);
+	margin: 0.5lh 0;
 	font-size: var(--p-font-size);
 	line-height: var(--p-line-height);
 }
 
 ul li + li {
-	margin-top: 0.5rem;
+	margin-top: 0.5lh;
 }
 
 li {
@@ -115,6 +117,10 @@ input {
 	.dark & {
 		color-scheme: dark;
 	}
+}
+
+abbr {
+	font-variant-caps: small-caps;
 }
 
 .emoji {
@@ -655,10 +661,10 @@ summary {
 	:root {
 		interpolate-size: allow-keywords;
 	}
+}
 
-	[open]::details-content {
-		height: auto;
-	}
+[open]::details-content {
+	height: auto;
 }
 
 ::details-content {
