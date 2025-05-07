@@ -47,7 +47,7 @@ Lastely you should check out [rustlings](https://github.com/rust-lang/rustlings)
 [BEAST](https://en.wikipedia.org/wiki/Beast_(video_game)) is a text-based action game developed for MS-DOS by Dan Baker, Alan Brown, Mark Hamilton, and Derrick Shadel. It was distributed as shareware in 1984.
 
 It's a game I grew up with back when I was young _(and everything was still black and white, there were no mobile phones
-and computers were monochrome)_.
+and computer monitors were monochrome emitted radiation)_.
 
 <iframe src="https://archive.org/embed/Beast_1020" width="560" height="384" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen></iframe>
 
@@ -56,7 +56,9 @@ directly.
 
 But generally, it's simple:
 
-![Animated scene from the 1984 ASCII game BEAST, showing a blue diamond-shaped player character navigating a maze-like environment made of green block clusters, avoiding obstacles and moving toward a yellow target area in the top right corner. The screen features a classic DOS-style black background with retro text-based graphics](assets/board.gif#small)
+![Animated scene from the 1984 ASCII game BEAST, showing a blue diamond-shaped player character navigating a maze-like environment made of green block clusters, avoiding obstacles and moving toward a yellow target area in the top right
+corner.
+The screen features a classic DOS-style black background with retro text-based graphics](assets/movements.gif#small)
 
 - You're a player on a 2D board `◀▶`
 - It contains blocks you can push `░░`
@@ -69,15 +71,97 @@ But generally, it's simple:
 There are more advanced challenges in later levels but for this tutorial we will focus only on the basics so you can add
 your own levels later.
 
-## The Scope of Part 1
-
-In the first part of this series we will focus on just rendering the game board and moving the player.
-We will end up re-writing a couple sections as we go because I don't just want to tell you what to write, I want you to
-understand why we write it like this.
-
 ## Setup
 
-repo and tooling setup
+Let's build a terminal game in rust!
+We start by creating our rust project:
+
+```sh {lineNos=false}
+cargo new beast
+cd beast
+```
+
+This will create a new rust project named `beast` with a binary target:
+
+```sh {lineNos=false}
+.
+├── Cargo.toml
+└── src
+    └── main.rs
+```
+
+Cargo has two [entry points](https://doc.rust-lang.org/stable/cargo/reference/cargo-targets.html?highlight=library#cargo-targets)
+for its crates and you can choose either or both in your project:
+- a binary, the `main.rs` file with a `main()` function which executes when you run the program
+- a library, the `lib.rs` file which can be imported by other crates
+
+For a game we don't really need a library, so we will focus on the binary and `cargo new` will default to a binary
+target.
+
+Our `Cargo.toml` file in the root is like the `package.json` file of our project:
+
+```toml
+[package]
+name = "beast"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+```
+
+We have our `name` and `version` set for us and something called `edition`.
+[The edition](https://doc.rust-lang.org/edition-guide/editions/index.html) is the version of the rust language we want
+to use and `2024` is the latest as of this writing.
+
+Our `src/main.rs` file is our entrypoint.
+This is where we will call our game logic and define our modules.
+
+```rust
+fn main() {
+	println!("Hello, world!");
+}
+```
+
+Let's take our crate for a spin:
+```sh {lineNos=false}
+cargo run
+   Compiling beast v0.1.0 (/Users/code/beast)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running `target/debug/beast`
+Hello, world!
+```
+
+Look at us!
+Building binaries and executing them like we've never done anything else.
+<span role="img" aria-label="High five hands" tabIndex="0" class="emoji">🙌</span>
+
+## The Board
+
+Ok let's start thinking about our board
+
+![Screenshot from the 1984 ASCII game BEAST. The screen is filled with a grid of green and yellow blocky patterns representing movable blocks and solid blocks. The player, shown as a cyan diamond shape, is located in the bottom-left corner. Several red 'H' characters, representing hostile beasts, are scattered on the right side of the screen. The game has a dark black background bordered by a yellow frame, with the environment laid out in a procedurally generated maze-like pattern.](assets/board.png "How do we want to represent it in code, where's the source of truth, how do we render it and all that while keeping our sanity?")
+
+There are a couple of ways we could approach this.
+You could create instances of each tile you expect on the board, give each of them a position and a way to represent
+themselves and in the render function we just iterate over each entity and place them on a temporary buffer that then
+gets to be iterated over to form a String we simply print to [`stdout`](https://en.wikipedia.org/wiki/Standard_streams).
+This is indeed a good way to approach this for a game with a large number of entities which all require instances
+to keep track of their own states.
+
+But our board isn't very large, our blocks don't really need state and we have way more blocks than beasts.
+Beasts need state to keep moving and path find their way to the player and the player itself should probably remember
+where it is.
+Knowing that we could simplify the approach above by skipping instances for blocks going straight to keeping a buffer of
+the board in memory and in the rendered simply iterate over it and print it to stdout.
+
+So we could represent the buffer of our board as a two dimensional array of tiles.
+Each inner array represents a row of tiles and contains all its columns:
+
+`[[Tile; BOARD_WIDTH]; BOARD_HEIGHT]`
+
+The render function would iterate over the the array and print a new line for each row.
+
+Ok this was a lot of text, let's get out of our heads and into coding.
 
 ## Structure
 

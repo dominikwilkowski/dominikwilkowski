@@ -11,7 +11,9 @@ document.addEventListener("DOMContentLoaded", function () {
 		codeBlock.appendChild(copyButton);
 
 		copyButton.addEventListener("click", function () {
-			const code = codeBlock.querySelector("td + td code");
+			const code =
+				codeBlock.querySelector("td + td code") ||
+				codeBlock.querySelector("code");
 			// Get the code content
 			const textToCopy = code.textContent || code.innerText;
 

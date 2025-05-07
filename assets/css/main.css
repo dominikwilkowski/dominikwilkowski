@@ -212,7 +212,19 @@ abbr {
 	}
 
 	pre {
+		margin: 0.5rem 0.75rem;
+	}
+
+	table pre {
 		margin: 0.5rem 0;
+	}
+
+	table tr td:first-child code > span {
+		padding-left: 0.75rem !important;
+	}
+
+	table tr td:first-child code > span > span {
+		padding-left: 0 !important;
 	}
 
 	tbody tr {
@@ -266,12 +278,6 @@ pre::-webkit-scrollbar {
 
 code {
 	-webkit-font-smoothing: antialiased;
-	-moz-font-feature-settings: "liga=1, dlig=1";
-	-ms-font-feature-settings: "liga", "dlig";
-	-webkit-font-feature-settings: "liga", "dlig";
-	-o-font-feature-settings: "liga", "dlig";
-	font-feature-settings: "liga", "dlig";
-	font-variant-ligatures: contextual;
 	font-family: var(--font-mono);
 	font-size: 0.9em;
 
@@ -289,8 +295,8 @@ p code {
 }
 
 :not(pre) > code {
-	padding: 3px 6px;
-	border: 1px solid var(--content-primary);
+	padding: 5px 6px 3px 6px;
+	border: 1px solid var(--code-border);
 	border-radius: 3px;
 	vertical-align: middle;
 }
