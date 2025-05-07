@@ -239,12 +239,35 @@ abbr {
 		scrollbar-width: none;
 	}
 
+	> pre {
+		overflow-y: hidden;
+		overflow-x: auto;
+	}
+
 	.diff-add {
 		background: #e6ffed;
 	}
 
 	.diff-del {
 		background: #ffeef0;
+	}
+
+	&[data-file] {
+		position: relative;
+		padding-top: 1.5em;
+
+		&:after {
+			content: attr(data-file);
+			position: absolute;
+			top: 0;
+			left: 0;
+			font-size: 0.75em;
+			line-height: 1;
+			white-space: nowrap;
+			background: var(--code-border);
+			padding: 0.5em 0.5em 0.75em 0.5em;
+			border-bottom-right-radius: var(--code-border-radius);
+		}
 	}
 }
 

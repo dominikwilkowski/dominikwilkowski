@@ -47,5 +47,8 @@ markup:
     lineNumbersInTable: true
     wrapperClass: highlight
   goldmark:
+    parser:
+      attribute:
+        block: true
     renderer:
       unsafe: true
