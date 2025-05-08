@@ -15,7 +15,10 @@ document.addEventListener("DOMContentLoaded", function () {
 				codeBlock.querySelector("td + td code") ||
 				codeBlock.querySelector("code");
 			// Get the code content
-			const textToCopy = code.textContent || code.innerText;
+			const textToCopy = (code.textContent || code.innerText).replace(
+				/\.\.\. \d+ collapsed lines \.\.\./g,
+				"",
+			);
 
 			// Use the Clipboard API to copy the text
 			navigator.clipboard
