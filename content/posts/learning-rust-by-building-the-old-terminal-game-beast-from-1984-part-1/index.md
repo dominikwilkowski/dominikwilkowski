@@ -60,11 +60,11 @@ But generally, it's simple:
 corner.
 The screen features a classic DOS-style black background with retro text-based graphics](assets/movements.gif#small)
 
-- You're a player on a 2D board `◀▶`
-- It contains blocks you can push `░░`
-- And blocks you can't push `▓▓`
-- There are beasts trying to get you `├┤`
-- To win you have to squish the beasts between two blocks `◀▶░░├┤░░`
+- You're a player on a 2D board ◀▶
+- It contains blocks you can push ░░
+- And blocks you can't push ▓▓
+- There are beasts trying to get you ├┤
+- To win you have to squish the beasts between two blocks ◀▶░░├┤░░
 
 ![The player moves a blue diamond character to push a wall block, crushing a red H-shaped beast between two blocks](assets/squish.gif#small)
 
@@ -195,7 +195,7 @@ enum Tile {
 }
 
 struct Board {
-	buffer: [[Tile; 50]; 30],
+	buffer: [[Tile; 39]; 20],
 }
 
 fn main() {
@@ -215,13 +215,13 @@ enum Tile {
 }
 
 struct Board {
-	buffer: [[Tile; 50]; 30],
+	buffer: [[Tile; 39]; 20],
 }
 
 impl Board {
 	fn new() -> Self {
 		Self {
-			buffer: [[Tile::Empty; 50]; 30],
+			buffer: [[Tile::Empty; 39]; 20],
 		}
 	}
 }
@@ -235,36 +235,26 @@ So our `buffer` after calling the `new()` method would look like this:
 
 ```rust {lineNos=false}
 [
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
-	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty],
+	[Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty]
 ]
 ```
 
@@ -282,13 +272,13 @@ enum Tile {
 }
 
 struct Board {
-	buffer: [[Tile; 50]; 30],
+	buffer: [[Tile; 39]; 20],
 }
 
 impl Board {
 	fn new() -> Self {
 		Self {
-			buffer: [[Tile::Empty; 50]; 30],
+			buffer: [[Tile::Empty; 39]; 20],
 		}
 	}
 }
@@ -302,11 +292,11 @@ But once we save it all rust-analyzer will be upset with is and if we try runnin
 
 ```console
 cargo run
-<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/beast)
 <span style="font-weight:bold;color:red;">error[E0277]</span><span style="font-weight:bold;">: the trait bound `Tile: Copy` is not satisfied</span>
   <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:17:14
    <span style="font-weight:bold;color:#3333FF;">|</span>
-<span style="font-weight:bold;color:#3333FF;">17</span> <span style="font-weight:bold;color:#3333FF;">|</span>             buffer: [[Tile::Empty; 50]; 30],
+<span style="font-weight:bold;color:#3333FF;">17</span> <span style="font-weight:bold;color:#3333FF;">|</span>             buffer: [[Tile::Empty; 39]; 20],
    <span style="font-weight:bold;color:#3333FF;">|</span>                       <span style="font-weight:bold;color:red;">^^^^^^^^^^^</span> <span style="font-weight:bold;color:red;">the trait `Copy` is not implemented for `Tile`</span>
    <span style="font-weight:bold;color:#3333FF;">|</span>
    <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: the `Copy` trait is required because this value will be copied for each element of the array
@@ -317,8 +307,8 @@ cargo run
    <span style="font-weight:bold;color:#3333FF;">|</span>
 <span style="font-weight:bold;color:aqua;">help</span>: create an inline `const` block
    <span style="font-weight:bold;color:#3333FF;">|</span>
-<span style="font-weight:bold;color:#3333FF;">17</span> <span style="color:red;">- </span>            buffer: [[<span style="color:red;">Tile::Empty</span>; 50]; 30],
-<span style="font-weight:bold;color:#3333FF;">17</span> <span style="color:lime;">+ </span>            buffer: [[<span style="color:lime;">const { Tile::Empty }</span>; 50]; 30],
+<span style="font-weight:bold;color:#3333FF;">17</span> <span style="color:red;">- </span>            buffer: [[<span style="color:red;">Tile::Empty</span>; 39]; 20],
+<span style="font-weight:bold;color:#3333FF;">17</span> <span style="color:lime;">+ </span>            buffer: [[<span style="color:lime;">const { Tile::Empty }</span>; 39]; 20],
    <span style="font-weight:bold;color:#3333FF;">|</span>
 
 <span style="font-weight:bold;color:red;">error[E0277]</span><span style="font-weight:bold;">: `Board` doesn't implement `Debug`</span>
@@ -363,13 +353,13 @@ enum Tile {
 }
 
 struct Board {
-	buffer: [[Tile; 50]; 30],
+	buffer: [[Tile; 39]; 20],
 }
 
 impl Board {
 	fn new() -> Self {
 		Self {
-			buffer: [[Tile::Empty; 50]; 30],
+			buffer: [[Tile::Empty; 39]; 20],
 		}
 	}
 }
@@ -383,7 +373,7 @@ Let's check in with our friend again:
 
 ```console
 cargo run
-<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/beast)
 <span style="font-weight:bold;color:red;">error[E0277]</span><span style="font-weight:bold;">: the trait bound `Tile: Clone` is not satisfied</span>
    <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:1:10
     <span style="font-weight:bold;color:#3333FF;">|</span>
@@ -434,13 +424,13 @@ enum Tile {
 }
 
 struct Board {
-	buffer: [[Tile; 50]; 30],
+	buffer: [[Tile; 39]; 20],
 }
 
 impl Board {
 	fn new() -> Self {
 		Self {
-			buffer: [[Tile::Empty; 50]; 30],
+			buffer: [[Tile::Empty; 39]; 20],
 		}
 	}
 }
@@ -454,7 +444,7 @@ And upon checking in with our trusty compiler/helper it appears we have solved t
 
 ```console
 cargo run
-<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/beast)
 <span style="font-weight:bold;color:red;">error[E0277]</span><span style="font-weight:bold;">: `Board` doesn't implement `Debug`</span>
   <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:22:19
    <span style="font-weight:bold;color:#3333FF;">|</span>
@@ -488,13 +478,13 @@ enum Tile {
 
 #[derive(Debug)]
 struct Board {
-	buffer: [[Tile; 50]; 30],
+	buffer: [[Tile; 39]; 20],
 }
 
 impl Board {
 	fn new() -> Self {
 		Self {
-			buffer: [[Tile::Empty; 50]; 30],
+			buffer: [[Tile::Empty; 39]; 20],
 		}
 	}
 }
@@ -511,6 +501,365 @@ The output is ... large and more importantly, it doesn't look like a board yet.
 So let's work on rendering the output in a way that feels more board-game-y.
 
 ## Rendering
+
+To render the board we add a `render` method to the `Board` struct.
+We will have to interate over each row in our `buffer` and within each row we will iterate over each column in each row.
+Then we [`match`](https://doc.rust-lang.org/std/keyword.match.html) against the column which contains our tile.
+
+Lastely we have to go into our `main` function and create an instance of our `Board` and then call the render method and
+print it to `stdout`.
+
+```rust {data-file="main.rs", data-fold="['1-20']", hl_lines=["21-37", "41-42"]}
+#[derive(Copy, Clone, Debug)]
+enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Board {
+	buffer: [[Tile; 39]; 20],
+}
+
+impl Board {
+	fn new() -> Self {
+		Self {
+			buffer: [[Tile::Empty; 39]; 20],
+		}
+	}
+
+	fn render(&self) -> String {
+		let mut output = String::new();
+
+		for rows in self.buffer {
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => output.push_str("◀▶"),
+					Tile::Block => output.push_str("░░"),
+					Tile::StaticBlock => output.push_str("▓▓"),
+				}
+			}
+			output.push('\n');
+		}
+
+		output
+	}
+}
+
+fn main() {
+	let board = Board::new();
+	println!("{}", board.render());
+}
+```
+
+So we made a new method that takes a reference to `self` and returns a `String`.
+
+> By now you've seen us use two different types of something calles self:
+> - `Self` in the `new` method
+> - `self` in the `render` method
+> 
+> The way I keep them separated in my head is like this:
+> - `Self` _always points to the type of the thing you're in._<br>
+> 	It's like in our case we COULD use `Board` but because `Self` means the same thing and never changes even if we change
+> 	the struct name, it's more "stable".
+> - `self` _always points to the instance._<br>
+> 	An instance will have data associated with it so we can access it.
+> 	A type has no data, only types.
+
+Then we make a new mutable `String` called `output` and then iterate in a nested loop over each tile and push into this
+`output` what the tile we find should be displayed as before returning it.
+
+Note in the code above we use two different methods on `output`: `push_str` and `push`.
+That's because a line break `\n` is a `char` and those can be pushed into a `String` much faster than other string
+slices.
+
+We also opted for a tile being 2 characters long from the terminal perspective.
+That's what the original games does, I'm just trying to stay consistent.
+You're welcome to change it to anything you like.
+
+Running `cargo run` now we still get a few warnings about unused options, which is fair, but we also get a big empty
+blob that gets printed.
+Functionally this is right, there is a boad that is just completely empty so really we don't print anything for
+`Tile::Empty`.
+But we're missing a refernce to where the board starts and ends to really get it.
+So let's add a frame that surrounds the board:
+
+```rust {data-file="main.rs", data-fold="['1-20']", hl_lines=[22, 25, 34, 36]}
+#[derive(Copy, Clone, Debug)]
+enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Board {
+	buffer: [[Tile; 39]; 20],
+}
+
+impl Board {
+	fn new() -> Self {
+		Self {
+			buffer: [[Tile::Empty; 39]; 20],
+		}
+	}
+
+	fn render(&self) -> String {
+		let mut output = format!("▛{}▜\n", "▀".repeat(39 * 2));
+
+		for rows in self.buffer {
+			output.push_str("▌");
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => output.push_str("◀▶"),
+					Tile::Block => output.push_str("░░"),
+					Tile::StaticBlock => output.push_str("▓▓"),
+				}
+			}
+			output.push_str("▐\n");
+		}
+		output.push_str(&format!("▙{}▟\n", "▄".repeat(39 * 2)));
+
+		output
+	}
+}
+
+fn main() {
+	let board = Board::new();
+	println!("{}", board.render());
+}
+```
+
+Instead of creating an empty `String` at the start, we use the
+[`format`](https://doc.rust-lang.org/std/macro.format.html) macro which returns a `String`.
+Inside there we use the [`repeat`](https://doc.rust-lang.org/std/string/struct.String.html#method.repeat) method to
+allow us to not have to write the entire length of the border out.
+We repeat the border `39 * 2` because the width of the board is `39` and the tile size is `2`.
+
+Then we add the side border on line 25 before we start iterating over each item in this row and add the other side on
+line 34.
+We had to change our `push` to `push_str` because now we add more than a char into the `String`.
+Lastely we add the bottom border in a very similar way we added the top.
+
+Now I don't know about you but I don't like magic numbers in my code.
+We now have `39 * 2` and multiple instances of hardcoded `39` and `20` throughout our code.
+At some point our future-self is going to ask:
+> What does this number mean?
+
+or
+
+> Where else do I have to change this number to change the window size?
+
+Let's be kind to future-you and create a couple [constants](https://doc.rust-lang.org/std/keyword.const.html).
+
+```rust {data-file="main.rs", data-fold="['5-12']", hl_lines=["1-3", 15, 21, 26, 40]}
+const BOARD_WIDTH: usize = 39;
+const BOARD_HEIGHT: usize = 20;
+const TILE_SIZE: usize = 2;
+
+#[derive(Copy, Clone, Debug)]
+enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Board {
+	buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	fn new() -> Self {
+		Self {
+			buffer: [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT],
+		}
+	}
+
+	fn render(&self) -> String {
+		let mut output = format!("▛{}▜\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+
+		for rows in self.buffer {
+			output.push_str("▌");
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => output.push_str("◀▶"),
+					Tile::Block => output.push_str("░░"),
+					Tile::StaticBlock => output.push_str("▓▓"),
+				}
+			}
+			output.push_str("▐\n");
+		}
+		output.push_str(&format!("▙{}▟\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+
+		output
+	}
+}
+
+fn main() {
+	let board = Board::new();
+	println!("{}", board.render());
+}
+```
+
+Now even future-me will understand what `BOARD_WIDTH * TILE_SIZE` means and there is only one place to change the size
+of the board.
+
+Ok now our app looks closer to what we're building:
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/beast)
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">: variants `Player`, `Block`, and `StaticBlock` are never constructed</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:8:2
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">6</span>  <span style="font-weight:bold;color:#3333FF;">|</span> enum Tile {
+   <span style="font-weight:bold;color:#3333FF;">|</span>      <span style="font-weight:bold;color:#3333FF;">----</span> <span style="font-weight:bold;color:#3333FF;">variants in this enum</span>
+<span style="font-weight:bold;color:#3333FF;">7</span>  <span style="font-weight:bold;color:#3333FF;">|</span>     Empty,       // There will be empty spaces on our board &quot;  &quot;
+<span style="font-weight:bold;color:#3333FF;">8</span>  <span style="font-weight:bold;color:#3333FF;">|</span>     Player,      // We will need the player &quot;◀▶&quot;
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:yellow;">^^^^^^</span>
+<span style="font-weight:bold;color:#3333FF;">9</span>  <span style="font-weight:bold;color:#3333FF;">|</span>     Block,       // Some tiles will be blocks &quot;░░&quot;
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:yellow;">^^^^^</span>
+<span style="font-weight:bold;color:#3333FF;">10</span> <span style="font-weight:bold;color:#3333FF;">|</span>     StaticBlock, // Others will be blocks that can't be moved &quot;▓▓&quot;
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:yellow;">^^^^^^^^^^^</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `Tile` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `#[warn(dead_code)]` on by default
+
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">:</span> `beast` (bin &quot;beast&quot;) generated 1 warning
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.14s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟
+```
+
+Ok this looks good.
+Let's hardcode some blocks and the player just to see what it would look like on the board:
+
+```rust {data-file="main.rs", data-fold="['1-18', '30-55']", hl_lines=["20-28"]}
+const BOARD_WIDTH: usize = 39;
+const BOARD_HEIGHT: usize = 20;
+const TILE_SIZE: usize = 2;
+
+#[derive(Copy, Clone, Debug)]
+enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Board {
+	buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		buffer[0][0] = Tile::Player;
+		buffer[2][5] = Tile::Block;
+		buffer[2][6] = Tile::Block;
+		buffer[2][7] = Tile::Block;
+		buffer[3][6] = Tile::StaticBlock;
+
+		Self { buffer }
+	}
+
+	fn render(&self) -> String {
+		let mut output = format!("▛{}▜\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+
+		for rows in self.buffer {
+			output.push_str("▌");
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => output.push_str("◀▶"),
+					Tile::Block => output.push_str("░░"),
+					Tile::StaticBlock => output.push_str("▓▓"),
+				}
+			}
+			output.push_str("▐\n");
+		}
+		output.push_str(&format!("▙{}▟\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+
+		output
+	}
+}
+
+fn main() {
+	let board = Board::new();
+	println!("{}", board.render());
+}
+```
+
+We create a mutable variable called `buffer` where we stick the nested array into and then set a couple tiles in that
+buffer to `Tile::Player`, `Tile::Block` and `Tile::StaticBlock`.
+We don't have to do `buffer: buffer` in the `Self` block because of
+[field init shorthand syntax](https://doc.rust-lang.org/book/ch05-01-defining-structs.html?utm_source=chatgpt.com#using-the-field-init-shorthand)
+rust has built in.
+
+All that gets us this little preview via `cargo run`:
+
+```console
+cargo run
+<span style="font-weight:bold;"></span><span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+<span style="font-weight:bold;"></span><span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜
+▌◀▶                                                                            ▐
+▌                                                                              ▐
+▌          ░░░░░░                                                              ▐
+▌            ▓▓                                                                ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▌                                                                              ▐
+▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟
+```
+
+Oh and look, no more warnings!
+
+Next step: Adding <span style="color:#ff0000;">c</span><span style="color:#ff00cb;">o</span><span style="color:#6600ff;">l</span><span style="color:#0065ff;">o</span><span style="color:#00ffcb;">r</span><span style="color:#00ff00;">s</span>.
 
 ## A Brief Intro into ANSI Escape Sequences
 

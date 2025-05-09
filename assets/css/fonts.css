@@ -29,19 +29,3 @@
 	font-style: italic;
 	font-display: swap;
 }
-
-@font-face {
-	font-family: "Monaspace";
-	src: url("/fonts/Monaspace/MonaspaceArgon-Regular.woff") format("woff");
-	font-weight: normal;
-	font-style: normal;
-	font-display: swap;
-}
-
-@font-face {
-	font-family: "Monaspace";
-	src: url("/fonts/Monaspace/MonaspaceArgon-SemiBold.woff") format("woff");
-	font-weight: bold;
-	font-style: normal;
-	font-display: swap;
-}
