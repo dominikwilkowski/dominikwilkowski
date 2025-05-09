@@ -1,11 +1,11 @@
 ---
-title: 'An intro into rust by building the old terminal game BEAST from 1984, Part 1'
+title: 'An intro into rust by building an old terminal game from 1984, Part 1'
 date: '2025-04-26T21:11:29+10:00'
 draft: true
 summary: >
-  I've found building the BEAST game from 1984 helped me teach rust as it touches many concepts of rust and gets us to
-  something visible quickly.
-description: "We are building the temrinal game BEAST together to learn to apply rust to a project"
+  I've found building the game BEAST from 1984 helped me teach rust as it touches many concepts of rust and gets us to
+  see something pretty quickly.
+description: "We are building the terminal game BEAST together to learn to apply rust to a project"
 toc: true
 readTime: true
 tags: ["rust", "terminal", "game development", "tutorial"]
@@ -17,25 +17,23 @@ header: assets/header.jpg
 ## Intro
 
 I've been teaching rust to a couple of friends and colleagues in lots of different ways.
-
 In the latest sessions, I've been using [this game I just finished building](https://github.com/dominikwilkowski/beast)
 as the project we're building together with great success.
 It allows us to see results very fast, it's fun to work on as you can add your own spin and it happens to touch on a lot
 of the important aspects of the language.
-So I thought I write it up in a series of blog posts... and here we are.
+So I thought I write it up in a series of blog posts.
 
-A small note at the start: I'm by no means an expert in rust. I love the language and continue to learn so if you find
-anything fishy in these posts (and it's not a _turbofish_), do let me know by submitting
+A small note to start: I'm by no means an expert in rust. I love the language and continue to learn so if you find
+anything fishy in these posts (and it's not a [_turbofish_](https://turbo.fish/)), do let me know by submitting
 [a pull request or an issue](https://github.com/dominikwilkowski/dominikwilkowski).
 
 ## Prerequisites
 
 I will assume you have some basic knowledge of rust and won't go too deep into language features.
 What I want to focus on is the use of the language for something you can see and play with.
-This is how I learn.
+This is how I learn myself.
 
-It's not just knowing what each of the bits are in the language, it's how you use them and how it
-all comes together.
+> It's not just knowing what each of the bits are in the language, it's how you use them and how it all comes together.
 
 But if you don't know the bits, I recommend you start with the [official book](https://doc.rust-lang.org/book/).
 And if you're so inclined, do have a look at [easy_rust](github.com/Dhghomon/easy_rust) which is a great way to learn
@@ -47,29 +45,30 @@ Lastely you should check out [rustlings](https://github.com/rust-lang/rustlings)
 [BEAST](https://en.wikipedia.org/wiki/Beast_(video_game)) is a text-based action game developed for MS-DOS by Dan Baker, Alan Brown, Mark Hamilton, and Derrick Shadel. It was distributed as shareware in 1984.
 
 It's a game I grew up with back when I was young _(and everything was still black and white, there were no mobile phones
-and computer monitors were monochrome emitted radiation)_.
+and computer monitors were monochrome and emitted radiation)_.
 
-<iframe src="https://archive.org/embed/Beast_1020" width="560" height="384" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen></iframe>
+<div style="position:relative;height:0;padding-bottom:68.547%;margin:1.5rem 0;">
+	<iframe src="https://archive.org/embed/Beast_1020" width="560" height="384" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>
+</div>
 
 To get a feel for the game, play it in the iframe above or on [archive.org](https://archive.org/embed/Beast_1020)
 directly.
+But here in borad strokes:
 
-But generally, it's simple:
+- You're a player on a 2D board ◀▶
+- The board contains blocks you can push ░░
+- ... and blocks you can't push ▓▓
+- There are beasts trying to get you ├┤
+- To win you have to squish the beasts between two blocks ◀▶░░├┤░░
 
 ![Animated scene from the 1984 ASCII game BEAST, showing a blue diamond-shaped player character navigating a maze-like environment made of green block clusters, avoiding obstacles and moving toward a yellow target area in the top right
 corner.
 The screen features a classic DOS-style black background with retro text-based graphics](assets/movements.gif#small)
 
-- You're a player on a 2D board ◀▶
-- It contains blocks you can push ░░
-- And blocks you can't push ▓▓
-- There are beasts trying to get you ├┤
-- To win you have to squish the beasts between two blocks ◀▶░░├┤░░
-
 ![The player moves a blue diamond character to push a wall block, crushing a red H-shaped beast between two blocks](assets/squish.gif#small)
 
 There are more advanced challenges in later levels but for this tutorial we will focus only on the basics so you can add
-your own levels later.
+your own levels later yourself.
 
 ## Setup
 
@@ -96,7 +95,7 @@ for its crates and you can choose either or both in your project:
 - a library, the `lib.rs` file which can be imported by other crates
 
 For a game we don't really need a library, so we will focus on the binary and `cargo new` will default to a binary
-target.
+target anyway.
 
 Our `Cargo.toml` file in the root is like the `package.json` file of our project:
 
@@ -137,9 +136,9 @@ Building binaries and executing them like we've never done anything else.
 
 ## The Board
 
-Ok let's start thinking about our board
+Ok let's start thinking what we're about to do.
 
-![Screenshot from the 1984 ASCII game BEAST. The screen is filled with a grid of green and yellow blocky patterns representing movable blocks and solid blocks. The player, shown as a cyan diamond shape, is located in the bottom-left corner. Several red 'H' characters, representing hostile beasts, are scattered on the right side of the screen. The game has a dark black background bordered by a yellow frame, with the environment laid out in a procedurally generated maze-like pattern.](assets/board.png "How do we want to represent it in code, where's the source of truth, how do we render it and all that while keeping our sanity?")
+![Screenshot from the 1984 ASCII game BEAST. The screen is filled with a grid of green and yellow blocky patterns representing movable blocks and solid blocks. The player, shown as a cyan diamond shape, is located in the bottom-left corner. Several red 'H' characters, representing hostile beasts, are scattered on the right side of the screen. The game has a dark black background bordered by a yellow frame, with the environment laid out in a procedurally generated maze-like pattern.](assets/board.png "How do we want to represent this board in code, where's the source of truth, how do we render it and all that while keeping the sanity of future-us?")
 
 There are a couple of ways we could approach this.
 You could create instances of each tile you expect on the board, give each of them a position and a way to represent
@@ -170,9 +169,9 @@ A natrual fit for an [enum](https://doc.rust-lang.org/std/keyword.enum.html).
 
 ```rust {data-file="main.rs", hl_lines=["1-6"]}
 enum Tile {
-	Empty, // There will be empty spaces on our board "  "
-	Player, // We will need the player "◀▶"
-	Block, // Some tiles will be blocks "░░"
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
 	StaticBlock, // Others will be blocks that can't be moved "▓▓"
 }
 
@@ -184,13 +183,13 @@ fn main() {
 That's fine for now.
 Now let's work on the board.
 Let's keep any board logic in a single [struct](https://doc.rust-lang.org/std/keyword.struct.html) we call `Board`.
-Structs are a great way to encapsulate data and behavior.
+Structs are there to encapsulate data and behavior.
 
 ```rust {data-file="main.rs", hl_lines=["8-10"]}
 enum Tile {
-	Empty, // There will be empty spaces on our board "  "
-	Player, // We will need the player "◀▶"
-	Block, // Some tiles will be blocks "░░"
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
 	StaticBlock, // Others will be blocks that can't be moved "▓▓"
 }
 
@@ -204,13 +203,17 @@ fn main() {
 ```
 
 So our board is a 2D array of the `Tile` enum we defined earlier.
+We use `39` as width because we know each tile will be 2 chars wide and our frame most likely will take up a space on
+each side (`30 * 2 + 1 + 1 = 80`) and so we stay within the
+[80 column width](https://en.wikipedia.org/wiki/Characters_per_line) limit.
+
 Let's implement the `new` method on the struct so we can get a squeaky clean new board out.
 
 ```rust {data-file="main.rs", hl_lines=["12-18"]}
 enum Tile {
-	Empty, // There will be empty spaces on our board "  "
-	Player, // We will need the player "◀▶"
-	Block, // Some tiles will be blocks "░░"
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
 	StaticBlock, // Others will be blocks that can't be moved "▓▓"
 }
 
@@ -231,7 +234,7 @@ fn main() {
 }
 ```
 
-So our `buffer` after calling the `new()` method would look like this:
+Our `buffer` in the `new()` method looks like this:
 
 ```rust {lineNos=false}
 [
@@ -265,9 +268,9 @@ Now let's actually try to get this output ourself by printing our board:
 
 ```rust {data-file="main.rs", hl_lines=[21]}
 enum Tile {
-	Empty, // There will be empty spaces on our board "  "
-	Player, // We will need the player "◀▶"
-	Block, // Some tiles will be blocks "░░"
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
 	StaticBlock, // Others will be blocks that can't be moved "▓▓"
 }
 
@@ -288,7 +291,7 @@ fn main() {
 }
 ```
 
-But once we save it all rust-analyzer will be upset with is and if we try running `cargo run` rustc will say this:
+But once we save it all, rust-analyzer will be upset with us and if we try running `cargo run`, rustc will say this:
 
 ```console
 cargo run
@@ -325,30 +328,30 @@ cargo run
 <span style="font-weight:bold;color:red;">error</span><span style="font-weight:bold;">:</span> could not compile `beast` (bin &quot;beast&quot;) due to 2 previous errors
 ```
 
-We are told about two errors here:
+We're told about two errors here:
 1. ``error[E0277]: the trait bound `Tile: Copy` is not satisfied``<br>
     This error occurs because our `Tile` enum is being copied into our array but doesn't currenlty have the ability
-    (trait) to be copied.
+    ([trait](https://doc.rust-lang.org/book/ch10-02-traits.html)) to be copied.
     Rust will actually tell us how to solve it too in two different ways which is awesome.
 2. ```error[E0277]: `Board` doesn't implement `Debug```<br>
     The second error happens because we're trying to print the struct and rust doesn't know how to display this custom data
     structure we have built even in the debug mode we choose here in the
     [format macro](https://doc.rust-lang.org/std/macro.format.html).
 
-I feels like the compiler is yelling at us and you'd be forgiven if this was your first impression but if you, right
-from the start, see the compiler more as a seasoned pair-coder sitting patiently next to you, trying to help you,
+It feels like the compiler is yelling at us and you'd be forgiven if this was your first impression but if you, _right
+from the start_, see the compiler more as a seasoned pair-coder sitting patiently next to you, trying to help you,
 you will have a much healthier relationship with it.
 It's just trying to help, I promise.
 
 So let's fix `1.`: the compiler tells us `Tile` needs the `Copy` trait.
-Let's derive it:
+Let's [derive](https://doc.rust-lang.org/reference/procedural-macros.html#derive-macros) it:
 
 ```rust {data-file="main.rs", data-fold="['5-23']", hl_lines=[1]}
 #[derive(Copy)]
 enum Tile {
-	Empty, // There will be empty spaces on our board "  "
-	Player, // We will need the player "◀▶"
-	Block, // Some tiles will be blocks "░░"
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
 	StaticBlock, // Others will be blocks that can't be moved "▓▓"
 }
 
@@ -369,7 +372,7 @@ fn main() {
 }
 ```
 
-Let's check in with our friend again:
+Let's check in with our friend:
 
 ```console
 cargo run
@@ -407,19 +410,19 @@ cargo run
 ```
 
 **The good news**: we fixed our previous error:<br>
-``error[E0277]: the trait bound `Tile: Copy` is not satisfied``
+``error[E0277]: the trait bound `Tile: Copy` is not satisfied`` is gone
 
 **The bad news**: a new one poped up:<br>
 ``error[E0277]: the trait bound `Tile: Clone` is not satisfied``
 
-But that's solvable since it seems we just have to add another trait to our derive macro.
+But that's solvable since it seems we just have to add another trait to our derive proc macro.
 
 ```rust {data-file="main.rs",data-fold="['5-23']", hl_lines=[1]}
 #[derive(Copy, Clone)]
 enum Tile {
-	Empty, // There will be empty spaces on our board "  "
-	Player, // We will need the player "◀▶"
-	Block, // Some tiles will be blocks "░░"
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
 	StaticBlock, // Others will be blocks that can't be moved "▓▓"
 }
 
@@ -460,11 +463,11 @@ cargo run
 ```
 
 This feels great.
-Ok let's just solve the second issue as well.
+Ok let's just ride this wave and solve the second issue as well.
 We can see our `Board` struct needs the `Debug` trait.
-But because we are on the top of our game and feel great it notice that part of the `Board` struct is the `Tile` enum
+But because we are at the top of our game and feel great, we notice that part of the `Board` struct is the `Tile` enum
 and if we were to just give the `Board` the debug trait we're guessing the compiler will let us gently know that the
-enum, being part of the thing you're trying to display with the `Debug` trait, will also need this trait.
+enum, being part of the thing we're trying to display with the `Debug` trait, will also need this trait.
 So we boldy just add the trait to both elements:
 
 ```rust {data-file="main.rs", data-fold="['13-24']", hl_lines=[1, 9]}
@@ -557,34 +560,34 @@ fn main() {
 
 So we made a new method that takes a reference to `self` and returns a `String`.
 
-> By now you've seen us use two different types of something calles self:
+> By now you've seen us use two different types of something called "self":
 > - `Self` in the `new` method
 > - `self` in the `render` method
 > 
 > The way I keep them separated in my head is like this:
-> - `Self` _always points to the type of the thing you're in._<br>
+> - `Self` _points to the type._<br>
 > 	It's like in our case we COULD use `Board` but because `Self` means the same thing and never changes even if we change
 > 	the struct name, it's more "stable".
-> - `self` _always points to the instance._<br>
+> - `self` _points to the instance._<br>
 > 	An instance will have data associated with it so we can access it.
 > 	A type has no data, only types.
 
-Then we make a new mutable `String` called `output` and then iterate in a nested loop over each tile and push into this
-`output` what the tile we find should be displayed as before returning it.
+Then we make a new mutable `String` called `output` and iterate in a nested loop over each tile and push into `output`
+what the tile we match should be displayed as, before returning it.
 
-Note in the code above we use two different methods on `output`: `push_str` and `push`.
+Note in the code above, we use two different methods on `output`: `push_str` and `push`.
 That's because a line break `\n` is a `char` and those can be pushed into a `String` much faster than other string
 slices.
 
 We also opted for a tile being 2 characters long from the terminal perspective.
-That's what the original games does, I'm just trying to stay consistent.
+That's what the original games does, (I'm just trying to stay consistent).
 You're welcome to change it to anything you like.
 
-Running `cargo run` now we still get a few warnings about unused options, which is fair, but we also get a big empty
-blob that gets printed.
-Functionally this is right, there is a boad that is just completely empty so really we don't print anything for
+Running `cargo run`, we still get a few warnings about unused options, which is fair, but we also get a big empty blob
+that gets printed.
+Functionally this is correct, there is a board that is just completely empty so we really don't print anything for
 `Tile::Empty`.
-But we're missing a refernce to where the board starts and ends to really get it.
+But we're missing a refernce to where the board starts and ends to really see the empty board.
 So let's add a frame that surrounds the board:
 
 ```rust {data-file="main.rs", data-fold="['1-20']", hl_lines=[22, 25, 34, 36]}
@@ -646,7 +649,7 @@ line 34.
 We had to change our `push` to `push_str` because now we add more than a char into the `String`.
 Lastely we add the bottom border in a very similar way we added the top.
 
-Now I don't know about you but I don't like magic numbers in my code.
+I don't know about you but I don't like magic numbers in my code.
 We now have `39 * 2` and multiple instances of hardcoded `39` and `20` throughout our code.
 At some point our future-self is going to ask:
 > What does this number mean?
@@ -712,7 +715,7 @@ fn main() {
 Now even future-me will understand what `BOARD_WIDTH * TILE_SIZE` means and there is only one place to change the size
 of the board.
 
-Ok now our app looks closer to what we're building:
+Ok our game is getting closer:
 
 ```console
 cargo run
@@ -857,11 +860,13 @@ cargo run
 ▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟
 ```
 
-Oh and look, no more warnings!
+Oh and look, no more warnings <span role="img" aria-label="Sparkles" tabIndex="0" class="emoji">✨</span>!
 
-Next step: Adding <span style="color:#ff0000;">c</span><span style="color:#ff00cb;">o</span><span style="color:#6600ff;">l</span><span style="color:#0065ff;">o</span><span style="color:#00ffcb;">r</span><span style="color:#00ff00;">s</span>.
+Next up: Adding <span style="color:#ff0000;">c</span><span style="color:#ff00cb;">o</span><span style="color:#6600ff;">l</span><span style="color:#0065ff;">o</span><span style="color:#00ffcb;">r</span><span style="color:#00ff00;">s</span>.
 
 ## A Brief Intro into ANSI Escape Sequences
+
+Install the [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/install).
 
 ## Rendering but with colors
 
