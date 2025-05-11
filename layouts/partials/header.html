@@ -1,11 +1,9 @@
 {{/* Header */}}
 
 <div class="header">
-
-	{{ if or (not (.Param "hideHeader")) .IsHome }}
-
+	{{- if or (not (.Param "hideHeader")) .IsHome -}}
 		<h1 itemprop="name" itemscope itemtype="https://schema.org/Blog" class="header-title">
-			<a itemprop="url" href="{{ site.BaseURL }}">
+			<a itemprop="url" href="{{- site.BaseURL -}}">
 				blog
 				<span itemprop="name">Dominik Wilkowski</span>
 			</a>
@@ -13,26 +11,23 @@
 
 		<nav class="header-nav">
 			<ul>
-				{{ $currentPage := . }}
+				{{- $currentPage := . -}}
 
-				{{ with site.Params.menu }}
-					{{ range . }}
-						{{ $link := .url | relURL }}
-						{{ $curr := $currentPage.RelPermalink }}
-						{{ $isExact := eq $link $curr }}
-						{{ $isPrefix := and (ne $link "/") (hasPrefix $curr $link) }}
-						{{ $active := or $isExact $isPrefix }}
-
+				{{- with site.Params.menu -}}
+					{{- range . -}}
+						{{- $link := .url | relURL -}}
+						{{- $curr := $currentPage.RelPermalink -}}
+						{{- $isExact := eq $link $curr -}}
+						{{- $isPrefix := and (ne $link "/") (hasPrefix $curr $link) -}}
+						{{- $active := or $isExact $isPrefix -}}
 						<li class="small {{ if $active }}bold{{ end }}">
-							<a href="{{ .url }}" {{ if and (isset . "newTab") .newTab }}target="_blank" rel="noopener noreferrer"{{ end }}>
-								{{ .name }}
+							<a href="{{- .url -}}" {{ if and (isset . "newTab") .newTab }}target="_blank" rel="noopener noreferrer"{{ end }}>
+								{{- .name -}}
 							</a>
 						</li>
-					{{ end }}
-				{{ end }}
+					{{- end -}}
+				{{- end -}}
 			</ul>
 		</nav>
-
-	{{ end }}
-
+	{{- end -}}
 </div>

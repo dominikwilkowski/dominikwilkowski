@@ -23,3 +23,21 @@
 .monospace {
 	font-family: var(--font-mono);
 }
+
+.rainbow {
+	background: var(--gradient-shadow);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	text-fill-color: transparent;
+	background-size: 400% auto;
+	animation: shine 20s linear infinite;
+	-webkit-text-stroke: 0.07em transparent;
+	font-weight: 900;
+}
+
+@media (prefers-reduced-motion) {
+	.rainbow {
+		animation: none;
+	}
+}

@@ -1,37 +1,37 @@
-{{ if or .NextInSection .PrevInSection }}
+{{- if or .NextInSection .PrevInSection -}}
 	<div class="single-pagination">
 		<hr />
 
 		<div class="flexnowrap" itemscope itemtype="https://schema.org/SiteNavigationElement">
 
 			<div class="single-pagination-prev">
-				{{ with .PrevInSection }}
+				{{- with .PrevInSection -}}
 					<div class="single-pagination-container-prev">
 						<div class="single-pagination-text">←</div>
 						<div class="single-pagination-text">
-							<a itemprop="url" href="{{ .RelPermalink }}">
-								<span itemprop="name">{{ .Title }}</span>
+							<a itemprop="url" href="{{- .RelPermalink -}}">
+								<span itemprop="name">{{- .Title -}}</span>
 							</a>
 						</div>
 					</div>
-				{{ end }}
+				{{- end -}}
 			</div>
 
 			<div class="single-pagination-next">
-				{{ with .NextInSection }}
+				{{- with .NextInSection -}}
 					<div class="single-pagination-container-next">
 						<div class="single-pagination-text">
-							<a itemprop="url" href="{{ .RelPermalink }}">
-								<span itemprop="name">{{ .Title }}</span>
+							<a itemprop="url" href="{{- .RelPermalink -}}">
+								<span itemprop="name">{{- .Title -}}</span>
 							</a>
 						</div>
 						<div class="single-pagination-text">→</div>
 					</div>
-				{{ end }}
+				{{- end -}}
 			</div>
 
 		</div>
 
 		<hr />
 	</div>
-{{ end }}
+{{- end -}}

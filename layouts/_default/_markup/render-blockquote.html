@@ -1,16 +1,16 @@
 {{- if eq .Type "alert" -}}
 	{{- $type := lower .AlertType -}}
-	{{- if not $type }}
+	{{- if not $type -}}
 		{{- $type = "note" -}}
 	{{- end -}}
 	{{- $role := cond (in (slice "warning" "caution") $type) "alert" "region" -}}
-	<blockquote
-		class="callout callout-{{ .AlertType }}"
-		role="{{ $role }}"
-		aria-label="{{ title $type }}"
+	{{- $titleID := printf "figcap-%d" (now.UnixNano) -}}
+	<aside
+		class="callout callout-{{- .AlertType -}}"
+		{{ if ne $type "callout" }}role="{{- $role -}}" aria-labelledby="{{- $titleID -}}"{{- end -}}
 	>
 		{{- if ne .AlertType "callout" -}}
-			<p class="callout-heading">
+			<p id="{{- $titleID -}}" class="callout-heading{{ if eq $type "tip" }} rainbow{{- end -}}">
 				{{- with .AlertTitle -}}
 					{{- . -}}
 				{{- else -}}
@@ -19,16 +19,16 @@
 			</p>
 		{{- end -}}
 		{{- .Text -}}
-	</blockquote>
+	</aside>
 {{- else -}}
 	{{- $ctx := . -}}
 	{{- with $ctx.Attributes.caption -}}
 		{{- $figcapID := printf "figcap-%d" (now.UnixNano) -}}
-		<figure role="group" aria-labelledby="{{ $figcapID }}" class="blockquote">
-			<blockquote {{ with $ctx.Attributes.cite }}cite="{{ . }}"{{ end }} aria-describedby="{{ $figcapID }}">
-				{{- $ctx.Text -}}
+		<figure role="group" aria-labelledby="{{- $figcapID -}}" class="blockquote">
+			<blockquote {{ with $ctx.Attributes.cite }}cite="{{- . -}}"{{ end }} aria-describedby="{{- $figcapID -}}">
+				{{- $ctx.Text | safeHTML -}}
 			</blockquote>
-			<figcaption id="{{ $figcapID }}" class="blockquote-caption">
+			<figcaption id="{{- $figcapID -}}" class="blockquote-caption">
 				&mdash;{{- . | safeHTML -}}
 			</figcaption>
 		</figure>

@@ -1,30 +1,30 @@
-{{ define "main" }}
+{{- define "main" -}}
 	<section itemscope itemtype="http://schema.org/Blog" class="list-container">
 
-		{{ partial "breadcrumbs.html" . }}
+		{{- partial "breadcrumbs.html" . -}}
 
-		<h2 class="posts-heading">{{ .Title }}</h2>
-		{{ .Content }}
+		<h2 class="posts-heading">{{- .Title -}}</h2>
+		{{- .Content -}}
 
-		{{ $tagsPage := eq .Title "Tags" }}
+		{{- $tagsPage := eq .Title "Tags" -}}
 
-		{{ $paginationSize := 1 }}
-		{{ if (gt .Site.Params.paginationSize 0) }}
-			{{ $paginationSize = .Site.Params.paginationSize }}
-		{{ end }}
+		{{- $paginationSize := 1 -}}
+		{{- if (gt .Site.Params.paginationSize 0) -}}
+			{{- $paginationSize = .Site.Params.paginationSize -}}
+		{{- end -}}
 
-		{{ $paginator := .Paginate (.Pages) $paginationSize }}
+		{{- $paginator := .Paginate (.Pages) $paginationSize -}}
 
 		<ul>
-			{{ range $index, $page := $paginator.Pages }}
-				{{ if $tagsPage }}
-					{{ partial "tag-entry.html" $page }}
-				{{ else }}
-					{{ partial "post-entry.html" $page }}
-				{{ end }}
-			{{ end }}
+			{{- range $index, $page := $paginator.Pages -}}
+				{{- if $tagsPage -}}
+					{{- partial "tag-entry.html" $page -}}
+				{{- else -}}
+					{{- partial "post-entry.html" $page -}}
+				{{- end -}}
+			{{- end -}}
 		</ul>
 
-		{{ partial "pagination-controls.html" $paginator }}
+		{{- partial "pagination-controls.html" $paginator -}}
 	</section>
-{{ end }}
+{{- end -}}

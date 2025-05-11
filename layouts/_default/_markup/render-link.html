@@ -1,6 +1,6 @@
-{{ $dest := .Destination | safeURL }}
-{{ if or (hasPrefix $dest "http://") (hasPrefix $dest "https://") }}
-	<a href="{{ $dest }}" target="_blank" rel="noopener noreferrer">{{ .Text | safeHTML }}</a>
-{{ else }}
-	<a href="{{ $dest }}">{{ .Text | safeHTML }}</a>
-{{ end }}
+{{- $dest := .Destination | safeURL -}}
+{{- if or (hasPrefix $dest "http://") (hasPrefix $dest "https://") -}}
+	<a href="{{- $dest -}}" target="_blank" rel="noopener noreferrer">{{- .Text | safeHTML -}}</a>
+{{- else -}}
+	<a href="{{- $dest -}}">{{- .Text | safeHTML -}}</a>
+{{- end -}}

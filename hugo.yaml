@@ -48,6 +48,7 @@ markup:
     wrapperClass: highlight
   goldmark:
     parser:
+      wrapStandAloneImageWithinParagraph: false
       attribute:
         block: true
     renderer:

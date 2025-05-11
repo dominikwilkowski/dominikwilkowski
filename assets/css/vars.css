@@ -13,6 +13,21 @@
 	--header-menu-side-gap: 0.5rem;
 	--header-menu-top-gap: 1rem;
 
+	/* gradients */
+	--gradient-shadow: linear-gradient(
+		45deg,
+		#fb0094,
+		#0000ff,
+		#00ff00,
+		#ffff00,
+		#ff0000,
+		#fb0094,
+		#0000ff,
+		#00ff00,
+		#ffff00,
+		#ff0000
+	);
+
 	/* Typography */
 	--font-body: "Literata", Georgia, Cambria, "Noto Serif", "Droif Serif",
 		ui-serif, serif;
@@ -44,7 +59,6 @@
 	--li-checkbox-size: 0.8em;
 
 	/* TOC */
-
 	--toc-margin-top: 2rem;
 	--toc-margin-bottom: 3rem;
 

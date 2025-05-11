@@ -1,51 +1,50 @@
 <!DOCTYPE html>
-<html lang="{{ or site.Language.LanguageCode site.Language.Lang }}" dir="{{ or site.Language.LanguageDirection `ltr` }}">
-
+<html lang="{{- or site.Language.LanguageCode site.Language.Lang -}}" dir="{{- or site.Language.LanguageDirection `ltr` -}}">
 	<head>
-		{{ partial "head.html" . }}
+		{{- partial "head.html" . -}}
 	</head>
 
-	{{ $theme := "auto"}}
+	{{- $theme := "auto" -}}
 
-	{{ with .Param "theme" }}
-		{{ $theme = .}}
-	{{ end }}
+	{{- with .Param "theme" -}}
+		{{- $theme = . -}}
+	{{- end -}}
 
-	<body class="{{ $theme }}">
+	<body class="{{- $theme -}}">
 
 		<div class="content">
 			<header>
-				{{ partial "header.html" . }}
+				{{- partial "header.html" . -}}
 			</header>
 
 			<main class="main">
-				{{ block "main" . }}{{ end }}
+				{{- block "main" . -}}{{- end -}}
 			</main>
 		</div>
 
 		{{/* Body end hook */}}
-		{{ partial "functions/get_hook.html" (dict "hook" "body_end" "context" .) }}
+		{{- partial "functions/get_hook.html" (dict "hook" "body_end" "context" .) -}}
 
 		<footer>
-			{{ partial "footer.html" . }}
+			{{- partial "footer.html" . -}}
 		</footer>
 
-		{{ if .Param "math" }}
-			{{ partialCached "math.html" . }}
-		{{ end }}
+		{{- if .Param "math" -}}
+			{{- partialCached "math.html" . -}}
+		{{- end -}}
 
-		{{ $js := slice
+		{{- $js := slice
 			(resources.Get "js/theme-switch.js")
 			(resources.Get "js/copy-code.js")
 			(resources.Get "js/code-folding.js")
-		}}
+		-}}
 
-		{{ $combined := $js
+		{{- $combined := $js
 			| resources.Concat "assets/combined.js"
 			| minify
 			| fingerprint
-		}}
+		-}}
 
-		<script defer src="{{ $combined.RelPermalink }}"></script>
+		<script defer src="{{- $combined.RelPermalink -}}"></script>
 	</body>
 </html>

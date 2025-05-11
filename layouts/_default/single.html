@@ -1,125 +1,125 @@
-{{ define "main" }}
+{{- define "main" -}}
 	{{/* Breadcrumbs */}}
 
-	{{ if not .IsHome }}
-		{{ partial "breadcrumbs.html" . }}
-	{{ end }}
+	{{- if not .IsHome -}}
+		{{- partial "breadcrumbs.html" . -}}
+	{{- end -}}
 
 	<article itemscope itemprop="blogPost" itemtype="https://schema.org/BlogPosting" {{ if .Param "autonumber" }} class="autonumber" {{ end }}>
-		<meta itemprop="wordCount" content="{{ .WordCount }}">
-		{{ with .Params.tags }}
+		<meta itemprop="wordCount" content="{{- .WordCount -}}">
+		{{- with .Params.tags -}}
 			<meta itemprop="keywords" content="{{ delimit . ", " }}">
-		{{ end }}
+		{{- end -}}
 
 		<div itemprop="author" itemscope itemtype="https://schema.org/Person" class="author">
 			<span itemprop="name">Dominik Wilkowski</span>
 		</div>
 
 		<div class="single-intro-container">
-			<h1 itemprop="headline" class="single-title">{{ .Title }}</h1>
+			<h1 itemprop="headline" class="single-title">{{- .Title -}}</h1>
 
 			<ul class="single-readtime">
 				<li>
-					{{ with .Date }}
-						{{ $dateMachine := . | time.Format "2006-01-02T15:04:05-07:00" }}
-						{{ $dateHuman := . | time.Format (default ":date_long" $.Site.Params.singleDateFormat) }}
-						<time itemprop="datePublished" datetime="{{ $dateMachine }}">{{ $dateHuman }}</time>
-					{{end}}
+					{{- with .Date -}}
+						{{- $dateMachine := . | time.Format "2006-01-02T15:04:05-07:00" -}}
+						{{- $dateHuman := . | time.Format (default ":date_long" $.Site.Params.singleDateFormat) -}}
+						<time itemprop="datePublished" datetime="{{- $dateMachine -}}">{{- $dateHuman -}}</time>
+					{{- end -}}
 				</li>
 
-				{{ with .Params.updated }}
+				{{- with .Params.updated -}}
 					{{/* parse and format the “updated” timestamp */}}
-					{{ $dateMachine := . | time.Format "2006-01-02T15:04:05-07:00" }}
-					{{ $dateHuman := . | time.Format (default "January 2, 2006 3:04pm") }}
+					{{- $dateMachine := . | time.Format "2006-01-02T15:04:05-07:00" -}}
+					{{- $dateHuman := . | time.Format (default "January 2, 2006 3:04pm") -}}
 					<li>
-						<time itemprop="dateModified" datetime="{{ $dateMachine }}">Updated: {{ $dateHuman }}</time>
+						<time itemprop="dateModified" datetime="{{- $dateMachine -}}">Updated: {{- $dateHuman -}}</time>
 					</li>
-				{{ end }}
+				{{- end -}}
 
 				<li>
-					{{ if .Param "readTime" }}
-						<span itemprop="timeRequired" content="PT{{ .ReadingTime }}M">
-							{{ .ReadingTime }} min read
+					{{- if .Param "readTime" -}}
+						<span itemprop="timeRequired" content="PT{{- .ReadingTime -}}M">
+							{{- .ReadingTime -}} min read
 						</span>
 					{{end}}
 				</li>
 			</ul>
 
-			{{ with .Param "summary" }}
-				<p itemprop="description" class="single-summary">{{ . | markdownify }}</p>
-			{{ end }}
+			{{- with .Param "summary" -}}
+				<p itemprop="description" class="single-summary">{{- . | markdownify -}}</p>
+			{{- end -}}
 		</div>
 
-		{{ if .Param "showTags" }}
+		{{- if .Param "showTags" -}}
 
-			{{ $taxonomy := "tags" }}
-			{{ with .Param $taxonomy }}
+			{{- $taxonomy := "tags" -}}
+			{{- with .Param $taxonomy -}}
 
 				<ul class="single-tags">
-					{{ range $index, $tag := . }}
-						{{ with $.Site.GetPage (printf "/%s/%s" $taxonomy $tag) -}}
+					{{- range $index, $tag := . -}}
+						{{- with $.Site.GetPage (printf "/%s/%s" $taxonomy $tag) -}}
 							<li>
-								<a href="{{ .Permalink }}">#{{ .LinkTitle }}</a>
+								<a href="{{- .Permalink -}}">#{{- .LinkTitle -}}</a>
 							</li>
-						{{ end }}
-					{{ end }}
+						{{- end -}}
+					{{- end -}}
 				</ul>
 
-			{{ end }}
-		{{ end }}
+			{{- end -}}
+		{{- end -}}
 
 		{{/* Table of Content */}}
-		{{ if .Param "toc" }}
+		{{- if .Param "toc" -}}
 			<details itemprop="tableOfContents" class="toc">
 				<summary><strong>Table of contents</strong></summary>
-				{{ .TableOfContents }}
+				{{- .TableOfContents -}}
 			</details>
-		{{ end }}
+		{{- end -}}
 
 		{{/* Header image */}}
-		{{ if .Param "header" }}
+		{{- if .Param "header" -}}
 			<div class="header-img-wrapper">
-				<div class="header-img" style="background-image: url({{ .Param "header" }});"></div>
+				<div class="header-img" style="background-image: url({{- .Param "header" -}});"></div>
 			</div>
-		{{ end }}
+		{{- end -}}
 
 		{{/* Page content */}}
 		<div itemprop="articleBody" class="single-content">
-			{{ .Content }}
-			{{ if .Site.Params.giscus.enable }}
-				{{ if not .Params.disableComment }}
-					{{ partial "comments.html" . }}
-				{{ end }}
-			{{ end }}
+			{{- .Content -}}
+			{{- if .Site.Params.giscus.enable -}}
+				{{- if not .Params.disableComment -}}
+					{{- partial "comments.html" . -}}
+				{{- end -}}
+			{{- end -}}
 		</div>
 
-		{{ if .Store.Get "hasMermaid" }}
-			{{ $mermaidDarkTheme := default "dark" (or .Params.mermaidDarkTheme .Site.Params.mermaidDarkTheme) }}
-			{{ $mermaidTheme := default "default" (or .Params.mermaidTheme .Site.Params.mermaidTheme) }}
+		{{- if .Store.Get "hasMermaid" -}}
+			{{- $mermaidDarkTheme := default "dark" (or .Params.mermaidDarkTheme .Site.Params.mermaidDarkTheme) -}}
+			{{- $mermaidTheme := default "default" (or .Params.mermaidTheme .Site.Params.mermaidTheme) -}}
 			<script defer
 				type="module"
 				id="mermaid_script"
-				data-light-theme="{{ $mermaidTheme }}"
-				data-dark-theme="{{ $mermaidDarkTheme }}"
-				src='{{ "js/mermaid.js" | relURL }}'>
+				data-light-theme="{{- $mermaidTheme -}}"
+				data-dark-theme="{{- $mermaidDarkTheme -}}"
+				src='{{- "js/mermaid.js" | relURL -}}'>
 			</script>
-		{{ end }}
+		{{- end -}}
 
 		{{/* Next prev controls */}}
 
-		{{ if not (.Param "hidePagination") }}
-			{{ partial "pagination-single.html" . }}
-		{{ end }}
+		{{- if not (.Param "hidePagination") -}}
+			{{- partial "pagination-single.html" . -}}
+		{{- end -}}
 
 		{{/* Back to top */}}
 
-		{{ if not (.Param "hideBackToTop") }}
+		{{- if not (.Param "hideBackToTop") -}}
 			<div class="back-to-top">
 				<a href="#top">
 					back to top
 				</a>
 			</div>
-		{{ end }}
+		{{- end -}}
 
 	</article>
-{{ end }}
+{{- end -}}

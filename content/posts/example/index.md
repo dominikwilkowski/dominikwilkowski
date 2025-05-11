@@ -211,6 +211,8 @@ Linux
 └────────────────────────────────────────────────┘
 ```
 
+<br><br>
+
 ## Blockquotes
 
 Normal quote:
@@ -220,16 +222,20 @@ Normal quote:
 Quote with citation:
 
 > Quote from a famous person with long lines so we see what the end looks like
-{cite="https://gohugo.io" caption="The person who said it"}
+{cite="https://dominik-wilkowski.com" caption="The person who said it"}
+
+<br><br>
+
+## Callouts
 
 > [!CALLOUT]
 > Calls out a thing that's important to highlight.
 
 > [!NOTE]
 > Useful information that users should know, even when skimming content
-> With **multiple lines**.
+> with **multiple lines** and some _markdown_.
 > 
-> And new paragraphs...
+> And a new paragraph...
 
 > [!TIP]
 > Helpful advice for doing things better or more easily.
@@ -242,6 +248,8 @@ Quote with citation:
 
 > [!CAUTION]
 > Advises about risks or negative outcomes of certain actions.
+
+<br><br>
 
 ## Emojis
 

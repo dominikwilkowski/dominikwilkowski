@@ -865,7 +865,7 @@ cargo run
 
 Oh and look, no more warnings <span role="img" aria-label="Sparkles" tabIndex="0" class="emoji">✨</span>!
 
-Next up: Adding <span style="color:#ff0000;">c</span><span style="color:#ff00cb;">o</span><span style="color:#6600ff;">l</span><span style="color:#0065ff;">o</span><span style="color:#00ffcb;">r</span><span style="color:#00ff00;">s</span>.
+Next up: Adding <span class="rainbow">colors</span>.
 
 ## A Brief Intro into ANSI Escape Sequences
 
@@ -997,3 +997,6 @@ This is normal color, <span style="color:yellow;">this is yellow,</span> and thi
 ## Generating the terrain
 
 ## Pushing blocks
+
+![A blue rectangular sign reading ‘PLEASE SHARE THIS POST’ mounted on a rustic wooden fence post, with a backdrop of
+dense green foliage and a grassy clearing.](assets/share.jpg)

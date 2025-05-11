@@ -632,7 +632,7 @@ footer {
 .single-readtime {
 	list-style: none;
 	font-size: small;
-	margin-top: 0.5rem;
+	margin-top: 1.5rem;
 	color: var(--content-secondary);
 
 	li {
@@ -893,17 +893,17 @@ figure {
 }
 
 .caption-container {
-	display: flex;
-	justify-content: center;
-}
-
-figcaption {
 	color: var(--content-secondary);
 	padding-left: var(--caption-padding);
 	padding-right: var(--caption-padding);
 	font-size: var(--caption-font-size);
 	margin-top: 1rem;
 	margin-bottom: 1rem;
+}
+
+figcaption {
+	display: flex;
+	justify-content: center;
 }
 
 .header-img-wrapper {
@@ -1013,103 +1013,86 @@ blockquote {
 		margin-left: 1rem;
 		margin-right: 1rem;
 	}
+}
 
-	&.callout {
-		position: relative;
-		border: 3px solid var(--content-secondary);
-		border-radius: var(--code-border-radius);
-		padding: 1rem;
-		--gradient-shadow: linear-gradient(
-			45deg,
-			#fb0094,
-			#0000ff,
-			#00ff00,
-			#ffff00,
-			#ff0000,
-			#fb0094,
-			#0000ff,
-			#00ff00,
-			#ffff00,
-			#ff0000
-		);
+.callout {
+	position: relative;
+	border: 3px solid var(--content-secondary);
+	border-radius: var(--code-border-radius);
+	padding: 1rem;
 
-		&.callout-note {
-			border-style: dotted;
-			border-width: 2px;
+	&.callout-note {
+		border-style: dotted;
+		border-width: 2px;
+	}
+
+	&.callout-callout,
+	&.callout-tip {
+		background: var(--background);
+		border: none;
+		margin: 2.5rem 0;
+
+		&::before,
+		&::after {
+			content: "";
+			position: absolute;
+			top: -2px;
+			left: -2px;
+			background: var(--gradient-shadow);
+			background-size: 400%;
+			width: calc(100% + 4px);
+			height: calc(100% + 4px);
+			border-radius: var(--code-border-radius);
+			z-index: -1;
+			animation: shine 40s linear infinite;
 		}
 
-		&.callout-callout,
-		&.callout-tip {
-			background: var(--background);
-			border: none;
-			margin: 2.5rem 0;
-
-			&::before,
-			&::after {
-				content: "";
-				position: absolute;
-				top: -2px;
-				left: -2px;
-				background: var(--gradient-shadow);
-				background-size: 400%;
-				width: calc(100% + 4px);
-				height: calc(100% + 4px);
-				border-radius: var(--code-border-radius);
-				z-index: -1;
-				animation: shine 40s linear infinite;
-			}
-
-			&::after {
-				filter: blur(10px);
-			}
-
-			.callout-heading {
-				background: var(--gradient-shadow);
-				-webkit-background-clip: text;
-				background-clip: text;
-				-webkit-text-fill-color: transparent;
-				text-fill-color: transparent;
-				background-size: 40% auto;
-				animation: shine 90s linear infinite;
-				font-size: 2rem;
-			}
-		}
-
-		&.callout-callout {
-			font-size: 1em;
-		}
-
-		&.callout-important {
-			box-shadow: 0.8em 0.8em 0 0 var(--content-secondary);
-			margin-bottom: 2.5rem;
-		}
-
-		&.callout-warning {
-			border-color: #f0ba22;
-			box-shadow: 0.8em 0.8em 0 0 #f0ba22;
-			margin-bottom: 2.5rem;
-		}
-
-		&.callout-caution {
-			border-color: red;
-			box-shadow: 0.8em 0.8em 0 0 red;
-			margin-bottom: 2.5rem;
-		}
-
-		p {
-			margin: 0;
-		}
-
-		p + p {
-			margin-top: 0.5rem;
+		&::after {
+			filter: blur(10px);
 		}
 
 		.callout-heading {
-			font-weight: 900;
-			font-style: italic;
-			font-size: 1.2em;
-			margin-top: -0.4em;
+			font-size: 2rem;
+			background-size: 40% auto;
+			animation-duration: 40s;
 		}
+	}
+
+	&.callout-callout {
+		font-size: 1em;
+	}
+
+	&.callout-important {
+		box-shadow: 0.8em 0.8em 0 0 var(--content-secondary);
+		margin-bottom: 2.5rem;
+	}
+
+	&.callout-warning {
+		border-color: #f0ba22;
+		box-shadow: 0.8em 0.8em 0 0 #f0ba22;
+		margin-bottom: 2.5rem;
+	}
+
+	&.callout-caution {
+		border-color: red;
+		box-shadow: 0.8em 0.8em 0 0 red;
+		margin-bottom: 2.5rem;
+	}
+
+	p {
+		margin: 0;
+	}
+
+	p + p {
+		margin-top: 0.5rem;
+	}
+
+	.callout-heading {
+		font-weight: 900;
+		font-style: italic;
+		font-size: 1.2em;
+		margin-top: -0.4em;
+		color: var(--content-secondary);
 	}
 }
 
@@ -1117,8 +1100,7 @@ blockquote {
 	blockquote.callout.callout-callout,
 	blockquote.callout.callout-tip {
 		&::before,
-		&::after,
-		.callout-heading {
+		&::after {
 			animation: none;
 		}
 	}
@@ -1159,7 +1141,7 @@ figure.blockquote {
 	}
 
 	blockquote,
-	figcaption {
+	.blockquote-caption {
 		position: relative;
 		z-index: 1;
 	}
@@ -1170,7 +1152,8 @@ figure.blockquote {
 		font-size: 1em;
 	}
 
-	figcaption {
+	.blockquote-caption {
+		display: block;
 		margin: 0 1em 1em 1em;
 		text-align: right;
 		font-style: italic;

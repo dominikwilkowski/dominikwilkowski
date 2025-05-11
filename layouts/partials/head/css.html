@@ -1,18 +1,16 @@
-{{
+{{-
 	$CSS := slice
 		(resources.Get "css/reset.css")
 		(resources.Get "css/vars.css")
-		(resources.Get "css/utils.css")
 		(resources.Get "css/fonts.css")
 		(resources.Get "css/main.css")
 		(resources.Get "css/theme.css")
-}}
-
-{{
+		(resources.Get "css/utils.css")
+-}}
+{{-
 	$combined := $CSS
 		| resources.Concat "assets/combined.css"
 		| minify
 		| fingerprint
-}}
-
-<link rel="stylesheet" href="{{ $combined.RelPermalink }}" media="all">
+-}}
+<link rel="stylesheet" href="{{- $combined.RelPermalink -}}" media="all">

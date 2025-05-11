@@ -4,38 +4,38 @@ Ref: https://gohugo.io/render-hooks/tables/
 */}}
 <div class="table-outer">
 	<table
-		{{- range $k, $v :=.Attributes }}
-			{{- if $v }}
-				{{- printf " %s=%q" $k $v | safeHTMLAttr }}
-			{{- end }}
-		{{- end }}>
+		{{- range $k, $v :=.Attributes -}}
+			{{- if $v -}}
+				{{- printf " %s=%q" $k $v | safeHTMLAttr -}}
+			{{- end -}}
+		{{- end -}}>
 		<thead>
-			{{- range .THead }}
+			{{- range .THead -}}
 				<tr>
-					{{- range . }}
+					{{- range . -}}
 						<th
-							{{- with .Alignment }}
-								{{- printf " style=%q" (printf "text-align: %s" .) | safeHTMLAttr }}
+							{{- with .Alignment -}}
+								{{- printf " style=%q" (printf "text-align: %s" .) | safeHTMLAttr -}}
 							{{- end -}}>
 							{{- .Text -}}
 						</th>
-					{{- end }}
+					{{- end -}}
 				</tr>
-			{{- end }}
+			{{- end -}}
 		</thead>
 		<tbody>
-			{{- range .TBody }}
+			{{- range .TBody -}}
 				<tr>
-					{{- range . }}
+					{{- range . -}}
 						<td
-							{{- with .Alignment }}
-								{{- printf " style=%q" (printf "text-align: %s" .) | safeHTMLAttr }}
+							{{- with .Alignment -}}
+								{{- printf " style=%q" (printf "text-align: %s" .) | safeHTMLAttr -}}
 							{{- end -}}>
 							{{- .Text -}}
 						</td>
-					{{- end }}
+					{{- end -}}
 				</tr>
-			{{- end }}
+			{{- end -}}
 		</tbody>
 	</table>
 </div>
