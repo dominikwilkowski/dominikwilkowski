@@ -9,13 +9,15 @@
 		role="{{ $role }}"
 		aria-label="{{ title $type }}"
 	>
-		<p class="callout-heading">
-			{{ with .AlertTitle }}
-				{{ . }}
-			{{ else }}
-				{{ or (i18n .AlertType) (title .AlertType) }}
-			{{ end }}
-		</p>
+		{{- if ne .AlertType "callout" -}}
+			<p class="callout-heading">
+				{{- with .AlertTitle -}}
+					{{- . -}}
+				{{- else -}}
+					{{- or (i18n .AlertType) (title .AlertType) -}}
+				{{- end -}}
+			</p>
+		{{- end -}}
 		{{- .Text -}}
 	</blockquote>
 {{- else -}}

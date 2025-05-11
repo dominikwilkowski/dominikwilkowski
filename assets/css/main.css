@@ -131,6 +131,11 @@ abbr {
 
 .emoji {
 	position: relative;
+	border-radius: 6px;
+	display: inline;
+	vertical-align: baseline;
+	padding: 0;
+	margin: 0;
 }
 
 .emoji:focus:after,
@@ -160,6 +165,13 @@ abbr {
 		content: " (" attr(aria-label) ") ";
 		font-size: 0.75em;
 		font-weight: normal;
+	}
+}
+
+@media (prefers-reduced-motion) {
+	.emoji:focus:after,
+	.emoji:hover:after {
+		animation: fadeIn 0s ease-out 0s 1 forwards;
 	}
 }
 
@@ -344,10 +356,6 @@ p code {
 	border: 1px solid var(--code-border);
 	border-radius: 3px;
 	vertical-align: baseline;
-}
-
-table code {
-	padding: 0;
 }
 
 .code-folding-summary-code {
@@ -999,6 +1007,7 @@ tbody tr {
 blockquote {
 	margin: 1.5rem 0;
 	border-left: solid 2px;
+	font-size: 0.75em;
 
 	p {
 		margin-left: 1rem;
@@ -1010,7 +1019,6 @@ blockquote {
 		border: 3px solid var(--content-secondary);
 		border-radius: var(--code-border-radius);
 		padding: 1rem;
-		font-size: 0.75em;
 		--gradient-shadow: linear-gradient(
 			45deg,
 			#fb0094,
@@ -1025,18 +1033,12 @@ blockquote {
 			#ff0000
 		);
 
-		&.callout-note,
-		&.callout-tip,
-		&.callout-important,
-		&.callout-warning,
-		&.callout-caution {
-		}
-
 		&.callout-note {
 			border-style: dotted;
 			border-width: 2px;
 		}
 
+		&.callout-callout,
 		&.callout-tip {
 			background: var(--background);
 			border: none;
@@ -1068,8 +1070,13 @@ blockquote {
 				-webkit-text-fill-color: transparent;
 				text-fill-color: transparent;
 				background-size: 40% auto;
-				animation: shine 90s ease-out infinite alternate;
+				animation: shine 90s linear infinite;
+				font-size: 2rem;
 			}
+		}
+
+		&.callout-callout {
+			font-size: 1em;
 		}
 
 		&.callout-important {
@@ -1107,6 +1114,7 @@ blockquote {
 }
 
 @media (prefers-reduced-motion) {
+	blockquote.callout.callout-callout,
 	blockquote.callout.callout-tip {
 		&::before,
 		&::after,
@@ -1116,9 +1124,21 @@ blockquote {
 	}
 }
 
+@keyframes shine {
+	0% {
+		background-position: 0 0;
+	}
+	50% {
+		background-position: 300% 0;
+	}
+	100% {
+		background-position: 0 0;
+	}
+}
+
 figure.blockquote {
 	position: relative;
-	border: dashed 2px var(--content-secondary);
+	border: dashed 1px var(--content-secondary);
 
 	&::before,
 	&::after {
@@ -1147,24 +1167,12 @@ figure.blockquote {
 	blockquote {
 		border: none;
 		margin: 0;
-		font-size: 1.25em;
+		font-size: 1em;
 	}
 
 	figcaption {
 		margin: 0 1em 1em 1em;
 		text-align: right;
 		font-style: italic;
-	}
-}
-
-@keyframes shine {
-	0% {
-		background-position: 0 0;
-	}
-	50% {
-		background-position: 300% 0;
-	}
-	100% {
-		background-position: 0 0;
 	}
 }

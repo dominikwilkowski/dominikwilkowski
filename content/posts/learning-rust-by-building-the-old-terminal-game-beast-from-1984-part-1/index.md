@@ -653,7 +653,7 @@ Lastely we add the bottom border in a very similar way we added the top.
 I don't know about you but I don't like magic numbers in my code.
 We now have `39 * 2` and multiple instances of hardcoded `39` and `20` throughout our code.
 At some point our future-self is going to ask:
-> What does this number mean?
+> What does this number even mean?
 {caption="Future Me"}
 
 or
@@ -875,7 +875,7 @@ Next up: Adding <span style="color:#ff0000;">c</span><span style="color:#ff00cb;
 > there.
 
 How do you even add color to a terminal?
-All we have is our trusted `println` macro.
+All we have is our trusted [`println`](https://doc.rust-lang.org/std/macro.println.html) macro.
 How do you add color to the output if all you have is a pipe that expects a string?
 
 This is where [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code) come in.<br>
@@ -883,7 +883,7 @@ From Wikipedia:
 
 > ANSI escape sequences are a standard for in-band signaling to control cursor location, color, font styling, and other options on video text terminals and terminal emulators. Certain sequences of bytes, most starting with an ASCII escape character and a bracket character, are embedded into text.
 
-The syntaxt of them is: `ESCAPE[CODE` and when you print this to most terminals it will be interpreted as a command
+The syntaxt of them is: `ESCAPE` `[` `CODE` and when you print this to most terminals it will be interpreted as a command
 rather than as text.
 
 There are many different things you can control with those sequences but for the purpose of this tutorial we will be
@@ -893,26 +893,26 @@ Here is a short summary of colors and cursor codes we might need:
 
 **Colors**
 
-| Code            | What it does       |
-| --------------- | ------------------ |
-| `ESCAPE` `[30m` | White font color   |
-| `ESCAPE` `[31m` | Red font color     |
-| `ESCAPE` `[32m` | Green font color   |
-| `ESCAPE` `[33m` | Yellow font color  |
-| `ESCAPE` `[34m` | Blue font color    |
-| `ESCAPE` `[35m` | Magenta font color |
-| `ESCAPE` `[36m` | Cyan font color    |
-| `ESCAPE` `[37m` | Black font color   |
-| `ESCAPE` `[39m` | Reset font color   |
+| Code               | What it does       |
+| ------------------ | ------------------ |
+| `ESCAPE` `[` `30m` | White font color   |
+| `ESCAPE` `[` `31m` | Red font color     |
+| `ESCAPE` `[` `32m` | Green font color   |
+| `ESCAPE` `[` `33m` | Yellow font color  |
+| `ESCAPE` `[` `34m` | Blue font color    |
+| `ESCAPE` `[` `35m` | Magenta font color |
+| `ESCAPE` `[` `36m` | Cyan font color    |
+| `ESCAPE` `[` `37m` | Black font color   |
+| `ESCAPE` `[` `39m` | Reset font color   |
 
 **Cursor**
 
-| Code                   | What it does                                     |
-| ---------------------- | ------------------------------------------------ |
-| `ESCAPE` `[?25l`       | Hide cursor                                      |
-| `ESCAPE` `[?25h`       | Show cursor                                      |
-| `ESCAPE` `[` + n + `E` | Move cursor to beginning of line, `n` lines down |
-| `ESCAPE` `[` + n + `F` | Move cursor to beginning of line, `n` lines up   |
+| Code                | What it does                                     |
+| ------------------- | ------------------------------------------------ |
+| `ESCAPE` `[` `?25l` | Hide cursor                                      |
+| `ESCAPE` `[` `?25h` | Show cursor                                      |
+| `ESCAPE` `[` n `F`  | Move cursor to beginning of line, `n` lines up   |
+| `ESCAPE` `[` n `E`  | Move cursor to beginning of line, `n` lines down |
 
 Looking at this we could make something yellow within a sentence so let's try it out:
 
@@ -979,7 +979,7 @@ Which will give us:
 
 ```console
 cargo run
-[..some warnings..]
+[..some warnings about unused items in our code..]
 <span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.34s
 <span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
 This is normal color, <span style="color:yellow;">this is yellow,</span> and this is normal again

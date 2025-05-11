@@ -219,8 +219,11 @@ Normal quote:
 
 Quote with citation:
 
-> Quote from a famous person
+> Quote from a famous person with long lines so we see what the end looks like
 {cite="https://gohugo.io" caption="The person who said it"}
+
+> [!CALLOUT]
+> Calls out a thing that's important to highlight.
 
 > [!NOTE]
 > Useful information that users should know, even when skimming content
@@ -239,3 +242,12 @@ Quote with citation:
 
 > [!CAUTION]
 > Advises about risks or negative outcomes of certain actions.
+
+## Emojis
+
+Read more about why this is a good idea in this excellent article:
+https://adrianroselli.com/2016/12/accessible-emoji-tweaked.html
+
+<span role="img" aria-label="Sparkles" tabIndex="0" class="emoji">✨</span>
+<span role="img" aria-label="High five hands" tabIndex="0" class="emoji">🙌</span>
+<span role="img" aria-label="A magic wand" tabIndex="0" class="emoji">🪄</span>
