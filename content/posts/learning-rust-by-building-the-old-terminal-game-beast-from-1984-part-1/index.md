@@ -560,15 +560,16 @@ fn main() {
 
 So we made a new method that takes a reference to `self` and returns a `String`.
 
+> [!TIP]
 > By now you've seen us use two different types of something called "self":
 > - `Self` in the `new` method
 > - `self` in the `render` method
 > 
 > The way I keep them separated in my head is like this:
-> - `Self` _points to the type._<br>
+> - `Self` **points to the type**<br>
 > 	It's like in our case we COULD use `Board` but because `Self` means the same thing and never changes even if we change
 > 	the struct name, it's more "stable".
-> - `self` _points to the instance._<br>
+> - `self` **points to the instance**<br>
 > 	An instance will have data associated with it so we can access it.
 > 	A type has no data, only types.
 
@@ -653,10 +654,12 @@ I don't know about you but I don't like magic numbers in my code.
 We now have `39 * 2` and multiple instances of hardcoded `39` and `20` throughout our code.
 At some point our future-self is going to ask:
 > What does this number mean?
+{caption="Future Me"}
 
 or
 
 > Where else do I have to change this number to change the window size?
+{caption="Future Me"}
 
 Let's be kind to future-you and create a couple [constants](https://doc.rust-lang.org/std/keyword.const.html).
 
@@ -763,7 +766,7 @@ cargo run
 ▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟
 ```
 
-Ok this looks good.
+This looks good.
 Let's hardcode some blocks and the player just to see what it would look like on the board:
 
 ```rust {data-file="main.rs", data-fold="['1-18', '30-55']", hl_lines=["20-28"]}
@@ -824,7 +827,7 @@ fn main() {
 }
 ```
 
-We create a mutable variable called `buffer` where we stick the nested array into and then set a couple tiles in that
+We create a mutable variable called `buffer` which we assign our nested array to and then set a couple tiles in that
 buffer to `Tile::Player`, `Tile::Block` and `Tile::StaticBlock`.
 We don't have to do `buffer: buffer` in the `Self` block because of
 [field init shorthand syntax](https://doc.rust-lang.org/book/ch05-01-defining-structs.html?utm_source=chatgpt.com#using-the-field-init-shorthand)
@@ -834,8 +837,8 @@ All that gets us this little preview via `cargo run`:
 
 ```console
 cargo run
-<span style="font-weight:bold;"></span><span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
-<span style="font-weight:bold;"></span><span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
 ▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜
 ▌◀▶                                                                            ▐
 ▌                                                                              ▐
@@ -866,7 +869,126 @@ Next up: Adding <span style="color:#ff0000;">c</span><span style="color:#ff00cb;
 
 ## A Brief Intro into ANSI Escape Sequences
 
-Install the [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/install).
+> [!NOTE]
+> To keep things simple we will follow along the unix standards so if you're working on a windows machine make sure you
+> install the [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/install) and run our game from
+> there.
+
+How do you even add color to a terminal?
+All we have is our trusted `println` macro.
+How do you add color to the output if all you have is a pipe that expects a string?
+
+This is where [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code) come in.<br>
+From Wikipedia:
+
+> ANSI escape sequences are a standard for in-band signaling to control cursor location, color, font styling, and other options on video text terminals and terminal emulators. Certain sequences of bytes, most starting with an ASCII escape character and a bracket character, are embedded into text.
+
+The syntaxt of them is: `ESCAPE[CODE` and when you print this to most terminals it will be interpreted as a command
+rather than as text.
+
+There are many different things you can control with those sequences but for the purpose of this tutorial we will be
+focusing only on color and cursor position.
+
+Here is a short summary of colors and cursor codes we might need:
+
+**Colors**
+
+| Code            | What it does       |
+| --------------- | ------------------ |
+| `ESCAPE` `[30m` | White font color   |
+| `ESCAPE` `[31m` | Red font color     |
+| `ESCAPE` `[32m` | Green font color   |
+| `ESCAPE` `[33m` | Yellow font color  |
+| `ESCAPE` `[34m` | Blue font color    |
+| `ESCAPE` `[35m` | Magenta font color |
+| `ESCAPE` `[36m` | Cyan font color    |
+| `ESCAPE` `[37m` | Black font color   |
+| `ESCAPE` `[39m` | Reset font color   |
+
+**Cursor**
+
+| Code                   | What it does                                     |
+| ---------------------- | ------------------------------------------------ |
+| `ESCAPE` `[?25l`       | Hide cursor                                      |
+| `ESCAPE` `[?25h`       | Show cursor                                      |
+| `ESCAPE` `[` + n + `E` | Move cursor to beginning of line, `n` lines down |
+| `ESCAPE` `[` + n + `F` | Move cursor to beginning of line, `n` lines up   |
+
+Looking at this we could make something yellow within a sentence so let's try it out:
+
+```rust {data-file="main.rs", data-fold="['1-51']" hl_lines=["53-55"]}
+const BOARD_WIDTH: usize = 39;
+const BOARD_HEIGHT: usize = 20;
+const TILE_SIZE: usize = 2;
+
+#[derive(Copy, Clone, Debug)]
+enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Board {
+	buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		buffer[0][0] = Tile::Player;
+		buffer[2][5] = Tile::Block;
+		buffer[2][6] = Tile::Block;
+		buffer[2][7] = Tile::Block;
+		buffer[3][6] = Tile::StaticBlock;
+
+		Self { buffer }
+	}
+
+	fn render(&self) -> String {
+		let mut output = format!("▛{}▜\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+
+		for rows in self.buffer {
+			output.push_str("▌");
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => output.push_str("◀▶"),
+					Tile::Block => output.push_str("░░"),
+					Tile::StaticBlock => output.push_str("▓▓"),
+				}
+			}
+			output.push_str("▐\n");
+		}
+		output.push_str(&format!("▙{}▟\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+
+		output
+	}
+}
+
+fn main() {
+	// let board = Board::new();
+	// println!("{}", board.render());
+	println!("This is normal color, \x1B[33mthis is yellow,\x1B[39m and this is normal again");
+}
+```
+
+Which will give us:
+
+```console
+cargo run
+[..some warnings..]
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.34s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+This is normal color, <span style="color:yellow;">this is yellow,</span> and this is normal again
+```
+
+> [!TIP]
+> Most terminals will keep the color once it has been set which means even after your program has finished the color
+> of the terminal might still be set to something other than the default which will alienate your users.
+> Make sure you clean up after yourself and use the appropriate reset sequence.
 
 ## Rendering but with colors
 

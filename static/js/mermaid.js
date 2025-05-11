@@ -1,14 +1,12 @@
 import mermaid from "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs";
 
 const this_js_script = document.getElementById("mermaid_script");
-const light_theme = this_js_script.getAttribute("data-light-theme");
-const dark_theme = this_js_script.getAttribute("data-dark-theme");
 
 function runmermaid() {
-	const theme = document.body.classList.contains("dark")
-		? dark_theme
-		: light_theme;
-	mermaid.initialize({ startOnLoad: false, theme: theme });
+	mermaid.initialize({
+		startOnLoad: false,
+		theme: "neutral",
+	});
 	const items = document.querySelectorAll(".mermaid");
 	let counter = 0;
 	for (const item of items) {
@@ -31,5 +29,5 @@ function runmermaid() {
 }
 document.addEventListener("DOMContentLoaded", runmermaid);
 window
-	.matchMedia("(prefers-color-scheme: dark)")
+	.matchMedia("(prefers-color-scheme: light)")
 	.addEventListener("change", runmermaid);

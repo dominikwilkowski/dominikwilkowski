@@ -1,0 +1,38 @@
+{{- if eq .Type "alert" -}}
+	{{- $type := lower .AlertType -}}
+	{{- if not $type }}
+		{{- $type = "note" -}}
+	{{- end -}}
+	{{- $role := cond (in (slice "warning" "caution") $type) "alert" "region" -}}
+	<blockquote
+		class="callout callout-{{ .AlertType }}"
+		role="{{ $role }}"
+		aria-label="{{ title $type }}"
+	>
+		<p class="callout-heading">
+			{{ with .AlertTitle }}
+				{{ . }}
+			{{ else }}
+				{{ or (i18n .AlertType) (title .AlertType) }}
+			{{ end }}
+		</p>
+		{{- .Text -}}
+	</blockquote>
+{{- else -}}
+	{{- $ctx := . -}}
+	{{- with $ctx.Attributes.caption -}}
+		{{- $figcapID := printf "figcap-%d" (now.UnixNano) -}}
+		<figure role="group" aria-labelledby="{{ $figcapID }}" class="blockquote">
+			<blockquote {{ with $ctx.Attributes.cite }}cite="{{ . }}"{{ end }} aria-describedby="{{ $figcapID }}">
+				{{- $ctx.Text -}}
+			</blockquote>
+			<figcaption id="{{ $figcapID }}" class="blockquote-caption">
+				&mdash;{{- . | safeHTML -}}
+			</figcaption>
+		</figure>
+	{{- else -}}
+		<blockquote>
+			{{- .Text -}}
+		</blockquote>
+	{{- end -}}
+{{- end -}}

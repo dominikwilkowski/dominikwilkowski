@@ -65,8 +65,8 @@
 
 	/* Tables */
 	--table-cell-padding: 0.5rem;
-	--table-margin-top: 2rem;
-	--table-margin-bottom: 2rem;
+	--table-margin-top: 1rem;
+	--table-margin-bottom: 1rem;
 }
 
 @media screen and (max-width: 640px) {
