@@ -1,16 +1,24 @@
-{{- if or .NextInSection .PrevInSection -}}
+{{- $inSection := where .Site.RegularPages "Section" .Section -}}
+{{- $visible := where $inSection "Params.visibility" "ne" false -}}
+{{- $prev := $visible.Prev . -}}
+{{- $next := $visible.Next . -}}
+{{- if or $prev $next -}}
 	<div class="single-pagination">
 		<hr />
-
 		<div class="flexnowrap" itemscope itemtype="https://schema.org/SiteNavigationElement">
 
 			<div class="single-pagination-prev">
-				{{- with .PrevInSection -}}
+				{{- with $prev -}}
 					<div class="single-pagination-container-prev">
 						<div class="single-pagination-text">←</div>
 						<div class="single-pagination-text">
 							<a itemprop="url" href="{{- .RelPermalink -}}">
 								<span itemprop="name">{{- .Title -}}</span>
+								{{- $dateFormat := "2 Jan 2006" -}}
+								{{- with .Site.Params.listDateFormat -}}
+									{{- $dateFormat = . -}}
+								{{- end -}}
+								<time class="single-pagination-date">{{- .Date | time.Format $dateFormat -}}</time>
 							</a>
 						</div>
 					</div>
@@ -18,11 +26,16 @@
 			</div>
 
 			<div class="single-pagination-next">
-				{{- with .NextInSection -}}
+				{{- with $next -}}
 					<div class="single-pagination-container-next">
 						<div class="single-pagination-text">
 							<a itemprop="url" href="{{- .RelPermalink -}}">
 								<span itemprop="name">{{- .Title -}}</span>
+								{{- $dateFormat := "2 Jan 2006" -}}
+								{{- with .Site.Params.listDateFormat -}}
+									{{- $dateFormat = . -}}
+								{{- end -}}
+								<time class="single-pagination-date">{{- .Date | time.Format $dateFormat -}}</time>
 							</a>
 						</div>
 						<div class="single-pagination-text">→</div>

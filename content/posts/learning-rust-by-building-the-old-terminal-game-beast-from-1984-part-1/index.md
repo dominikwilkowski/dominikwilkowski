@@ -2,6 +2,7 @@
 title: 'An intro into rust by building an old terminal game from 1984, Part 1'
 date: '2025-04-26T21:11:29+10:00'
 draft: true
+visibility: false
 summary: >
   I've found building the game BEAST from 1984 helped me teach rust as it touches many concepts of rust and gets us to
   see something pretty quickly.
@@ -13,6 +14,8 @@ showTags: true
 hideBackToTop: false
 header: assets/header.jpg
 ---
+
+<div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg"></div>
 
 ## Intro
 

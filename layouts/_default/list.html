@@ -13,7 +13,8 @@
 			{{- $paginationSize = .Site.Params.paginationSize -}}
 		{{- end -}}
 
-		{{- $paginator := .Paginate (.Pages) $paginationSize -}}
+		{{- $visible := where .Pages "Params.visibility" "ne" false -}}
+		{{- $paginator := .Paginate $visible $paginationSize -}}
 
 		<ul>
 			{{- range $index, $page := $paginator.Pages -}}

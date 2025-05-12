@@ -71,6 +71,7 @@ h6 {
 		visibility: hidden;
 		font-size: 0.9em;
 		font-family: var(--font-mono);
+		margin-left: 0.5rem;
 	}
 
 	&:hover .anchor {
@@ -420,8 +421,8 @@ hr {
 }
 
 .header-title {
-	font-size: 6.25rem;
-	font-weight: 100;
+	font-size: 5.85rem;
+	font-weight: 900;
 	margin-bottom: 0;
 	margin-top: 0;
 	margin-left: -0.6rem;
@@ -636,17 +637,11 @@ footer {
 	color: var(--content-secondary);
 
 	li {
-		display: block;
+		display: inline-block;
 		margin: 0;
 	}
-}
 
-@media (min-width: 480px) {
-	.single-readtime li {
-		display: inline-block;
-	}
-
-	.single-readtime li + li:before {
+	li + li::before {
 		content: "•";
 		margin: 0 0.5rem;
 	}
@@ -694,40 +689,45 @@ footer {
 	hr {
 		margin: 0;
 	}
-}
 
-.single-pagination-text {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	min-height: 100%;
-}
+	.single-pagination-text {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		min-height: 100%;
+	}
 
-.single-pagination-prev {
-	min-width: 50%;
-	margin-top: 1rem;
-	margin-bottom: 1rem;
-	text-align: right;
-}
+	.single-pagination-prev {
+		min-width: 50%;
+		margin-top: 1rem;
+		margin-bottom: 1rem;
+		text-align: right;
+	}
 
-.single-pagination-next {
-	min-width: 50%;
-	margin-top: 1rem;
-	margin-bottom: 1rem;
-	text-align: left;
-}
+	.single-pagination-next {
+		min-width: 50%;
+		margin-top: 1rem;
+		margin-bottom: 1rem;
+		text-align: left;
+	}
 
-.single-pagination-container-next {
-	display: flex;
-	min-height: 100%;
-	padding: 0.5rem;
-}
+	.single-pagination-container-next {
+		display: flex;
+		min-height: 100%;
+		padding: 0.5rem;
+	}
 
-.single-pagination-container-prev {
-	display: flex;
-	min-height: 100%;
-	padding: 0.5rem;
-	float: right;
+	.single-pagination-container-prev {
+		display: flex;
+		min-height: 100%;
+		padding: 0.5rem;
+		float: right;
+	}
+
+	.single-pagination-date {
+		display: block;
+		font-size: small;
+	}
 }
 
 /* Table of contents */
@@ -1157,5 +1157,27 @@ figure.blockquote {
 		margin: 0 1em 1em 1em;
 		text-align: right;
 		font-style: italic;
+	}
+}
+
+/* Ribbon */
+
+.ribbon {
+	position: absolute;
+	top: 1rem;
+	right: 2rem;
+	width: 6rem;
+	height: 6rem;
+	transform: rotate(31deg);
+
+	img {
+		opacity: 0.5;
+	}
+}
+
+@media (min-width: 640px) {
+	.ribbon {
+		width: 7.5rem;
+		height: 7.5rem;
 	}
 }

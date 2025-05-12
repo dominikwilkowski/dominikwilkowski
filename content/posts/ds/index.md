@@ -1,7 +1,8 @@
 ---
-title: 'Example'
+title: 'Design System'
 date: '2025-05-11T07:25:06+10:00'
 draft: true
+visibility: false
 summary: "An example post to keep track of all blog features"
 description: "Example"
 tags: []
