@@ -6,13 +6,21 @@ body {
 	font-family: var(--font-body);
 	margin: auto;
 	max-width: var(--main-width);
-	padding-left: var(--main-padding);
-	padding-right: var(--main-padding);
+	padding-left: 1em;
+	padding-right: 1em;
 	color: var(--content-primary);
 	background: var(--background);
 	font-variant: no-common-ligatures proportional-nums;
-	font-size: var(--body-font-size);
+	font-size: 1rem;
 	line-height: var(--body-line-height);
+}
+
+@media (min-width: 480px) {
+	body {
+		font-size: var(--body-font-size);
+		padding-left: var(--main-padding);
+		padding-right: var(--main-padding);
+	}
 }
 
 .content {
@@ -357,6 +365,7 @@ p code {
 	border: 1px solid var(--code-border);
 	border-radius: 3px;
 	vertical-align: baseline;
+	white-space: nowrap;
 }
 
 .code-folding-summary-code {
@@ -371,6 +380,12 @@ p code {
 	font-size: small;
 	padding: 3px 0;
 	visibility: hidden;
+}
+
+.console-line {
+	font-family: var(--font-mono);
+	font-size: 0.75em;
+	letter-spacing: 0;
 }
 
 /* Latex */
@@ -829,15 +844,16 @@ summary {
 /* Images */
 
 figure {
-	display: grid;
+	display: block;
 	margin-top: 1rem;
-	align-items: start;
 
 	.img-container {
+		display: flex;
+		align-items: center;
 		aspect-ratio: var(--w) / var(--h);
 		max-height: var(--figure-img-max-height);
 		width: auto;
-		margin-inline: auto;
+		justify-content: center;
 	}
 
 	img {
@@ -855,11 +871,23 @@ figure {
 	display: none !important;
 }
 
+figure.img-left {
+	.img-container,
+	figcaption {
+		justify-content: start;
+	}
+}
+
 .img-small {
+	img& {
+		max-height: calc(var(--h) / 2);
+		max-width: calc(var(--w) / 2);
+	}
+
 	.img-container {
 		display: flex;
 		align-items: center;
-		justify-content: start;
+		justify-content: center;
 	}
 
 	img {
@@ -875,6 +903,24 @@ figure {
 		margin-left: auto;
 		margin-right: auto;
 		justify-content: center;
+	}
+}
+
+.img-lineheight {
+	img& {
+		/* display: inline-block; */
+		max-height: 1em;
+	}
+
+	img {
+		max-height: 1em;
+		width: auto;
+	}
+}
+
+.img-inline {
+	img& {
+		display: inline-block;
 	}
 }
 
@@ -1165,7 +1211,7 @@ figure.blockquote {
 .ribbon {
 	position: absolute;
 	top: 1rem;
-	right: 2rem;
+	right: 1.5rem;
 	width: 6rem;
 	height: 6rem;
 	transform: rotate(31deg);

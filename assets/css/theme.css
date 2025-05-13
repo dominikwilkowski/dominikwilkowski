@@ -1,10 +1,10 @@
 :root {
-	--content-primary: rgb(24, 26, 28);
-	--content-secondary: rgb(86, 88, 90);
+	--content-primary: rgb(24, 26, 28); /* #181a1c */
+	--content-secondary: rgb(86, 88, 90); /* #56585a */
 	--focus: #ff0000;
-	--background: rgb(250, 248, 246);
-	--code-background: rgb(244, 242, 240);
-	--code-border: rgb(200, 202, 204);
+	--background: rgb(250, 248, 246); /* #faf8f6 */
+	--code-background: rgb(244, 242, 240); /* #f4f2f0 */
+	--code-border: rgb(200, 202, 204); /* #c8cacc */
 }
 
 .dark {

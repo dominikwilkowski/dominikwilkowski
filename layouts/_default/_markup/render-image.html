@@ -57,5 +57,9 @@ and build the img class string as "img-tag1 img-tag2 ..."
 	</figure>
 	{{- else -}}
 	  {{/* inline image inside a paragraph */}}
-		<img loading="lazy" src="{{ .Destination | safeURL }}" alt="{{ .Text }}">
+		<span class="img-nonblock" {{ with $imgResource }}style="--w: {{- .Width -}}px; --h: {{- .Height -}}px;"{{- end -}}>
+			{{- /* remove whitespace */ -}}
+			<img class="{{- $classes -}}" loading="lazy" src="{{ .Destination | safeURL }}" alt="{{ .Text }}">
+			{{- /* remove whitespace */ -}}
+		</span>
 {{- end -}}

@@ -1,7 +1,7 @@
 ---
 title: 'An intro into rust by building an old terminal game from 1984, Part 1'
 date: '2025-04-26T21:11:29+10:00'
-draft: true
+draft: false
 visibility: false
 summary: >
   I've found building the game BEAST from 1984 helped me teach rust as it touches many concepts of rust and gets us to
@@ -332,11 +332,11 @@ cargo run
 ```
 
 We're told about two errors here:
-1. ``error[E0277]: the trait bound `Tile: Copy` is not satisfied``<br>
+1. <span class="console-line"><span style="color:red;">error[E0277]</span>: the trait bound `Tile: Copy` is not satisfied</span><br>
     This error occurs because our `Tile` enum is being copied into our array but doesn't currenlty have the ability
     ([trait](https://doc.rust-lang.org/book/ch10-02-traits.html)) to be copied.
     Rust will actually tell us how to solve it too in two different ways which is awesome.
-2. ```error[E0277]: `Board` doesn't implement `Debug```<br>
+2. <span class="console-line"><span style="color:red;">error[E0277]</span>: `Board` doesn't implement `Debug`</span><br>
     The second error happens because we're trying to print the struct and rust doesn't know how to display this custom data
     structure we have built even in the debug mode we choose here in the
     [format macro](https://doc.rust-lang.org/std/macro.format.html).
@@ -413,10 +413,10 @@ cargo run
 ```
 
 **The good news**: we fixed our previous error:<br>
-``error[E0277]: the trait bound `Tile: Copy` is not satisfied`` is gone
+<span class="console-line"><span style="color:red;">error[E0277]</span>: the trait bound `Tile: Copy` is not satisfied</span><br>
 
 **The bad news**: a new one poped up:<br>
-``error[E0277]: the trait bound `Tile: Clone` is not satisfied``
+<span class="console-line"><span style="color:red;">error[E0277]</span>: the trait bound `Tile: Clone` is not satisfied</font>
 
 But that's solvable since it seems we just have to add another trait to our derive proc macro.
 
@@ -894,7 +894,7 @@ focusing only on color and cursor position.
 
 Here is a short summary of colors and cursor codes we might need:
 
-**Colors**
+### Colors
 
 | Code               | What it does       |
 | ------------------ | ------------------ |
@@ -908,7 +908,7 @@ Here is a short summary of colors and cursor codes we might need:
 | `ESCAPE` `[` `37m` | Black font color   |
 | `ESCAPE` `[` `39m` | Reset font color   |
 
-**Cursor**
+### Cursor
 
 | Code                | What it does                                     |
 | ------------------- | ------------------------------------------------ |
@@ -992,6 +992,19 @@ This is normal color, <span style="color:yellow;">this is yellow,</span> and thi
 > Most terminals will keep the color once it has been set which means even after your program has finished the color
 > of the terminal might still be set to something other than the default which will alienate your users.
 > Make sure you clean up after yourself and use the appropriate reset sequence.
+
+Now we know how to make our text colorful in the terminal which is something we will need for the frame, our blocks and
+eventually our beasts.
+
+Another thing you can do in the terminal is animations.
+I'm sure you've seen it before when installing things: ![Animated terminal output](assets/loading.gif#lineheight#inline).
+
+You still only have `println!("My output");` though so how would you do something like a loading animation?
+
+The answer again is ANSI escape sequences.
+If you look at [our secquences for cursor movements](#cursor) then we spot our ability to move the cursor to the start
+of a line which means we can print a thing, reset the cursor to the start of that line, and print again over the
+previous output, slowly changing what we print, frame by frame, to make an animation.
 
 ## Rendering but with colors
 

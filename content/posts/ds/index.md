@@ -1,7 +1,7 @@
 ---
 title: 'Design System'
 date: '2025-05-11T07:25:06+10:00'
-draft: true
+draft: false
 visibility: false
 summary: "An example post to keep track of all blog features"
 description: "Example"
@@ -14,6 +14,8 @@ showTags: true
 hideBackToTop: false
 header: ../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/assets/header.jpg
 ---
+
+<div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg"></div>
 
 ## Code Blocks
 
@@ -260,3 +262,88 @@ https://adrianroselli.com/2016/12/accessible-emoji-tweaked.html
 <span role="img" aria-label="Sparkles" tabIndex="0" class="emoji">✨</span>
 <span role="img" aria-label="High five hands" tabIndex="0" class="emoji">🙌</span>
 <span role="img" aria-label="A magic wand" tabIndex="0" class="emoji">🪄</span>
+
+## Images
+
+Figure image:
+
+![Placeholder image alt text](assets/placeholder.png)
+
+Figure half size:
+
+![Placeholder image alt text](assets/placeholder.png#small)
+
+Figure line height:
+
+![Placeholder image alt text](assets/placeholder.png#lineheight)
+
+---
+
+Figure with figcaption:
+
+![Placeholder image alt text](assets/placeholder.png "My fig caption that is long and will break since the text goes and goes and goes until it finally gives in to the end of the page")
+
+Figure half size with figcaption:
+
+![Placeholder image alt text](assets/placeholder.png#small "My fig caption that is long and will break since the text goes and goes and goes until it finally gives in to the end of the page")
+
+Figure line height with figcaption:
+
+![Placeholder image alt text](assets/placeholder.png#lineheight "My fig caption that is long and will break since the text goes and goes and goes until it finally gives in to the end of the page")
+
+---
+
+Figure image left aligned:
+
+![Placeholder image alt text](assets/placeholder.png#left)
+
+Figure half size left aligned:
+
+![Placeholder image alt text](assets/placeholder.png#small#left)
+
+Figure line height left aligned:
+
+![Placeholder image alt text](assets/placeholder.png#lineheight#left)
+
+---
+
+Figure with figcaption left aligned:
+
+![Placeholder image alt text](assets/placeholder.png#left "My fig caption that is long and will break since the text goes and goes and goes until it finally gives in to the end of the page")
+
+Figure half size with figcaption left aligned:
+
+![Placeholder image alt text](assets/placeholder.png#small#left "My fig caption that is long and will break since the text goes and goes and goes until it finally gives in to the end of the page")
+
+Figure line height with figcaption left aligned:
+
+![Placeholder image alt text](assets/placeholder.png#lineheight#left "My fig caption that is long and will break since the text goes and goes and goes until it finally gives in to the end of the page")
+
+---
+
+Non-block image:
+
+Some text ![Placeholder image alt text](assets/placeholder.png) more text.
+
+Non-block image half size:
+
+Some text ![Placeholder image alt text](assets/placeholder.png#small) more text.
+
+Non-block image line height:
+
+Some text ![Placeholder image alt text](assets/placeholder.png#lineheight) more text.
+
+---
+
+Non-block image inline:
+
+Some text ![Placeholder image alt text](assets/placeholder.png#inline) more text.
+
+Non-block image half size inline:
+
+Some text ![Placeholder image alt text](assets/placeholder.png#small#inline) more text.
+
+Non-block image line height inline:
+
+Some text ![Placeholder image alt text](assets/placeholder.png#lineheight#inline) more text.
+
