@@ -917,7 +917,8 @@ Here is a short summary of colors and cursor codes we might need:
 | `ESCAPE` `[` n `F`  | Move cursor to beginning of line, `n` lines up   |
 | `ESCAPE` `[` n `E`  | Move cursor to beginning of line, `n` lines down |
 
-Looking at this we could make something yellow within a sentence so let's try it out:
+`ESCAPE` in rust via the print macro would be `\x1B` so looking at this we could make something yellow within a sentence
+so let's try it out:
 
 ```rust {data-file="main.rs", data-fold="['1-51']" hl_lines=["53-55"]}
 const BOARD_WIDTH: usize = 39;
@@ -1002,11 +1003,314 @@ I'm sure you've seen it before when installing things: ![Animated terminal outpu
 You still only have `println!("My output");` though so how would you do something like a loading animation?
 
 The answer again is ANSI escape sequences.
-If you look at [our secquences for cursor movements](#cursor) then we spot our ability to move the cursor to the start
+If you look at [our sequences for cursor movements](#cursor) then we spot our ability to move the cursor to the start
 of a line which means we can print a thing, reset the cursor to the start of that line, and print again over the
 previous output, slowly changing what we print, frame by frame, to make an animation.
 
+```rust {data-file="main.rs", data-fold="['1-51']" hl_lines=["55-56"]}
+const BOARD_WIDTH: usize = 39;
+const BOARD_HEIGHT: usize = 20;
+const TILE_SIZE: usize = 2;
+
+#[derive(Copy, Clone, Debug)]
+enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Board {
+	buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		buffer[0][0] = Tile::Player;
+		buffer[2][5] = Tile::Block;
+		buffer[2][6] = Tile::Block;
+		buffer[2][7] = Tile::Block;
+		buffer[3][6] = Tile::StaticBlock;
+
+		Self { buffer }
+	}
+
+	fn render(&self) -> String {
+		let mut output = format!("▛{}▜\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+
+		for rows in self.buffer {
+			output.push_str("▌");
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => output.push_str("◀▶"),
+					Tile::Block => output.push_str("░░"),
+					Tile::StaticBlock => output.push_str("▓▓"),
+				}
+			}
+			output.push_str("▐\n");
+		}
+		output.push_str(&format!("▙{}▟\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+
+		output
+	}
+}
+
+fn main() {
+	// let board = Board::new();
+	// println!("{}", board.render());
+	println!("Hello");
+	println!("\x1B[1FWorld");
+}
+```
+
+This will just print out "World" after you run `cargo run`.
+This is what's happening:
+
+![Hand-drawn black-and-white diagram of four side-by-side terminal windows illustrating a simple ANSI animation. The first window shows an empty prompt. The second shows println!(Hello) as the label and the prompt Hello with the cursor at the right of the word. The third and forth window has the label println!(x1B1A World) and in the third window the cursor has moved to the start of the word Hello indicating the cursor moving. The fourth window shows World in place of Hello, demonstrating how the line is overwritten.](assets/ansi.png "See where the cursor moved in each step of the code above")
+
+Let's use [`sleep`](https://doc.rust-lang.org/std/thread/fn.sleep.html) from the standard library to make what is
+happening more visible:
+
+```rust {data-file="main.rs", data-fold="['1-51']" hl_lines=["55-57"]}
+const BOARD_WIDTH: usize = 39;
+const BOARD_HEIGHT: usize = 20;
+const TILE_SIZE: usize = 2;
+
+#[derive(Copy, Clone, Debug)]
+enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Board {
+	buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		buffer[0][0] = Tile::Player;
+		buffer[2][5] = Tile::Block;
+		buffer[2][6] = Tile::Block;
+		buffer[2][7] = Tile::Block;
+		buffer[3][6] = Tile::StaticBlock;
+
+		Self { buffer }
+	}
+
+	fn render(&self) -> String {
+		let mut output = format!("▛{}▜\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+
+		for rows in self.buffer {
+			output.push_str("▌");
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => output.push_str("◀▶"),
+					Tile::Block => output.push_str("░░"),
+					Tile::StaticBlock => output.push_str("▓▓"),
+				}
+			}
+			output.push_str("▐\n");
+		}
+		output.push_str(&format!("▙{}▟\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+
+		output
+	}
+}
+
+fn main() {
+	// let board = Board::new();
+	// println!("{}", board.render());
+	println!("Hello");
+	std::thread::sleep(std::time::Duration::from_secs(3));
+	println!("\x1B[1FWorld");
+}
+```
+
+Now when you run `cargo run` you see "Hello" printed first, then after 3 seconds it's replaced by "World".
+This is how any anymations in the terminal work, by moving the cursor we constantly just overwrite the previous frame
+with the next frame.
+We will use this technique later when we start moving around on the board.
+
 ## Rendering but with colors
+
+Now that we know how to add colors to our output let's make our `render` method prettier:
+
+```rust {data-file="main.rs", data-fold="['1-30']" hl_lines=[32, 35, "39-41", 44, 46, "53-54"]}
+const BOARD_WIDTH: usize = 39;
+const BOARD_HEIGHT: usize = 20;
+const TILE_SIZE: usize = 2;
+
+#[derive(Copy, Clone, Debug)]
+enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Board {
+	buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		buffer[0][0] = Tile::Player;
+		buffer[2][5] = Tile::Block;
+		buffer[2][6] = Tile::Block;
+		buffer[2][7] = Tile::Block;
+		buffer[3][6] = Tile::StaticBlock;
+
+		Self { buffer }
+	}
+
+	fn render(&self) -> String {
+		let mut output = format!("\x1B[33m▛{}▜\x1B[39m\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+
+		for rows in self.buffer {
+			output.push_str("\x1B[33m▌\x1B[39m");
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => output.push_str("\x1B[36m◀▶\x1B[39m"),
+					Tile::Block => output.push_str("\x1B[32m░░\x1B[39m"),
+					Tile::StaticBlock => output.push_str("\x1B[33m▓▓\x1B[39m"),
+				}
+			}
+			output.push_str("\x1B[33m▐\x1B[39m\n");
+		}
+		output.push_str(&format!("\x1B[33m▙{}▟\x1B[39m\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+
+		output
+	}
+}
+
+fn main() {
+	let board = Board::new();
+	println!("{}", board.render());
+}
+```
+
+This will give us a board that is pretty close to the original game:
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span><span style="color:aqua;">◀▶</span>                                                                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span><span style="color:lime;">░░</span><span style="color:lime;">░░</span>                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>            <span style="color:yellow;">▓▓</span>                                                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+```
+
+But I gotta say looking at the code it's hard to see where an ANSI escape sequence ends and our output starts.
+Let's clean this up by adding some consts for each of the colors:
+
+```rust {data-file="main.rs", data-fold="['1-3', '10-35', '56-60']" hl_lines=["5-8", 37, 40, "44-46", 49, 51]}
+const BOARD_WIDTH: usize = 39;
+const BOARD_HEIGHT: usize = 20;
+const TILE_SIZE: usize = 2;
+
+const ANSI_YELLOW: &str = "\x1B[33m";
+const ANSI_GREEN: &str = "\x1B[32m";
+const ANSI_CYAN: &str = "\x1B[36m";
+const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug)]
+enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Board {
+	buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		buffer[0][0] = Tile::Player;
+		buffer[2][5] = Tile::Block;
+		buffer[2][6] = Tile::Block;
+		buffer[2][7] = Tile::Block;
+		buffer[3][6] = Tile::StaticBlock;
+
+		Self { buffer }
+	}
+
+	fn render(&self) -> String {
+		let mut output = format!("{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}")),
+					Tile::Block => output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}")),
+						Tile::StaticBlock => output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}")),
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!("{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+
+		output
+	}
+}
+
+fn main() {
+	let board = Board::new();
+	println!("{}", board.render());
+}
+```
+
+Because the method [`push_str`](https://doc.rust-lang.org/std/string/struct.String.html#method.push_str) expects a
+[`&str`](https://doc.rust-lang.org/std/primitive.str.html) and the macro
+[`format`](https://doc.rust-lang.org/std/macro.format.html) returns a `String` we have to pass what `format` returns by
+reference so we end up doing this: `output.push_str(&format!("Foo"));`.
+
+> [!NOTE]
+> In a real-world application, you’d typically rely on a library like [crossterm](https://crates.io/crates/crossterm)
+> to handle terminals that don’t fully support every ANSI escape sequence.
+> Here, however, we peak into what a crate like crossterm would do under the hood for a terminal that supports our
+> sequences.
+
+Our code is much more readable now and we can start listening to keyboard input.
 
 ## Listening to `stdin`
 
