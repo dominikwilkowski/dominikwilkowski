@@ -15,7 +15,7 @@ hideBackToTop: false
 header: assets/header.jpg
 ---
 
-<div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg"></div>
+<div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg" title="I'm perfectly able to add my own em dashes, thank you very much!"></div>
 
 ## Intro
 
@@ -1233,7 +1233,7 @@ cargo run
 <span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
 ```
 
-But I gotta say looking at the code it's hard to see where an ANSI escape sequence ends and our output starts.
+But I gotta say: looking at the code, it's hard to see where an ANSI escape sequence ends and our output starts.
 Let's clean this up by adding some consts for each of the colors:
 
 ```rust {data-file="main.rs", data-fold="['1-3', '10-35', '56-60']" hl_lines=["5-8", 37, 40, "44-46", 49, 51]}
@@ -1313,6 +1313,22 @@ reference so we end up doing this: `output.push_str(&format!("Foo"));`.
 Our code is much more readable now and we can start listening to keyboard input.
 
 ## Listening to `stdin`
+
+## Terminal modes
+
+https://en.wikipedia.org/wiki/Terminal_mode
+
+By default, Unix-style tty (i.e. console) drivers will take input in "cooked mode". In this mode, it provides a certain amount of command-line editing. The user can type in a line of input, possibly deleting and retyping some of it (but that doesn't always work) and the program won't see it until the user hits enter.
+
+This probably harkens back to the days of hardware terminals connected to the computer via a serial line; if the terminal handles some of the low-level editing, the computer doesn't have to. It also gives trivial C programs some basic input editing for free.
+
+In contrast, raw mode sets up the TTY driver to pass every character to the program as it is typed. Programs (on Unixish operating systems) are started in cooked mode by default and need to enable raw mode.
+
+How to do this used to vary wildly between operating systems, although POSIX has standardized this stuff these days. On Linux, you can read the "termios" and "tty_ioctl" man pages for the documentation. Basically, you get a data structure containing the tty settings, modify the parts you care about (specifically, enabling raw mode) and then pass it back.
+
+Another possibility is to just use the ncurses library. It abstracts away all of that stuff for you.
+
+in raw mode it is the application's job to echo the characters typed
 
 ## Generating the terrain
 
