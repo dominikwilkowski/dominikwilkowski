@@ -579,8 +579,9 @@ So we made a new method that takes a reference to `self` and returns a `String`.
 Then we make a new mutable `String` called `output` and iterate in a nested loop over each tile and push into `output`
 what the tile we match should be displayed as, before returning it.
 
-Note in the code above, we use two different methods on `output`: `push_str` and `push`.
-That's because a line break `\n` is a `char` and those can be pushed into a `String` much faster than other string
+> [!Note]
+> In the code above, we use two different methods on `output`: `push_str` and `push`.
+> That's because a line break `\n` is a `char` and those can be pushed into a `String` much faster than other string
 slices.
 
 We also opted for a tile being 2 characters long from the terminal perspective.
@@ -1313,6 +1314,142 @@ reference so we end up doing this: `output.push_str(&format!("Foo"));`.
 Our code is much more readable now and we can start listening to keyboard input.
 
 ## Listening to `stdin`
+
+I mentioned `stdout` before but now it's time to actually briefly talk about what that is.
+`stdout` stands for `standard out` and is part of the three
+[standard streams](https://en.wikipedia.org/wiki/Standard_streams) between programs and their environment:
+
+- `stdout` - "Standard out"; the stream we output our data into
+- `stderr` - "Standard error"; the stream we output all of our error into
+- `stdin` - "Standard in"; the stream we read for input
+
+We've been using `stdout` via the `println` macro and you would have been using it via `console.log`, `print()`, `echo`
+etc in other languages.
+Now we need to listen for keyboard input because we want to know if the user of our game hit a key to move the player so
+we need to listen to `stdin`.
+
+And if we think about it: we really only want to render the board when things have changed in our state so only when the
+user has hit a key to move the player.
+So we need a `play` method that listens to keyboad input and calls `render` when the right keys have been pressed.
+
+Listening to `stdin` means we have to lock `stdin` for reading and direct that stream to a buffer which we can `match`
+against:
+
+```rust {data-file="main.rs", data-fold="['3-56']" hl_lines=[1, "58-72", 77]}
+use std::io::{Read, stdin};
+
+const BOARD_WIDTH: usize = 39;
+const BOARD_HEIGHT: usize = 20;
+const TILE_SIZE: usize = 2;
+
+const ANSI_YELLOW: &str = "\x1B[33m";
+const ANSI_GREEN: &str = "\x1B[32m";
+const ANSI_CYAN: &str = "\x1B[36m";
+const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug)]
+enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Board {
+	buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		buffer[0][0] = Tile::Player;
+		buffer[2][5] = Tile::Block;
+		buffer[2][6] = Tile::Block;
+		buffer[2][7] = Tile::Block;
+		buffer[3][6] = Tile::StaticBlock;
+
+		Self { buffer }
+	}
+
+	fn render(&self) -> String {
+		let mut output = format!("{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}")),
+					Tile::Block => output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}")),
+					Tile::StaticBlock => output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}")),
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!("{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+
+		output
+	}
+
+	fn play(&self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+		}
+	}
+}
+
+fn main() {
+	let board = Board::new();
+	board.play();
+}
+```
+
+We're importing [`stdin`](https://doc.rust-lang.org/std/io/fn.stdin.html) function and the
+[`Write`](https://doc.rust-lang.org/std/io/trait.Write.html) trait from the [`io`](https://doc.rust-lang.org/std/io/)
+module in the standard library at the top of our `main.rs` file.
+
+Then we call `stdin()` to get a handle for the standard-in stream and then call
+[`lock`](https://doc.rust-lang.org/std/io/struct.Stdin.html#method.lock) on it so we can read from this stream
+(and no-one else can).
+Think of the way we read from a stream as the same as reading from a file, we have to put a read-lock on it to make sure
+no other processes are making changes to the stream while we're reading from it.
+
+We're expecting the user to use the <kbd>A</kbd>, <kbd>W</kbd>, <kbd>S</kbd> and <kbd>D</kbd> for direction (mainly
+because it's simpler to listen to letter keys than arrow keys for now) which means we will need a buffer with exactly
+one byte and use the [`read_exact`](https://doc.rust-lang.org/std/io/trait.Read.html#method.read_exact) method to fill
+it.
+`read_exact` returns a [`Result`](https://doc.rust-lang.org/std/io/type.Result.html) because reading from the stream
+could fail.
+While it doesn't fail, and the `Result` is `Ok`, we loop over the input and match against the byte we're getting back.
+Since it's easier to read characters then bytes I convert the byte into a `char` and then match against it.
+
+> [!Note]
+> You could very well also write the below but I find that less readable:
+> ```rust
+> match buffer[0] {
+> 	b'q' => {
+> 		println!("Good bye");
+> 		break;
+> 	},
+> 	_ => {},
+> }
+> ```
+> In my very limited testing both compile to the same assembly: [char](https://play.rust-lang.org/?version=stable&mode=release&edition=2024&gist=41ae4f4a647997baf5b951ba2a283ebc) vs [byte](https://play.rust-lang.org/?version=stable&mode=release&edition=2024&gist=3122c1ff9734439bd3dc78fe437973b6)
+
+Inside the match we just check for the letter `q` (lowercase) and print a good bye message and break our `while` loop
+thus ending our program.
 
 ## Terminal modes
 
