@@ -1146,7 +1146,7 @@ We will use this technique later when we start moving around on the board.
 
 Now that we know how to add colors to our output let's make our `render` method prettier:
 
-```rust {data-file="main.rs", data-fold="['1-30']", hl_lines=[32, 35, "39-41", 44, 46, "53-54"]}
+```rust {data-file="main.rs", data-fold="['1-30']", hl_lines=["32-33", 36, "40-42", 45, "47-50", "57-58"]}
 const BOARD_WIDTH: usize = 39;
 const BOARD_HEIGHT: usize = 20;
 const TILE_SIZE: usize = 2;
@@ -1178,7 +1178,8 @@ impl Board {
 	}
 
 	fn render(&self) -> String {
-		let mut output = format!("\x1B[33m▛{}▜\x1B[39m\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+		let mut output =
+			format!("\x1B[33m▛{}▜\x1B[39m\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
 
 		for rows in self.buffer {
 			output.push_str("\x1B[33m▌\x1B[39m");
@@ -1192,7 +1193,10 @@ impl Board {
 			}
 			output.push_str("\x1B[33m▐\x1B[39m\n");
 		}
-		output.push_str(&format!("\x1B[33m▙{}▟\x1B[39m\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+		output.push_str(&format!(
+			"\x1B[33m▙{}▟\x1B[39m\n",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
 
 		output
 	}
@@ -1237,7 +1241,7 @@ cargo run
 But I gotta say: looking at the code, it's hard to see where an ANSI escape sequence ends and our output starts.
 Let's clean this up by adding some consts for each of the colors:
 
-```rust {data-file="main.rs", data-fold="['1-3', '10-35', '56-60']", hl_lines=["5-8", 37, 40, "44-46", 49, 51]}
+```rust {data-file="main.rs", data-fold="['1-3', '10-35', '69-72']", hl_lines=["5-8", "38-40", 43, "47-55", 58, "60-63"]}
 const BOARD_WIDTH: usize = 39;
 const BOARD_HEIGHT: usize = 20;
 const TILE_SIZE: usize = 2;
@@ -1274,21 +1278,33 @@ impl Board {
 	}
 
 	fn render(&self) -> String {
-		let mut output = format!("{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
 
 		for rows in self.buffer {
 			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
 			for tile in rows {
 				match tile {
 					Tile::Empty => output.push_str("  "),
-					Tile::Player => output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}")),
-					Tile::Block => output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}")),
-						Tile::StaticBlock => output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}")),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
 				}
 			}
 			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
 		}
-		output.push_str(&format!("{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
 
 		output
 	}
@@ -1335,7 +1351,7 @@ So we need a `play` method that listens to keyboad input and calls `render` when
 Listening to `stdin` means we have to lock `stdin` for reading and direct that stream to a buffer which we can `match`
 against:
 
-```rust {data-file="main.rs", data-fold="['3-56']", hl_lines=[1, "58-72", 77]}
+```rust {data-file="main.rs", data-fold="['3-68']", hl_lines=[1, "70-84", 89]}
 use std::io::{Read, stdin};
 
 const BOARD_WIDTH: usize = 39;
@@ -1374,21 +1390,33 @@ impl Board {
 	}
 
 	fn render(&self) -> String {
-		let mut output = format!("{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
 
 		for rows in self.buffer {
 			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
 			for tile in rows {
 				match tile {
 					Tile::Empty => output.push_str("  "),
-					Tile::Player => output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}")),
-					Tile::Block => output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}")),
-					Tile::StaticBlock => output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}")),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
 				}
 			}
 			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
 		}
-		output.push_str(&format!("{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
 
 		output
 	}
@@ -1456,7 +1484,7 @@ When you run this you notice the program doesn't finish until you hit <kbd>q</kb
 This is great.
 Now we can add the four braches for our directions.
 
-```rust {data-file="main.rs", data-fold="['1-57', '86-90']", hl_lines=["65-76"]}
+```rust {data-file="main.rs", data-fold="['1-69', '98-102']", hl_lines=["77-88"]}
 use std::io::{Read, stdin};
 
 const BOARD_WIDTH: usize = 39;
@@ -1495,21 +1523,33 @@ impl Board {
 	}
 
 	fn render(&self) -> String {
-		let mut output = format!("{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
 
 		for rows in self.buffer {
 			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
 			for tile in rows {
 				match tile {
 					Tile::Empty => output.push_str("  "),
-					Tile::Player => output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}")),
-					Tile::Block => output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}")),
-					Tile::StaticBlock => output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}")),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
 				}
 			}
 			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
 		}
-		output.push_str(&format!("{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
 
 		output
 	}
@@ -1552,7 +1592,7 @@ fn main() {
 Ok point of order: Looking at our code I'm getting a [code smell](https://en.wikipedia.org/wiki/Code_smell).
 
 > [!TIP]
-> Never ignore code smells, they will **always** get stronger and harder to fix with time
+> Never ignore code smells (your gut instincts), they will **always** get stronger and harder to fix with time
 
 What is this smell?
 We have a `Board` struct that now contains `new`, `render` and now also `play`.
@@ -1565,6 +1605,15 @@ We will likely do more things within our game like deal with scores, game state 
 a `Game` struct that contains all that logic and keep the `Board` isolated to just board business?
 
 Let's create a new file in our `src` folder called `board.rs` and move all our board logic there:
+
+```console
+.
+├── Cargo.lock
+├── Cargo.toml
+└── src
+    ├── board.rs
+    └── main.rs
+```
 
 ```rust {data-file="board.rs"}
 #[derive(Debug)]
@@ -1586,21 +1635,33 @@ impl Board {
 	}
 
 	fn render(&self) -> String {
-		let mut output = format!("{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
 
 		for rows in self.buffer {
 			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
 			for tile in rows {
 				match tile {
 					Tile::Empty => output.push_str("  "),
-					Tile::Player => output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}")),
-					Tile::Block => output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}")),
-					Tile::StaticBlock => output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}")),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
 				}
 			}
 			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
 		}
-		output.push_str(&format!("{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
 
 		output
 	}
@@ -1609,7 +1670,7 @@ impl Board {
 
 And our `main.rs` file can be cleaned up a little:
 
-```rust {data-file="main.rs", hl_lines=["21-22", 25, 27, "60-61"]}
+```rust {data-file="main.rs", hl_lines=["21-22", 25, 28, "62-63"]}
 use std::io::{Read, stdin};
 
 const BOARD_WIDTH: usize = 39;
@@ -1636,7 +1697,9 @@ struct Game {
 
 impl Game {
 	fn new() -> Self {
-		Self { board: Board::new() }
+		Self {
+			board: Board::new(),
+		}
 	}
 
 	fn play(&self) {
@@ -1677,7 +1740,7 @@ fn main() {
 Now having separated these we need to tell rust that we just created a new
 [module](https://doc.rust-lang.org/stable/book/ch07-02-defining-modules-to-control-scope-and-privacy.html).
 
-```rust {data-file="main.rs", data-fold="['5-64']", hl_lines=[3]}
+```rust {data-file="main.rs", data-fold="['5-66']", hl_lines=[3]}
 use std::io::{Read, stdin};
 
 mod board;
@@ -1706,7 +1769,9 @@ struct Game {
 
 impl Game {
 	fn new() -> Self {
-		Self { board: Board::new() }
+		Self {
+			board: Board::new(),
+		}
 	}
 
 	fn play(&self) {
@@ -1748,7 +1813,7 @@ This includes our `board.rs` file into our codebase and we can watch the rust-an
 The compiler reminds us that everything by default in rust is private and has to be explicitly made public.
 So let's throw in some [`pub`](https://doc.rust-lang.org/std/keyword.pub.html) keywords where we need them:
 
-```rust {data-file="main.rs", data-fold="['16-66']", hl_lines=["7-9", "11-14"]}
+```rust {data-file="main.rs", data-fold="['16-68']", hl_lines=["7-9", "11-14"]}
 use std::io::{Read, stdin};
 
 mod board;
@@ -1779,7 +1844,9 @@ struct Game {
 
 impl Game {
 	fn new() -> Self {
-		Self { board: Board::new() }
+		Self {
+			board: Board::new(),
+		}
 	}
 
 	fn play(&self) {
@@ -1819,8 +1886,11 @@ fn main() {
 
 And import those public variables now in our `board.rs` file and make `Board` and its method `new` public as well:
 
-```rust {data-file="board.rs", data-fold="['12-40']", hl_lines=[1, 4, 9]}
-use crate::{ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH, TILE_SIZE, Tile};
+```rust {data-file="board.rs", data-fold="['15-55']", hl_lines=["1-4", 7, 12]}
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	TILE_SIZE, Tile,
+};
 
 #[derive(Debug)]
 pub struct Board {
@@ -1841,21 +1911,33 @@ impl Board {
 	}
 
 	fn render(&self) -> String {
-		let mut output = format!("{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n", "▀".repeat(BOARD_WIDTH * TILE_SIZE));
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
 
 		for rows in self.buffer {
 			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
 			for tile in rows {
 				match tile {
 					Tile::Empty => output.push_str("  "),
-					Tile::Player => output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}")),
-					Tile::Block => output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}")),
-					Tile::StaticBlock => output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}")),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
 				}
 			}
 			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
 		}
-		output.push_str(&format!("{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
 
 		output
 	}
@@ -1866,7 +1948,7 @@ This compiles again and feels much cleaner.
 
 Running this code we notice something odd though.
 You have to hit <kbd>Enter</kbd> before our game does anythign with the input.
-Even when you hit <kbd>a</kbd>, <kbd>w</kbd> and <kbd>s</kbd> hit all after one another and then <kbd>Enter</kbd> we see
+Even when you hit <kbd>a</kbd>, <kbd>w</kbd> and <kbd>s</kbd> all after one another and then <kbd>Enter</kbd> we see
 this in our terminal:
 
 ```console
@@ -1876,9 +1958,9 @@ Go Up
 Go Right
 ```
 
-I notice a few issues:
-- You are required to hit <kbd>Enter</kbd> before our program does anything
-- Moving is bunched together until you hit <kbd>Enter</kbd>
+A few issues:
+- We are required to hit <kbd>Enter</kbd> before our program does anything
+- Moving is bunched together until we hit <kbd>Enter</kbd>
 - Hitten any of our direction keys echos them to our output
 
 That's not a good way for a game to operate.
@@ -1890,19 +1972,408 @@ We can fix all that by setting our terminal to "raw mode".
 Unix-style terminals have [modes](https://en.wikipedia.org/wiki/Terminal_mode) that have different purposes.
 
 By default terminals are set to `cooked mode`.
-In this mode commands can be types out, edited by deleting the text before hitten <kbd>Enter</kbd> which sends it to the
-program and echos it back to the user.
+In this mode commands can be typed out, edited by deleting or adding to the text before hitten <kbd>Enter</kbd> which
+sends it to the program and echos it back to the user.
 This dates back to the days of hardware terminals connected to the computer via a serial line.
-The computer expected the terminals to handle the low-level editing so it didn't have to implement it.
+The computer expected the terminals to handle the low-level editing so it didn't have to implement it itself.
 
 In contrast, `raw mode` sets up the [TTY](https://en.wikipedia.org/wiki/Tty_(Unix)) driver to pass every character to
-the program as it is typed and it's the programs respinsibility to echo anything back to the user.
+the program as it's typed and keeps it the programs responsibility to echo anything back to the user.
 
 Programs are started in `cooked mode` by default and need to enable `raw mode` because imagine the mayham `raw mode`
 would cause if every single keystroke you type would be send to the shell instantly.
 
 Switching to raw mode in our linux like shall will be this command: `stty -icanon -echo`.
 Switching back is: `stty icanon echo`.
+So we have to call these commands in our program at the start and end to make sure we're in the right mode for our game.
+Let's do this by creating a new module called `raw_mode` in a new file `raw_mode.rs`:
+
+```console
+.
+├── Cargo.lock
+├── Cargo.toml
+└── src
+    ├── board.rs
+    ├── main.rs
+    └── raw_mode.rs
+```
+
+In there we will use the [`std::process::Command`](https://doc.rust-lang.org/std/process/struct.Command.html) struct to
+execute the commands and put it all into a struct called `RawMode`:
+
+```rust {data-file="raw_mode.rs"}
+use std::process::Command;
+
+pub struct RawMode;
+
+impl RawMode {
+	pub fn enter() {
+		let _ = Command::new("stty")
+			.arg("-icanon")
+			.arg("-echo")
+			.spawn()
+			.and_then(|mut child| child.wait());
+	}
+}
+```
+
+We implemented a new method on our struct called `enter` which creates a new instance of `Command`, adds two arguments
+to it and calls [`spawn`](https://doc.rust-lang.org/std/process/struct.Command.html#method.spawn) to create a new child
+process to execute this command in.
+Then we use [`and_then`](https://doc.rust-lang.org/std/result/enum.Result.html#method.and_then) to unwrap the `Result`
+which is returned from `spawn` and call `wait` on the child handle inside of it to make sure we return from our function
+only after the command was executed.
+We use `let _ =` to ignore the actual instance created by the struct because we don't need it.
+`_` is a catch all convention in rust that allows us to tell the compiler to ignore whatever is returned here.
+
+Calling `RawMode::enter()` will now execute our command telling our terminal to enter `raw mode`.
+Let's add one more thing in here: let's hide the cursor while the program is running because we don't need a cursor and
+we have learned we can use ANSI escape sequences to do this.
+
+```rust {data-file="raw_mode.rs", hl_lines=[12]}
+use std::{io, process::Command};
+
+pub struct RawMode;
+
+impl RawMode {
+	pub fn enter() {
+		let _ = Command::new("stty")
+			.arg("-icanon")
+			.arg("-echo")
+			.spawn()
+			.and_then(|mut child| child.wait());
+		print!("\x1b[?25l");
+	}
+}
+```
+
+Ok now let's include our new module into our codebase in the `main.rs` file and call our `enter` method at the start of
+our `main` function:
+
+```rust {data-file="main.rs", data-fold="['8-64']", hl_lines=[4, 6, 67]}
+use std::io::{Read, stdin};
+
+mod board;
+mod raw_mode;
+
+use crate::{board::Board, raw_mode::RawMode};
+
+pub const BOARD_WIDTH: usize = 39;
+pub const BOARD_HEIGHT: usize = 20;
+pub const TILE_SIZE: usize = 2;
+
+pub const ANSI_YELLOW: &str = "\x1B[33m";
+pub const ANSI_GREEN: &str = "\x1B[32m";
+pub const ANSI_CYAN: &str = "\x1B[36m";
+pub const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug)]
+pub enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Game {
+	board: Board,
+}
+
+impl Game {
+	fn new() -> Self {
+		Self {
+			board: Board::new(),
+		}
+	}
+
+	fn play(&self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'a' => {
+					println!("Go Left");
+				},
+				'w' => {
+					println!("Go Up");
+				},
+				's' => {
+					println!("Go Down");
+				},
+				'd' => {
+					println!("Go Right");
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+		}
+	}
+}
+
+fn main() {
+	RawMode::enter();
+
+	let game = Game::new();
+	game.play();
+}
+```
+
+Running our program now we notice we instantly get feedback on each keystroke and we also don't see the cursor anymore.
+This is great.
+Hitting <kbd>q</kbd> quites the game flawlessly and we feel a rush of accomplishment.
+
+Oh but we also notice that the cursor is now hidden, even after the program has finished.
+That's a side effect we didn't want.
+Let's quickly run this in our terminal to get the cursor back: `echo "\x1b[?25h"`.
+Ok we're back to normal but we can't expect our users to do this after they played our game so we need to do this in our
+program.
+We COULD create a new method now called `leave` or something that just echos the sequence and we call it at the end of
+the program but instead we will do it a bit more "rusty".
+
+As you know, rust cleans up its variables whenever they go out of scope.
+When cleaning up, rust will call the `destructor` via the [`Drop`](https://doc.rust-lang.org/std/ops/trait.Drop.html)
+trait.
+Let's use this to our advantage and implement this trait for our `RawMode` struct and have rust take care of when to
+call the clean up crew.
+
+```rust {data-file="raw_mode.rs", data-fold="['5-14']", hl_lines=["16-24"]}
+use std::{io, process::Command};
+
+pub struct RawMode;
+
+impl RawMode {
+	pub fn enter() {
+		let _ = Command::new("stty")
+			.arg("-icanon")
+			.arg("-echo")
+			.spawn()
+			.and_then(|mut child| child.wait());
+		print!("\x1b[?25l");
+	}
+}
+
+impl Drop for RawMode {
+	fn drop(&mut self) {
+		let _ = Command::new("stty")
+			.arg("icanon")
+			.arg("echo")
+			.spawn()
+			.and_then(|mut child| child.wait());
+		print!("\x1b[?25h");
+	}
+}
+```
+
+The `Drop` trait expects a function called `drop` to be implemented and inside we just reverse whatever we did in
+`enter` and have rust take care of the rest.
+
+But when we run our program now this function doesn't seem to be called at all because our cursor is still hidden after
+the program quits.
+
+That's because there is nothing to be cleaned up.
+While we call `enter` in our `main` function, we don't actually create an instance of `RawMode` that can be cleaned up
+by rust so the destructor on our struct is never called.
+Let's change that by returning `Self` from the `new` method.
+
+```rust {data-file="raw_mode.rs", data-fold="['17-26']", hl_lines=[6, 13]}
+use std::process::Command;
+
+pub struct RawMode;
+
+impl RawMode {
+	pub fn enter() -> Self {
+		let _ = Command::new("stty")
+			.arg("-icanon")
+			.arg("-echo")
+			.spawn()
+			.and_then(|mut child| child.wait());
+		print!("\x1b[?25l");
+		Self
+	}
+}
+
+impl Drop for RawMode {
+	fn drop(&mut self) {
+		let _ = Command::new("stty")
+			.arg("icanon")
+			.arg("echo")
+			.spawn()
+			.and_then(|mut child| child.wait());
+		print!("\x1b[?25h");
+	}
+}
+```
+
+But wait a minute, I hear you say.
+Now running `cargo run` get's us back to `cooked mode` because we have to hit <kbd>Enter</kbd> after each keyboard hit
+again.
+Why is that happening?
+
+Well if we look at our `main` function we see what the issue is:
+
+```rust {data-file="main.rs", data-fold="['1-65']"}
+use std::io::{Read, stdin};
+
+mod board;
+mod raw_mode;
+
+use crate::{board::Board, raw_mode::RawMode};
+
+pub const BOARD_WIDTH: usize = 39;
+pub const BOARD_HEIGHT: usize = 20;
+pub const TILE_SIZE: usize = 2;
+
+pub const ANSI_YELLOW: &str = "\x1B[33m";
+pub const ANSI_GREEN: &str = "\x1B[32m";
+pub const ANSI_CYAN: &str = "\x1B[36m";
+pub const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug)]
+pub enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Game {
+	board: Board,
+}
+
+impl Game {
+	fn new() -> Self {
+		Self {
+			board: Board::new()
+		}
+	}
+
+	fn play(&self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'a' => {
+					println!("Go Left");
+				},
+				'w' => {
+					println!("Go Up");
+				},
+				's' => {
+					println!("Go Down");
+				},
+				'd' => {
+					println!("Go Right");
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+		}
+	}
+}
+
+fn main() {
+	RawMode::enter();
+
+	let game = Game::new();
+	game.play();
+}
+```
+
+While we return an instance of `RawMode` (via `Self`) from the `enter` function, we don't actually put it anywhere.
+The instance is created but because it's never stored anywhere it's also cleaned up instantly thus calling our drop
+method and resetting our temrinal.
+We need to create a variable to keep this instance in but we also don't need to do anything with it.
+We just want to keep it around for the duration of the `main` function which represents the duration of our program.
+So to do that and prevent the linter to warn us about an unused variable, we can prefix our variable with an underscore
+to communciate to the compiler this is a thing we don't want to use any further.
+
+```rust {data-file="main.rs", data-fold="['1-65']", hl_lines=[67]}
+use std::io::{Read, stdin};
+
+mod board;
+mod raw_mode;
+
+use crate::{board::Board, raw_mode::RawMode};
+
+pub const BOARD_WIDTH: usize = 39;
+pub const BOARD_HEIGHT: usize = 20;
+pub const TILE_SIZE: usize = 2;
+
+pub const ANSI_YELLOW: &str = "\x1B[33m";
+pub const ANSI_GREEN: &str = "\x1B[32m";
+pub const ANSI_CYAN: &str = "\x1B[36m";
+pub const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug)]
+pub enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+#[derive(Debug)]
+struct Game {
+	board: Board,
+}
+
+impl Game {
+	fn new() -> Self {
+		Self {
+			board: Board::new()
+		}
+	}
+
+	fn play(&self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'a' => {
+					println!("Go Left");
+				},
+				'w' => {
+					println!("Go Up");
+				},
+				's' => {
+					println!("Go Down");
+				},
+				'd' => {
+					println!("Go Right");
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+		}
+	}
+}
+
+fn main() {
+	let _raw_mode = RawMode::enter();
+
+	let game = Game::new();
+	game.play();
+}
+```
+
+Now running our game we get the benefits of `raw mode` and things are cleaned up for us nicely without side effects.
 
 ## Moving around
 
