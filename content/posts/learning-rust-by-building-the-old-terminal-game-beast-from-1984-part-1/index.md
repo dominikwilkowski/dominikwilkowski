@@ -631,7 +631,7 @@ impl Board {
 			}
 			output.push_str("▐\n");
 		}
-		output.push_str(&format!("▙{}▟\n", "▄".repeat(39 * 2)));
+		output.push_str(&format!("▙{}▟", "▄".repeat(39 * 2)));
 
 		output
 	}
@@ -707,7 +707,7 @@ impl Board {
 			}
 			output.push_str("▐\n");
 		}
-		output.push_str(&format!("▙{}▟\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+		output.push_str(&format!("▙{}▟", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
 
 		output
 	}
@@ -819,7 +819,7 @@ impl Board {
 			}
 			output.push_str("▐\n");
 		}
-		output.push_str(&format!("▙{}▟\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+		output.push_str(&format!("▙{}▟", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
 
 		output
 	}
@@ -967,7 +967,7 @@ impl Board {
 			}
 			output.push_str("▐\n");
 		}
-		output.push_str(&format!("▙{}▟\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+		output.push_str(&format!("▙{}▟", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
 
 		output
 	}
@@ -1054,7 +1054,7 @@ impl Board {
 			}
 			output.push_str("▐\n");
 		}
-		output.push_str(&format!("▙{}▟\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+		output.push_str(&format!("▙{}▟", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
 
 		output
 	}
@@ -1122,7 +1122,7 @@ impl Board {
 			}
 			output.push_str("▐\n");
 		}
-		output.push_str(&format!("▙{}▟\n", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
+		output.push_str(&format!("▙{}▟", "▄".repeat(BOARD_WIDTH * TILE_SIZE)));
 
 		output
 	}
@@ -1194,7 +1194,7 @@ impl Board {
 			output.push_str("\x1B[33m▐\x1B[39m\n");
 		}
 		output.push_str(&format!(
-			"\x1B[33m▙{}▟\x1B[39m\n",
+			"\x1B[33m▙{}▟\x1B[39m",
 			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
 		));
 
@@ -1302,7 +1302,7 @@ impl Board {
 			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
 		}
 		output.push_str(&format!(
-			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n",
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
 			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
 		));
 
@@ -1414,7 +1414,7 @@ impl Board {
 			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
 		}
 		output.push_str(&format!(
-			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n",
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
 			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
 		));
 
@@ -1547,7 +1547,7 @@ impl Board {
 			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
 		}
 		output.push_str(&format!(
-			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n",
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
 			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
 		));
 
@@ -1561,17 +1561,17 @@ impl Board {
 
 		while lock.read_exact(&mut buffer).is_ok() {
 			match buffer[0] as char {
-				'a' => {
-					println!("Go Left");
-				},
 				'w' => {
 					println!("Go Up");
+				},
+				'd' => {
+					println!("Go Right");
 				},
 				's' => {
 					println!("Go Down");
 				},
-				'd' => {
-					println!("Go Right");
+				'a' => {
+					println!("Go Left");
 				},
 				'q' => {
 					println!("Good bye");
@@ -1659,7 +1659,7 @@ impl Board {
 			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
 		}
 		output.push_str(&format!(
-			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n",
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
 			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
 		));
 
@@ -1709,17 +1709,17 @@ impl Game {
 
 		while lock.read_exact(&mut buffer).is_ok() {
 			match buffer[0] as char {
-				'a' => {
-					println!("Go Left");
-				},
 				'w' => {
 					println!("Go Up");
+				},
+				'd' => {
+					println!("Go Right");
 				},
 				's' => {
 					println!("Go Down");
 				},
-				'd' => {
-					println!("Go Right");
+				'a' => {
+					println!("Go Left");
 				},
 				'q' => {
 					println!("Good bye");
@@ -1781,17 +1781,17 @@ impl Game {
 
 		while lock.read_exact(&mut buffer).is_ok() {
 			match buffer[0] as char {
-				'a' => {
-					println!("Go Left");
-				},
 				'w' => {
 					println!("Go Up");
+				},
+				'd' => {
+					println!("Go Right");
 				},
 				's' => {
 					println!("Go Down");
 				},
-				'd' => {
-					println!("Go Right");
+				'a' => {
+					println!("Go Left");
 				},
 				'q' => {
 					println!("Good bye");
@@ -1856,17 +1856,17 @@ impl Game {
 
 		while lock.read_exact(&mut buffer).is_ok() {
 			match buffer[0] as char {
-				'a' => {
-					println!("Go Left");
-				},
 				'w' => {
 					println!("Go Up");
+				},
+				'd' => {
+					println!("Go Right");
 				},
 				's' => {
 					println!("Go Down");
 				},
-				'd' => {
-					println!("Go Right");
+				'a' => {
+					println!("Go Left");
 				},
 				'q' => {
 					println!("Good bye");
@@ -1935,7 +1935,7 @@ impl Board {
 			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
 		}
 		output.push_str(&format!(
-			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}\n",
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
 			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
 		));
 
@@ -2094,17 +2094,17 @@ impl Game {
 
 		while lock.read_exact(&mut buffer).is_ok() {
 			match buffer[0] as char {
-				'a' => {
-					println!("Go Left");
-				},
 				'w' => {
 					println!("Go Up");
+				},
+				'd' => {
+					println!("Go Right");
 				},
 				's' => {
 					println!("Go Down");
 				},
-				'd' => {
-					println!("Go Right");
+				'a' => {
+					println!("Go Left");
 				},
 				'q' => {
 					println!("Good bye");
@@ -2261,17 +2261,17 @@ impl Game {
 
 		while lock.read_exact(&mut buffer).is_ok() {
 			match buffer[0] as char {
-				'a' => {
-					println!("Go Left");
-				},
 				'w' => {
 					println!("Go Up");
+				},
+				'd' => {
+					println!("Go Right");
 				},
 				's' => {
 					println!("Go Down");
 				},
-				'd' => {
-					println!("Go Right");
+				'a' => {
+					println!("Go Left");
 				},
 				'q' => {
 					println!("Good bye");
@@ -2343,17 +2343,17 @@ impl Game {
 
 		while lock.read_exact(&mut buffer).is_ok() {
 			match buffer[0] as char {
-				'a' => {
-					println!("Go Left");
-				},
 				'w' => {
 					println!("Go Up");
+				},
+				'd' => {
+					println!("Go Right");
 				},
 				's' => {
 					println!("Go Down");
 				},
-				'd' => {
-					println!("Go Right");
+				'a' => {
+					println!("Go Left");
 				},
 				'q' => {
 					println!("Good bye");
@@ -2373,9 +2373,13 @@ fn main() {
 }
 ```
 
-Now running our game we get the benefits of `raw mode` and things are cleaned up for us nicely without side effects.
+Now running our game we get the benefits of our terminal being in `raw mode` and things are cleaned up for us nicely
+without side effects.
+We now listen to the users keyboard and are executing functions on each key we're interested in for navigation.
+Naturally our next step should be to actually navigate our player on the board.
 
 ## Moving around
+
 
 ## Generating the terrain
 
