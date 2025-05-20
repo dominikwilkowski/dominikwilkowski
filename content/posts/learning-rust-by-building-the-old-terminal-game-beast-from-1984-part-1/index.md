@@ -2375,11 +2375,174 @@ fn main() {
 
 Now running our game we get the benefits of our terminal being in `raw mode` and things are cleaned up for us nicely
 without side effects.
+
+> [!Note]
+> I kept this `raw_mode` module simple for the sake of the tutorial but at this stage it wouldn't be able to detect
+> the [`sigint`](https://en.wikipedia.org/wiki/Signal_(IPC)) signal and thus not clean up when you stop the program with
+> <kbd>Ctrl</kbd> + <kbd>c</kbd>.
+> You should use [`crossterm`](https://docs.rs/crossterm/latest/crossterm/terminal/index.html#raw-mode) to do this
+> in a game you want to distribute or at least add an event handler for the sigint signal.
+
 We now listen to the users keyboard and are executing functions on each key we're interested in for navigation.
 Naturally our next step should be to actually navigate our player on the board.
 
 ## Moving around
 
+How do we move our player around the board?
+We have a board buffer that we need to manipulate in order for our `render` method to work.
+So when moving our player we would need to set the previous tile our player was in to `Tile::Empty` and the new tile our
+player is moving into, to `Tile::Player`.
+We have a branch for each direction in our `play` method so we can easily pass an enum for each direction into our
+function that calculates our move.
+Thought we need to know where the player is in order to calculate the new position for a given direction.
+We could do that by scanning the board buffer and find the location of `Tile::Player`.
+That seems like a lot of work to do for each move.
+Perhaps we keep track of our position each time we move and just recall that position from memory.
+
+Ok that sounds good, now let's think about where to put all this code.
+Moving a player doesn't seem appropriate for the board module.
+Also doesn't seem like a good fit for our `Game` struct really?
+Perhaps we create a new module just for the player that can handle movements, re-spawning and scores.
+
+With all that in mind let's create a new file called `player.rs`:
+
+```console
+.
+├── Cargo.lock
+├── Cargo.toml
+└── src
+    ├── board.rs
+    ├── main.rs
+    ├── player.rs
+    └── raw_mode.rs
+```
+
+In there we create a new struct called `Player` that holds our position and implements a `new` method.
+
+```rust {data-file="player.rs"}
+pub struct Player {
+	position: (usize, usize),
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self { position: (0, 0) }
+	}
+}
+```
+
+Our position requires two things: column and row.
+Let's keep it simple for now and just use a [`tuple`](https://doc.rust-lang.org/std/primitive.tuple.html) for this until
+it gets too messy.
+
+Now we need a new method to move our player.
+Since `move` is a reserved word in rust, let's call the method `advance`.
+This method would need to know what direction we're advancing in so perhaps we start with adding a new enum to our
+`main.rs` file which lays out each direction a player can go:
+
+```rust {data-file="main.rs", data-fold="['1-24', '32-78']", hl_lines=["25-30"]}
+use std::io::{Read, stdin};
+
+mod board;
+mod raw_mode;
+
+use crate::{board::Board, raw_mode::RawMode};
+
+pub const BOARD_WIDTH: usize = 39;
+pub const BOARD_HEIGHT: usize = 20;
+pub const TILE_SIZE: usize = 2;
+
+pub const ANSI_YELLOW: &str = "\x1B[33m";
+pub const ANSI_GREEN: &str = "\x1B[32m";
+pub const ANSI_CYAN: &str = "\x1B[36m";
+pub const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug)]
+pub enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+pub enum Direction {
+	Up,
+	Right,
+	Down,
+	Left,
+}
+
+#[derive(Debug)]
+struct Game {
+	board: Board,
+}
+
+impl Game {
+	fn new() -> Self {
+		Self {
+			board: Board::new()
+		}
+	}
+
+	fn play(&self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'w' => {
+					println!("Go Up");
+				},
+				'd' => {
+					println!("Go Right");
+				},
+				's' => {
+					println!("Go Down");
+				},
+				'a' => {
+					println!("Go Left");
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+		}
+	}
+}
+
+fn main() {
+	let _raw_mode = RawMode::enter();
+
+	let game = Game::new();
+	game.play();
+}
+```
+
+We will make this enum `pub` because we will need to use (_import_) it our player module:
+
+```rust {data-file="player.rs", hl_lines=[1, "12-14"]}
+use crate::Direction;
+
+pub struct Player {
+	position: (usize, usize),
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self { position: (0, 0) }
+	}
+
+	pub fn advance(&mut self, direction: Direction) {
+		todo!("We still need to write the logic here")
+	}
+}
+```
+
+Our new advance method now takes a mutable reference to self because we will have to change `position` and `direction`
+to tell us which direction the player is advancing in.
 
 ## Generating the terrain
 
