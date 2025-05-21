@@ -75,9 +75,17 @@
 		{{- end -}}
 
 		{{/* Header image */}}
-		{{- if .Param "header" -}}
+		{{- $p := .Param "header" -}}
+		{{- $res := $.Resources.GetMatch $p -}}
+		{{- if not $res -}}
+			{{- $res = resources.Get (strings.TrimPrefix $p "assets/") -}}
+		{{- end -}}
+
+		{{- if $res -}}
+			{{- $filter := images.Process "webp" -}}
+			{{- $webp  := $res | images.Filter $filter -}}
 			<div class="header-img-wrapper">
-				<div class="header-img" style="background-image: url({{- .Param "header" -}});"></div>
+				<div class="header-img" style="background-image: url('{{- $webp.RelPermalink -}}');"></div>
 			</div>
 		{{- end -}}
 

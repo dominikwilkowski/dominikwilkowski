@@ -1,13 +1,8 @@
-{{/*
-To get page resources and relative paths to work. Copied as is from default hook:
-https://github.com/gohugoio/hugo/blob/89bd02/tpl/tplimpl/embedded/templates/_default/_markup/render-image.html
-*/}}
 {{- $u := urls.Parse .Destination -}}
 {{- $url := $u.String -}}
 {{- $imgResource := .Page.Scratch.Get "typoNilVariable" -}}
 {{- if not $u.IsAbs -}}
 	{{- $path := strings.TrimPrefix "./" $u.Path -}}
-	{{/* Check if this is a page bundle or standalone page */}}
 	{{- if .PageInner.Resources -}}
 		{{- $imgResource = .PageInner.Resources.Get $path -}}
 	{{- else if (or .PageInner.Parent .PageInner.Parent.Resources) -}}
@@ -45,21 +40,32 @@ and build the img class string as "img-tag1 img-tag2 ..."
 {{/* Use the computed classes on the rendered figure */}}
 {{- if .IsBlock -}}
 	<figure class="{{- $classes -}}">
-		<div class="img-container" {{ with $imgResource }}style="--w: {{- .Width -}}px; --h: {{- .Height -}}px;"{{- end -}}>
-			<img loading="lazy" alt="{{- .Text -}}" src="{{- $url -}}" {{ with $imgResource }}width="{{- .Width -}}" height="{{- .Height -}}"{{ end }}>
+		<div class="img-container"
+			{{- with $imgResource -}}
+				{{- if ne .MediaType.SubType "svg" -}}
+					style="--w: {{- .Width -}}px; --h: {{- .Height -}}px;"
+				{{- end -}}
+			{{- end -}}>
+			<img loading="lazy" alt="{{- .Text -}}" src="{{- $url -}}"
+				{{- with $imgResource -}}
+					{{- if ne .MediaType.SubType "svg" -}}
+						width="{{- .Width -}}" height="{{- .Height -}}"
+					{{- end -}}
+				{{- end -}}>
 		</div>
-
 		{{- with .Title -}}
 			<figcaption>
 				<div class="caption-container">{{- . | markdownify -}}</div>
 			</figcaption>
 		{{- end -}}
 	</figure>
-	{{- else -}}
-	  {{/* inline image inside a paragraph */}}
-		<span class="img-nonblock" {{ with $imgResource }}style="--w: {{- .Width -}}px; --h: {{- .Height -}}px;"{{- end -}}>
-			{{- /* remove whitespace */ -}}
-			<img class="{{- $classes -}}" loading="lazy" src="{{ .Destination | safeURL }}" alt="{{ .Text }}">
-			{{- /* remove whitespace */ -}}
-		</span>
+{{- else -}}
+	<span class="img-nonblock"
+		{{- with $imgResource -}}
+			{{- if ne .MediaType.SubType "svg" -}}
+				style="--w: {{- .Width -}}px; --h: {{- .Height -}}px;"
+			{{- end -}}
+		{{- end -}}>
+		<img class="{{- $classes -}}" loading="lazy" src="{{- .Destination | safeURL -}}" alt="{{- .Text -}}">
+	</span>
 {{- end -}}

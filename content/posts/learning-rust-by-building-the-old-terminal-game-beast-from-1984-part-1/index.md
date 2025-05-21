@@ -2521,7 +2521,7 @@ fn main() {
 }
 ```
 
-We will make this enum `pub` because we will need to use (_import_) it our player module:
+We will make this enum `pub` because we will need to use (_import_) it in our player module:
 
 ```rust {data-file="player.rs", hl_lines=[1, "12-14"]}
 use crate::Direction;
@@ -2543,10 +2543,212 @@ impl Player {
 
 Our new advance method now takes a mutable reference to self because we will have to change `position` and `direction`
 to tell us which direction the player is advancing in.
+Inside our method naturally we use the all-powerfull `match` statement to branch off each `Direction` value.
+What do we do in each branch?
 
-## Generating the terrain
+If we go right, for example, we have to:
+- Change our old position on the buffer to `Tile::Empty`
+- Add 1 to the column of our position
+- Add `Tile::Player` to the board buffer at this new position
 
-## Pushing blocks
+That way when we call `render` next the player has moved and the next time we call the `advance` we go from the new
+position.
 
+```rust {data-file="player.rs", hl_lines=[1, 3, "13-23"]}
+use crate::{Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: (usize, usize),
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self { position: (0, 0) }
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		board.buffer[self.position.1][self.position.0] = Tile::Empty;
+
+		match direction {
+			Direction::Up => self.position.1 -= 1,
+			Direction::Right => self.position.0 += 1,
+			Direction::Down => self.position.1 += 1,
+			Direction::Left => self.position.0 -= 1,
+		}
+
+		board.buffer[self.position.1][self.position.0] = Tile::Player;
+	}
+}
+```
+
+When we run `carogo run` we get an error again: `Player` doesn't implement `Debug`.
+That's fair because the `Player` struct is used in our `Game` struct and that struct has the `Debug` trait derived.
+If that struct has it, all it's data must have it too.
+
+So we added the derive and all the other code but when we run our program again and walk left as the first thing we get
+a panic:
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span><span style="color:aqua;">◀▶</span>                                                                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span><span style="color:lime;">░░</span><span style="color:lime;">░░</span>                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>            <span style="color:yellow;">▓▓</span>                                                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+
+thread 'main' panicked at src/player.rs:20:32:
+attempt to subtract with overflow
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+
+What does "_attempt to subtract with overflow_" mean?
+Also our trusty compiler tells us where this error happened in our code: on line 20 in the `player.rs` file.
+
+```rust {data-file="player.rs", data-fold="['1-12']", hl_lines=[20]}
+use crate::{Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: (usize, usize),
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self { position: (0, 0) }
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		board.buffer[self.position.1][self.position.0] = Tile::Empty;
+
+		match direction {
+			Direction::Up => self.position.1 -= 1,
+			Direction::Right => self.position.0 += 1,
+			Direction::Down => self.position.1 += 1,
+			Direction::Left => self.position.0 -= 1,
+		}
+
+		board.buffer[self.position.1][self.position.0] = Tile::Player;
+	}
+}
+```
+
+When we start the game our position is `(0,0)` and on line 20 we attempt to substract `1` from `0`.
+But the type of that number is `usize` which means it can't be a value of anything below 0 so rust panics.
+Now thinking about this, what would happen when you walk across to the right and further:
+
+```console
+cargo run
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span>                                                                            <span style="color:aqua;">◀▶</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span><span style="color:lime;">░░</span><span style="color:lime;">░░</span>                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>            <span style="color:yellow;">▓▓</span>                                                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+
+thread 'main' panicked at src/player.rs:23:9:
+index out of bounds: the len is 39 but the index is 39
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+
+Yeah that panics too because we're trying to index into our board buffer with a number larger than the index of our
+array.
+
+Basically we need to guard against each boundary of our board.
+
+```rust {data-file="player.rs", data-fold="['3-11']", hl_lines=[1, "17-35"]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: (usize, usize),
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self { position: (0, 0) }
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		board.buffer[self.position.1][self.position.0] = Tile::Empty;
+
+		match direction {
+			Direction::Up => {
+				if self.position.1 > 0 {
+					self.position.1 -= 1
+				}
+			},
+			Direction::Right => {
+				if self.position.0 < BOARD_WIDTH - 1 {
+					self.position.0 += 1
+				}
+			},
+			Direction::Down => {
+				if self.position.1 < BOARD_HEIGHT - 1 {
+					self.position.1 += 1
+				}
+			},
+			Direction::Left => {
+				if self.position.0 > 0 {
+					self.position.0 -= 1
+				}
+			},
+		}
+
+		board.buffer[self.position.1][self.position.0] = Tile::Player;
+	}
+}
+```
+
+Now we're checking to make sure we don't do anything illigal with our buffer or our position and running this code gives
+us a nice way to walk across our board.
+
+We notice that we're "eating" the blocks on the board as we walk over them but that's ok for now.
+
+![A screen recording of the board with the player walking around randomly also over Blocks and StaticBlocks and erasing
+them as we leave their tile.](assets/moving.svg)
+
+This is it.
+We did it!
+The first part of this tutorial is done and we got a baord we can walk around on with a couple tiles hardcoded.
+
+In the next part we will generate a terrain, implement pushing blocks around and look into adding beasts.
+
+<br><br><br>
 ![A blue rectangular sign reading ‘PLEASE SHARE THIS POST’ mounted on a rustic wooden fence post, with a backdrop of
 dense green foliage and a grassy clearing.](assets/share.jpg)

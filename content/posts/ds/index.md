@@ -12,7 +12,7 @@ readTime: true
 math: true
 showTags: true
 hideBackToTop: false
-header: ../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/assets/header.jpg
+header: assets/placeholder.png
 ---
 
 <div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg"></div>
@@ -346,4 +346,21 @@ Some text ![Placeholder image alt text](assets/placeholder.png#small#inline) mor
 Non-block image line height inline:
 
 Some text ![Placeholder image alt text](assets/placeholder.png#lineheight#inline) more text.
+
+## Terminal recordings
+
+Use [termsvg](https://github.com/MrMarble/termsvg) and run:
+
+```sh
+termsvg rec ~/Desktop/my-cast.svg
+cargo run
+# do stuff and end program
+exit
+```
+
+To convert the cast:
+
+```sh
+termsvg export ~/Desktop/my-cast.cast -m
+```
 
