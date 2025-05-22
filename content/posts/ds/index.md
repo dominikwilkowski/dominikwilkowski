@@ -361,6 +361,6 @@ exit
 To convert the cast:
 
 ```sh
-termsvg export ~/Desktop/my-cast.cast -m
+termsvg export -m -n -b "rgb(40, 42, 44)" ~/Desktop/my-cast.cast
 ```
 

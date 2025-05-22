@@ -1,4 +1,4 @@
-{"version":2,"width":85,"height":26,"timestamp":1747820093,"duration":11.811564,"env":{"SHELL":"/bin/zsh","TERM":"xterm-256color"}}
+{"version":2,"width":80,"height":26,"timestamp":1747820093,"duration":11.811564,"env":{"SHELL":"/bin/zsh","TERM":"xterm-256color"}}
 [0.299925,"o","\u001b[?2004l\r\r\n"]
 [0.347024,"o","\u001b[1m\u001b[32m    Finished\u001b[0m `dev` profile [unoptimized + debuginfo] target(s) in 0.00s\r\n"]
 [0.347441,"o","\u001b[1m\u001b[32m     Running\u001b[0m `target/debug/beast`\r\n"]
@@ -232,7 +232,7 @@
 [10.791787,"o","Good bye\r\n"]
 [10.799244,"o","\u001b[?25h"]
 [10.799572,"o","\u001b[1m\u001b[7m%\u001b[27m\u001b[1m\u001b[0m                                                                                    \r \r"]
-[10.79964,"o","\r\u001b[0m\u001b[27m\u001b[24m\u001b[J\u001b[32m~/Desktop/beast\u001b[39m λ \u001b[K\u001b[?2004h"]
+[10.79964,"o","\r\u001b[0m\u001b[27m\u001b[24m\u001b[J\u001b[32m~/code/beast\u001b[39m λ \u001b[K\u001b[?2004h"]
 [13.221015,"o","e"]
 [13.377731,"o","\bex"]
 [13.515808,"o","i"]

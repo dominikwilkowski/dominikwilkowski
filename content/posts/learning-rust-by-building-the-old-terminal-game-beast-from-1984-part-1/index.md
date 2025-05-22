@@ -1,12 +1,12 @@
 ---
-title: 'An intro into rust by building an old terminal game from 1984, Part 1'
-date: '2025-04-26T21:11:29+10:00'
+title: 'An Introduction to Rust by building an old terminal game from 1984, Part 1'
+date: '2025-05-21T21:11:29+10:00'
 draft: false
 visibility: false
 summary: >
-  I've found building the game BEAST from 1984 helped me teach rust as it touches many concepts of rust and gets us to
-  see something pretty quickly.
-description: "We are building the terminal game BEAST together to learn to apply rust to a project"
+  You just read the Rust book and now want to apply your new skills to something real.
+  Let's build a terminal game I grew up with, learn how the terminal works and how to control it.
+description: "We are building the terminal game BEAST together to learn to apply Rust to a project."
 toc: true
 readTime: true
 tags: ["rust", "terminal", "game development", "tutorial"]
@@ -15,54 +15,58 @@ hideBackToTop: false
 header: assets/header.jpg
 ---
 
-<div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg" title="I'm perfectly able to add my own em dashes, thank you very much!"></div>
+<div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg" title="I'm perfectly able to add my own em dashes, thank you very much!" width="120px" height="120px"></div>
 
 ## Intro
 
-I've been teaching rust to a couple of friends and colleagues in lots of different ways.
-In the latest sessions, I've been using [this game I just finished building](https://github.com/dominikwilkowski/beast)
-as the project we're building together with great success.
-It allows us to see results very fast, it's fun to work on as you can add your own spin and it happens to touch on a lot
-of the important aspects of the language.
-So I thought I write it up in a series of blog posts.
+I've been teaching Rust to a couple of friends and colleagues in lots of different ways.
+In my latest sessions, I've been using [this game I built as a homage](https://github.com/dominikwilkowski/beast) to
+apply their newly learned rust skills to a project.
+It seems to go over well with people because it's something real people can reason about, it's fun to work on as you can
+add your own spin to it and it happens to touch on a lot of the important aspects of the language.
+So I thought I'd write it up in a series of blog posts.
 
-A small note to start: I'm by no means an expert in rust. I love the language and continue to learn so if you find
-anything fishy in these posts (and it's not a [_turbofish_](https://turbo.fish/)), do let me know by submitting
+A small note to start: I'm by no means an expert in Rust.
+I love the language and continue to learn, so if you find anything fishy in these posts (and it's not a
+[_turbofish_](https://turbo.fish/)), do let me know by submitting
 [a pull request or an issue](https://github.com/dominikwilkowski/dominikwilkowski).
 
 ## Prerequisites
 
-I will assume you have some basic knowledge of rust and won't go too deep into language features.
+I will assume you have some basic knowledge of Rust and won't go too deep into how the language works.
 What I want to focus on is the use of the language for something you can see and play with.
 This is how I learn myself.
 
 > It's not just knowing what each of the bits are in the language, it's how you use them and how it all comes together.
 
-But if you don't know the bits, I recommend you start with the [official book](https://doc.rust-lang.org/book/).
-And if you're so inclined, do have a look at [easy_rust](github.com/Dhghomon/easy_rust) which is a great way to learn
-rust as it is organized in small chapters not longer than 20min each with videos in plain language.
-Lastely you should check out [rustlings](https://github.com/rust-lang/rustlings) to get a feel for the language.
+I recommend you have read the [official book](https://doc.rust-lang.org/book/) and if you're so inclined, do have a look
+at [easy_rust](https://github.com/Dhghomon/easy_rust), which is a great way to learn Rust as it is organized in small
+chapters, not longer than 20 minutes each, with videos in plain language.
+Lastly, checking out [rustlings](https://github.com/rust-lang/rustlings) helps you to get a feel for the language.
 
 ## What we're building
 
-[BEAST](https://en.wikipedia.org/wiki/Beast_(video_game)) is a text-based action game developed for MS-DOS by Dan Baker, Alan Brown, Mark Hamilton, and Derrick Shadel. It was distributed as shareware in 1984.
+[BEAST](https://en.wikipedia.org/wiki/Beast_(video_game)) is a terminal-based action game developed for MS-DOS by Dan
+Baker, Alan Brown, Mark Hamilton, and Derrick Shadel.
+It was distributed as shareware in 1984.
 
-It's a game I grew up with back when I was young _(and everything was still black and white, there were no mobile phones
-and computer monitors were monochrome and emitted radiation)_.
+It's a game I grew up with back when I was young _(everything was still black and white, there were no mobile phones,
+computer monitors were monochrome and emitted radiation)_.
 
 <div style="position:relative;height:0;padding-bottom:68.547%;margin:1.5rem 0;">
-	<iframe src="https://archive.org/embed/Beast_1020" width="560" height="384" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>
+	<iframe src="https://archive.org/embed/Beast_1020" width="560" height="384" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Archive.org Beast Game to play in the browser"></iframe>
 </div>
 
 To get a feel for the game, play it in the iframe above or on [archive.org](https://archive.org/embed/Beast_1020)
 directly.
-But here in borad strokes:
+
+The broad strokes are:
 
 - You're a player on a 2D board ◀▶
 - The board contains blocks you can push ░░
-- ... and blocks you can't push ▓▓
+- &hellip; and blocks you can't push ▓▓
 - There are beasts trying to get you ├┤
-- To win you have to squish the beasts between two blocks ◀▶░░├┤░░
+- To win you have to squish the beasts between two blocks &nbsp;&nbsp;◀▶░░├┤░░
 
 ![Animated scene from the 1984 ASCII game BEAST, showing a blue diamond-shaped player character navigating a maze-like environment made of green block clusters, avoiding obstacles and moving toward a yellow target area in the top right
 corner.
@@ -70,20 +74,25 @@ The screen features a classic DOS-style black background with retro text-based g
 
 ![The player moves a blue diamond character to push a wall block, crushing a red H-shaped beast between two blocks](assets/squish.gif#small)
 
-There are more advanced challenges in later levels but for this tutorial we will focus only on the basics so you can add
-your own levels later yourself.
+There are more advanced challenges in later levels, but for this tutorial, we will focus only on the basics so you can
+add your own levels later yourself.
+
+For part 1, this post, we will be doing a bit of setup, go through some of the tooling and build our board to allow our
+player to move around on it.
 
 ## Setup
 
-Let's build a terminal game in rust!
-We start by creating our rust project:
+Let's build a terminal game in Rust <span role="img" aria-label="Excitment" tabIndex="0" class="emoji">🥳</span>!
+
+We start by creating our Rust project:
 
 ```console
 cargo new beast
 cd beast
 ```
 
-This will create a new rust project named `beast` with a binary target:
+This will create a new Rust project named `beast` with a
+[binary target](https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries):
 
 ```console
 .
@@ -92,8 +101,8 @@ This will create a new rust project named `beast` with a binary target:
     └── main.rs
 ```
 
-Cargo has two [entry points](https://doc.rust-lang.org/stable/cargo/reference/cargo-targets.html?highlight=library#cargo-targets)
-for its crates and you can choose either or both in your project:
+Cargo has two [entry points](https://doc.rust-lang.org/stable/cargo/reference/cargo-targets.html#cargo-targets)
+for its crates, and you can choose either or both in your project:
 - a binary, the `main.rs` file with a `main()` function which executes when you run the program
 - a library, the `lib.rs` file which can be imported by other crates
 
@@ -112,10 +121,10 @@ edition = "2024"
 ```
 
 We have our `name` and `version` set for us and something called `edition`.
-[The edition](https://doc.rust-lang.org/edition-guide/editions/index.html) is the version of the rust language we want
+[The edition](https://doc.rust-lang.org/edition-guide/editions/index.html) is the version of the Rust language we want
 to use and `2024` is the latest as of this writing.
 
-Our `src/main.rs` file is our entrypoint.
+Our `src/main.rs` file is our entry point.
 This is where we will call our game logic and define our modules.
 
 ```rust {data-file="main.rs"}
@@ -134,12 +143,12 @@ Hello, world!
 ```
 
 Look at us!
-Building binaries and executing them like we've never done anything else.
+Building binaries and executing them like there's no tomorrow.
 <span role="img" aria-label="High five hands" tabIndex="0" class="emoji">🙌</span>
 
 ## The Board
 
-Ok let's start thinking what we're about to do.
+OK, let's start thinking about what we're doing.
 
 ![Screenshot from the 1984 ASCII game BEAST. The screen is filled with a grid of green and yellow blocky patterns representing movable blocks and solid blocks. The player, shown as a cyan diamond shape, is located in the bottom-left corner. Several red 'H' characters, representing hostile beasts, are scattered on the right side of the screen. The game has a dark black background bordered by a yellow frame, with the environment laid out in a procedurally generated maze-like pattern.](assets/board.png "How do we want to represent this board in code, where's the source of truth, how do we render it and all that while keeping the sanity of future-us?")
 
@@ -151,24 +160,24 @@ This is indeed a good way to approach this for a game with a large number of ent
 to keep track of their own states.
 
 But our board isn't very large, our blocks don't really need state and we have way more blocks than beasts.
-Beasts need state to keep moving and path find their way to the player and the player itself should probably remember
+Beasts need state to keep moving and path-find their way to the player and the player itself should probably remember
 where it is.
-Knowing that we could simplify the approach above by skipping instances for blocks going straight to keeping a buffer of
-the board in memory and in the rendered simply iterate over it and print it to stdout.
+Knowing that, we could simplify the approach above by skipping instances for blocks, going straight to keeping a buffer
+of the board in memory and in the render function simply iterate over it and print it to stdout.
 
-So we could represent the buffer of our board as a two dimensional
+So, we could represent the buffer of our board as a two-dimensional
 [array](https://doc.rust-lang.org/std/primitive.array.html) of tiles.
 Each inner array represents a row of tiles and contains all its columns:
 
 `[[Tile; BOARD_WIDTH]; BOARD_HEIGHT]`
 
-The render function would iterate over the the array and print a new line for each row.
+The render function would iterate over the array and print a new line for each row.
 
-Ok this was a lot of text, let's get out of our heads and into code.
+OK, this was a lot of text, let's get out of our heads and into code.
 
 The first thing we need to do is define our tiles.
 The tile should encapsulate what each tile on our board can represent.
-A natrual fit for an [enum](https://doc.rust-lang.org/std/keyword.enum.html).
+A natural fit for an [enum](https://doc.rust-lang.org/std/keyword.enum.html).
 
 ```rust {data-file="main.rs", hl_lines=["1-6"]}
 enum Tile {
@@ -207,7 +216,7 @@ fn main() {
 
 So our board is a 2D array of the `Tile` enum we defined earlier.
 We use `39` as width because we know each tile will be 2 chars wide and our frame most likely will take up a space on
-each side (`30 * 2 + 1 + 1 = 80`) and so we stay within the
+each side (`39 * 2 + 1 + 1 = 80`) and so we stay within the
 [80 column width](https://en.wikipedia.org/wiki/Characters_per_line) limit.
 
 Let's implement the `new` method on the struct so we can get a squeaky clean new board out.
@@ -264,10 +273,10 @@ Our `buffer` in the `new()` method looks like this:
 ]
 ```
 
-It helps to visualize it because if you squit a little it actually looks like a board.
+It helps to visualize it because if you squint a little, it actually looks like a board.
 We have rows and columns, we have items for each tile, it's square.
 
-Now let's actually try to get this output ourself by printing our board:
+Now let's actually try to get this output ourselves by printing our board:
 
 ```rust {data-file="main.rs", hl_lines=[21]}
 enum Tile {
@@ -333,11 +342,11 @@ cargo run
 
 We're told about two errors here:
 1. <span class="console-line"><span style="color:red;">error[E0277]</span>: the trait bound `Tile: Copy` is not satisfied</span><br>
-    This error occurs because our `Tile` enum is being copied into our array but doesn't currenlty have the ability
+    This error occurs because our `Tile` enum is being copied into our array but doesn't currently have the ability
     ([trait](https://doc.rust-lang.org/book/ch10-02-traits.html)) to be copied.
     Rust will actually tell us how to solve it too in two different ways which is awesome.
 2. <span class="console-line"><span style="color:red;">error[E0277]</span>: `Board` doesn't implement `Debug`</span><br>
-    The second error happens because we're trying to print the struct and rust doesn't know how to display this custom data
+    The second error happens because we're trying to print the struct and Rust doesn't know how to display this custom data
     structure we have built even in the debug mode we choose here in the
     [format macro](https://doc.rust-lang.org/std/macro.format.html).
 
@@ -466,12 +475,12 @@ cargo run
 ```
 
 This feels great.
-Ok let's just ride this wave and solve the second issue as well.
+OK, let's just ride this wave and solve the second issue as well.
 We can see our `Board` struct needs the `Debug` trait.
 But because we are at the top of our game and feel great, we notice that part of the `Board` struct is the `Tile` enum
 and if we were to just give the `Board` the debug trait we're guessing the compiler will let us gently know that the
 enum, being part of the thing we're trying to display with the `Debug` trait, will also need this trait.
-So we boldy just add the trait to both elements:
+So we boldly just add the trait to both elements:
 
 ```rust {data-file="main.rs", data-fold="['13-24']", hl_lines=[1, 9]}
 #[derive(Copy, Clone, Debug)]
@@ -500,19 +509,19 @@ fn main() {
 }
 ```
 
-And what do you know: the compiler shows us some warnings about unused options and fields but it does ... **compile**.
+And what do you know: the compiler shows us some warnings about unused options and fields but it does &hellip; **compile**.
 Yay us!
 
-The output is ... large and more importantly, it doesn't look like a board yet.
+The output is &hellip; large and more importantly, it doesn't look like a board yet.
 So let's work on rendering the output in a way that feels more board-game-y.
 
 ## Rendering
 
 To render the board we add a `render` method to the `Board` struct.
-We will have to interate over each row in our `buffer` and within each row we will iterate over each column in each row.
+We will have to iterate over each row in our `buffer` and within each row we will iterate over each column in each row.
 Then we [`match`](https://doc.rust-lang.org/std/keyword.match.html) against the column which contains our tile.
 
-Lastely we have to go into our `main` function and create an instance of our `Board` and then call the render method and
+Lastly we have to go into our `main` function and create an instance of our `Board` and then call the render method and
 print it to `stdout`.
 
 ```rust {data-file="main.rs", data-fold="['1-20']", hl_lines=["21-37", "41-42"]}
@@ -585,14 +594,14 @@ what the tile we match should be displayed as, before returning it.
 slices.
 
 We also opted for a tile being 2 characters long from the terminal perspective.
-That's what the original games does, (I'm just trying to stay consistent).
+That's what the original game does, (I'm just trying to stay consistent).
 You're welcome to change it to anything you like.
 
 Running `cargo run`, we still get a few warnings about unused options, which is fair, but we also get a big empty blob
 that gets printed.
 Functionally this is correct, there is a board that is just completely empty so we really don't print anything for
 `Tile::Empty`.
-But we're missing a refernce to where the board starts and ends to really see the empty board.
+But we're missing a reference to where the board starts and ends to really see the empty board.
 So let's add a frame that surrounds the board:
 
 ```rust {data-file="main.rs", data-fold="['1-20']", hl_lines=[22, 25, 34, 36]}
@@ -652,9 +661,9 @@ We repeat the border `39 * 2` because the width of the board is `39` and the til
 Then we add the side border on line 25 before we start iterating over each item in this row and add the other side on
 line 34.
 We had to change our `push` to `push_str` because now we add more than a char into the `String`.
-Lastely we add the bottom border in a very similar way we added the top.
+Lastly we add the bottom border in a very similar way we added the top.
 
-I don't know about you but I don't like magic numbers in my code.
+I don't know about you, but I don't like magic numbers in my code.
 We now have `39 * 2` and multiple instances of hardcoded `39` and `20` throughout our code.
 At some point our future-self is going to ask:
 > What does this number even mean?
@@ -722,7 +731,7 @@ fn main() {
 Now even future-me will understand what `BOARD_WIDTH * TILE_SIZE` means and there is only one place to change the size
 of the board.
 
-Ok our game is getting closer:
+OK, our game is getting closer:
 
 ```console
 cargo run
@@ -835,7 +844,7 @@ We create a mutable variable called `buffer` which we assign our nested array to
 buffer to `Tile::Player`, `Tile::Block` and `Tile::StaticBlock`.
 We don't have to do `buffer: buffer` in the `Self` block because of
 [field init shorthand syntax](https://doc.rust-lang.org/book/ch05-01-defining-structs.html?utm_source=chatgpt.com#using-the-field-init-shorthand)
-rust has built in.
+Rust has built in.
 
 All that gets us this little preview via `cargo run`:
 
@@ -887,7 +896,7 @@ From Wikipedia:
 
 > ANSI escape sequences are a standard for in-band signaling to control cursor location, color, font styling, and other options on video text terminals and terminal emulators. Certain sequences of bytes, most starting with an ASCII escape character and a bracket character, are embedded into text.
 
-The syntaxt of them is: `ESCAPE` `[` `CODE` and when you print this to most terminals it will be interpreted as a command
+The syntax of them is: `ESCAPE` `[` `CODE` and when you print this to most terminals it will be interpreted as a command
 rather than as text.
 
 There are many different things you can control with those sequences but for the purpose of this tutorial we will be
@@ -899,14 +908,14 @@ Here is a short summary of colors and cursor codes we might need:
 
 | Code               | What it does       |
 | ------------------ | ------------------ |
-| `ESCAPE` `[` `30m` | White font color   |
+| `ESCAPE` `[` `30m` | Black font color   |
 | `ESCAPE` `[` `31m` | Red font color     |
 | `ESCAPE` `[` `32m` | Green font color   |
 | `ESCAPE` `[` `33m` | Yellow font color  |
 | `ESCAPE` `[` `34m` | Blue font color    |
 | `ESCAPE` `[` `35m` | Magenta font color |
 | `ESCAPE` `[` `36m` | Cyan font color    |
-| `ESCAPE` `[` `37m` | Black font color   |
+| `ESCAPE` `[` `37m` | White font color   |
 | `ESCAPE` `[` `39m` | Reset font color   |
 
 ### Cursor
@@ -918,7 +927,7 @@ Here is a short summary of colors and cursor codes we might need:
 | `ESCAPE` `[` n `F`  | Move cursor to beginning of line, `n` lines up   |
 | `ESCAPE` `[` n `E`  | Move cursor to beginning of line, `n` lines down |
 
-`ESCAPE` in rust via the print macro would be `\x1B` so looking at this we could make something yellow within a sentence
+`ESCAPE` in Rust via the print macro would be `\x1B` so looking at this we could make something yellow within a sentence
 so let's try it out:
 
 ```rust {data-file="main.rs", data-fold="['1-51']", hl_lines=["53-55"]}
@@ -1138,7 +1147,7 @@ fn main() {
 ```
 
 Now when you run `cargo run` you see "Hello" printed first, then after 3 seconds it's replaced by "World".
-This is how any anymations in the terminal work, by moving the cursor we constantly just overwrite the previous frame
+This is how any animations in the terminal work, by moving the cursor we constantly just overwrite the previous frame
 with the next frame.
 We will use this technique later when we start moving around on the board.
 
@@ -1324,7 +1333,7 @@ reference so we end up doing this: `output.push_str(&format!("Foo"));`.
 > [!NOTE]
 > In a real-world application, you’d typically rely on a library like [crossterm](https://crates.io/crates/crossterm)
 > to handle terminals that don’t fully support every ANSI escape sequence.
-> Here, however, we peak into what a crate like crossterm would do under the hood for a terminal that supports our
+> Here, however, we peek into what a crate like crossterm would do under the hood for a terminal that supports our
 > sequences.
 
 Our code is much more readable now and we can start listening to keyboard input.
@@ -1346,7 +1355,7 @@ we need to listen to `stdin`.
 
 And if we think about it: we really only want to render the board when things have changed in our state so only when the
 user has hit a key to move the player.
-So we need a `play` method that listens to keyboad input and calls `render` when the right keys have been pressed.
+So we need a `play` method that listens to keyboard input and calls `render` when the right keys have been pressed.
 
 Listening to `stdin` means we have to lock `stdin` for reading and direct that stream to a buffer which we can `match`
 against:
@@ -1445,7 +1454,7 @@ fn main() {
 ```
 
 We're importing [`stdin`](https://doc.rust-lang.org/std/io/fn.stdin.html) function and the
-[`Write`](https://doc.rust-lang.org/std/io/trait.Write.html) trait from the [`io`](https://doc.rust-lang.org/std/io/)
+[`Read`](https://doc.rust-lang.org/std/io/trait.Read.html) trait from the [`io`](https://doc.rust-lang.org/std/io/)
 module in the standard library at the top of our `main.rs` file.
 
 Then we call `stdin()` to get a handle for the standard-in stream and then call
@@ -1461,7 +1470,7 @@ it.
 `read_exact` returns a [`Result`](https://doc.rust-lang.org/std/io/type.Result.html) because reading from the stream
 could fail.
 While it doesn't fail, and the `Result` is `Ok`, we loop over the input and match against the byte we're getting back.
-Since it's easier to read characters then bytes I convert the byte into a `char` and then match against it.
+Since it's easier to read characters than bytes I convert the byte into a `char` and then match against it.
 
 > [!Note]
 > You could very well also write it this way:
@@ -1474,7 +1483,7 @@ Since it's easier to read characters then bytes I convert the byte into a `char`
 > 	_ => {},
 > }
 > ```
-> But I find that less readable and the difference is only noticible if you run this in a hot loop with billions of 
+> But I find that less readable and the difference is only noticeable if you run this in a hot loop with billions of 
 > iterations.
 
 Inside the match we just check for the letter `q` (lowercase) and print a good bye message and break our `while` loop
@@ -1482,7 +1491,7 @@ thus ending our program.
 
 When you run this you notice the program doesn't finish until you hit <kbd>q</kbd> and <kbd>Enter</kbd>.
 This is great.
-Now we can add the four braches for our directions.
+Now we can add the four branches for our directions.
 
 ```rust {data-file="main.rs", data-fold="['1-69', '98-102']", hl_lines=["77-88"]}
 use std::io::{Read, stdin};
@@ -1589,7 +1598,7 @@ fn main() {
 }
 ```
 
-Ok point of order: Looking at our code I'm getting a [code smell](https://en.wikipedia.org/wiki/Code_smell).
+OK, point of order: Looking at our code I'm getting a [code smell](https://en.wikipedia.org/wiki/Code_smell).
 
 > [!TIP]
 > Never ignore code smells (your gut instincts), they will **always** get stronger and harder to fix with time
@@ -1737,7 +1746,7 @@ fn main() {
 }
 ```
 
-Now having separated these we need to tell rust that we just created a new
+Now having separated these we need to tell Rust that we just created a new
 [module](https://doc.rust-lang.org/stable/book/ch07-02-defining-modules-to-control-scope-and-privacy.html).
 
 ```rust {data-file="main.rs", data-fold="['5-66']", hl_lines=[3]}
@@ -1810,7 +1819,7 @@ fn main() {
 ```
 
 This includes our `board.rs` file into our codebase and we can watch the rust-analyzer errors flooding in.
-The compiler reminds us that everything by default in rust is private and has to be explicitly made public.
+The compiler reminds us that everything by default in Rust is private and has to be explicitly made public.
 So let's throw in some [`pub`](https://doc.rust-lang.org/std/keyword.pub.html) keywords where we need them:
 
 ```rust {data-file="main.rs", data-fold="['16-68']", hl_lines=["7-9", "11-14"]}
@@ -1947,7 +1956,7 @@ impl Board {
 This compiles again and feels much cleaner.
 
 Running this code we notice something odd though.
-You have to hit <kbd>Enter</kbd> before our game does anythign with the input.
+You have to hit <kbd>Enter</kbd> before our game does anything with the input.
 Even when you hit <kbd>a</kbd>, <kbd>w</kbd> and <kbd>s</kbd> all after one another and then <kbd>Enter</kbd> we see
 this in our terminal:
 
@@ -1961,10 +1970,10 @@ Go Right
 A few issues:
 - We are required to hit <kbd>Enter</kbd> before our program does anything
 - Moving is bunched together until we hit <kbd>Enter</kbd>
-- Hitten any of our direction keys echos them to our output
+- Hitting any of our direction keys echos them to our output
 
 That's not a good way for a game to operate.
-Having to hit <kbd>Enter</kbd> after each move or even seeing the the letters appear in my terminal when playing.
+Having to hit <kbd>Enter</kbd> after each move or even seeing the letters appear in my terminal when playing.
 We can fix all that by setting our terminal to "raw mode".
 
 ## Terminal modes
@@ -1972,18 +1981,18 @@ We can fix all that by setting our terminal to "raw mode".
 Unix-style terminals have [modes](https://en.wikipedia.org/wiki/Terminal_mode) that have different purposes.
 
 By default terminals are set to `cooked mode`.
-In this mode commands can be typed out, edited by deleting or adding to the text before hitten <kbd>Enter</kbd> which
+In this mode commands can be typed out, edited by deleting or adding to the text before hitting <kbd>Enter</kbd> which
 sends it to the program and echos it back to the user.
 This dates back to the days of hardware terminals connected to the computer via a serial line.
 The computer expected the terminals to handle the low-level editing so it didn't have to implement it itself.
 
 In contrast, `raw mode` sets up the [TTY](https://en.wikipedia.org/wiki/Tty_(Unix)) driver to pass every character to
-the program as it's typed and keeps it the programs responsibility to echo anything back to the user.
+the program as it's typed and keeps it the program's responsibility to echo anything back to the user.
 
-Programs are started in `cooked mode` by default and need to enable `raw mode` because imagine the mayham `raw mode`
-would cause if every single keystroke you type would be send to the shell instantly.
+Programs are started in `cooked mode` by default and need to enable `raw mode` because imagine the mayhem `raw mode`
+would cause if every single keystroke you type would be sent to the shell instantly.
 
-Switching to raw mode in our linux like shall will be this command: `stty -icanon -echo`.
+Switching to raw mode in our Linux-like-shell will be this command: `stty -icanon -echo`.
 Switching back is: `stty icanon echo`.
 So we have to call these commands in our program at the start and end to make sure we're in the right mode for our game.
 Let's do this by creating a new module called `raw_mode` in a new file `raw_mode.rs`:
@@ -2024,7 +2033,7 @@ Then we use [`and_then`](https://doc.rust-lang.org/std/result/enum.Result.html#m
 which is returned from `spawn` and call `wait` on the child handle inside of it to make sure we return from our function
 only after the command was executed.
 We use `let _ =` to ignore the actual instance created by the struct because we don't need it.
-`_` is a catch all convention in rust that allows us to tell the compiler to ignore whatever is returned here.
+`_` is a catch all convention in Rust that allows us to tell the compiler to ignore whatever is returned here.
 
 Calling `RawMode::enter()` will now execute our command telling our terminal to enter `raw mode`.
 Let's add one more thing in here: let's hide the cursor while the program is running because we don't need a cursor and
@@ -2047,7 +2056,7 @@ impl RawMode {
 }
 ```
 
-Ok now let's include our new module into our codebase in the `main.rs` file and call our `enter` method at the start of
+OK, now let's include our new module into our codebase in the `main.rs` file and call our `enter` method at the start of
 our `main` function:
 
 ```rust {data-file="main.rs", data-fold="['8-64']", hl_lines=[4, 6, 67]}
@@ -2126,20 +2135,20 @@ fn main() {
 
 Running our program now we notice we instantly get feedback on each keystroke and we also don't see the cursor anymore.
 This is great.
-Hitting <kbd>q</kbd> quites the game flawlessly and we feel a rush of accomplishment.
+Hitting <kbd>q</kbd> quits the game flawlessly and we feel a rush of accomplishment.
 
 Oh but we also notice that the cursor is now hidden, even after the program has finished.
 That's a side effect we didn't want.
 Let's quickly run this in our terminal to get the cursor back: `echo "\x1b[?25h"`.
-Ok we're back to normal but we can't expect our users to do this after they played our game so we need to do this in our
+OK, we're back to normal but we can't expect our users to do this after they played our game so we need to do this in our
 program.
 We COULD create a new method now called `leave` or something that just echos the sequence and we call it at the end of
 the program but instead we will do it a bit more "rusty".
 
-As you know, rust cleans up its variables whenever they go out of scope.
-When cleaning up, rust will call the `destructor` via the [`Drop`](https://doc.rust-lang.org/std/ops/trait.Drop.html)
+As you know, Rust cleans up its variables whenever they go out of scope.
+When cleaning up, Rust will call the `destructor` via the [`Drop`](https://doc.rust-lang.org/std/ops/trait.Drop.html)
 trait.
-Let's use this to our advantage and implement this trait for our `RawMode` struct and have rust take care of when to
+Let's use this to our advantage and implement this trait for our `RawMode` struct and have Rust take care of when to
 call the clean up crew.
 
 ```rust {data-file="raw_mode.rs", data-fold="['5-14']", hl_lines=["16-24"]}
@@ -2171,15 +2180,15 @@ impl Drop for RawMode {
 ```
 
 The `Drop` trait expects a function called `drop` to be implemented and inside we just reverse whatever we did in
-`enter` and have rust take care of the rest.
+`enter` and have Rust take care of the rest.
 
 But when we run our program now this function doesn't seem to be called at all because our cursor is still hidden after
 the program quits.
 
 That's because there is nothing to be cleaned up.
 While we call `enter` in our `main` function, we don't actually create an instance of `RawMode` that can be cleaned up
-by rust so the destructor on our struct is never called.
-Let's change that by returning `Self` from the `new` method.
+by Rust so the destructor on our struct is never called.
+Let's change that by returning `Self` from the `enter` method.
 
 ```rust {data-file="raw_mode.rs", data-fold="['17-26']", hl_lines=[6, 13]}
 use std::process::Command;
@@ -2211,7 +2220,7 @@ impl Drop for RawMode {
 ```
 
 But wait a minute, I hear you say.
-Now running `cargo run` get's us back to `cooked mode` because we have to hit <kbd>Enter</kbd> after each keyboard hit
+Now running `cargo run` gets us back to `cooked mode` because we have to hit <kbd>Enter</kbd> after each keyboard hit
 again.
 Why is that happening?
 
@@ -2293,11 +2302,11 @@ fn main() {
 
 While we return an instance of `RawMode` (via `Self`) from the `enter` function, we don't actually put it anywhere.
 The instance is created but because it's never stored anywhere it's also cleaned up instantly thus calling our drop
-method and resetting our temrinal.
+method and resetting our terminal.
 We need to create a variable to keep this instance in but we also don't need to do anything with it.
 We just want to keep it around for the duration of the `main` function which represents the duration of our program.
 So to do that and prevent the linter to warn us about an unused variable, we can prefix our variable with an underscore
-to communciate to the compiler this is a thing we don't want to use any further.
+to communicate to the compiler this is a thing we don't want to use any further.
 
 ```rust {data-file="main.rs", data-fold="['1-65']", hl_lines=[67]}
 use std::io::{Read, stdin};
@@ -2383,7 +2392,7 @@ without side effects.
 > You should use [`crossterm`](https://docs.rs/crossterm/latest/crossterm/terminal/index.html#raw-mode) to do this
 > in a game you want to distribute or at least add an event handler for the sigint signal.
 
-We now listen to the users keyboard and are executing functions on each key we're interested in for navigation.
+We now listen to the user's keyboard and are executing functions on each key we're interested in for navigation.
 Naturally our next step should be to actually navigate our player on the board.
 
 ## Moving around
@@ -2394,12 +2403,12 @@ So when moving our player we would need to set the previous tile our player was 
 player is moving into, to `Tile::Player`.
 We have a branch for each direction in our `play` method so we can easily pass an enum for each direction into our
 function that calculates our move.
-Thought we need to know where the player is in order to calculate the new position for a given direction.
+Though we need to know where the player is in order to calculate the new position for a given direction.
 We could do that by scanning the board buffer and find the location of `Tile::Player`.
 That seems like a lot of work to do for each move.
 Perhaps we keep track of our position each time we move and just recall that position from memory.
 
-Ok that sounds good, now let's think about where to put all this code.
+OK, that sounds good, now let's think about where to put all this code.
 Moving a player doesn't seem appropriate for the board module.
 Also doesn't seem like a good fit for our `Game` struct really?
 Perhaps we create a new module just for the player that can handle movements, re-spawning and scores.
@@ -2436,7 +2445,7 @@ Let's keep it simple for now and just use a [`tuple`](https://doc.rust-lang.org/
 it gets too messy.
 
 Now we need a new method to move our player.
-Since `move` is a reserved word in rust, let's call the method `advance`.
+Since `move` is a reserved word in Rust, let's call the method `advance`.
 This method would need to know what direction we're advancing in so perhaps we start with adding a new enum to our
 `main.rs` file which lays out each direction a player can go:
 
@@ -2543,7 +2552,7 @@ impl Player {
 
 Our new advance method now takes a mutable reference to self because we will have to change `position` and `direction`
 to tell us which direction the player is advancing in.
-Inside our method naturally we use the all-powerfull `match` statement to branch off each `Direction` value.
+Inside our method naturally we use the all-powerful `match` statement to branch off each `Direction` value.
 What do we do in each branch?
 
 If we go right, for example, we have to:
@@ -2582,9 +2591,9 @@ impl Player {
 }
 ```
 
-When we run `carogo run` we get an error again: `Player` doesn't implement `Debug`.
+When we run `cargo run` we get an error again: `Player` doesn't implement `Debug`.
 That's fair because the `Player` struct is used in our `Game` struct and that struct has the `Debug` trait derived.
-If that struct has it, all it's data must have it too.
+If that struct has it, all its data must have it too.
 
 So we added the derive and all the other code but when we run our program again and walk left as the first thing we get
 a panic:
@@ -2652,8 +2661,8 @@ impl Player {
 }
 ```
 
-When we start the game our position is `(0,0)` and on line 20 we attempt to substract `1` from `0`.
-But the type of that number is `usize` which means it can't be a value of anything below 0 so rust panics.
+When we start the game our position is `(0,0)` and on line 20 we attempt to subtract `1` from `0`.
+But the type of that number is `usize` which means it can't be a value of anything below `0` so Rust panics.
 Now thinking about this, what would happen when you walk across to the right and further:
 
 ```console
@@ -2735,17 +2744,17 @@ impl Player {
 }
 ```
 
-Now we're checking to make sure we don't do anything illigal with our buffer or our position and running this code gives
+Now we're checking to make sure we don't do anything illegal with our buffer or our position and running this code gives
 us a nice way to walk across our board.
 
-We notice that we're "eating" the blocks on the board as we walk over them but that's ok for now.
+We notice that we're "eating" the blocks on the board as we walk over them but that's OK for now.
 
 ![A screen recording of the board with the player walking around randomly also over Blocks and StaticBlocks and erasing
 them as we leave their tile.](assets/moving.svg)
 
 This is it.
 We did it!
-The first part of this tutorial is done and we got a baord we can walk around on with a couple tiles hardcoded.
+The first part of this tutorial is done and we got a board we can walk around on with a couple tiles hardcoded.
 
 In the next part we will generate a terrain, implement pushing blocks around and look into adding beasts.
 
