@@ -153,9 +153,10 @@ OK, let's start thinking about what we're doing.
 ![Screenshot from the 1984 ASCII game BEAST. The screen is filled with a grid of green and yellow blocky patterns representing movable blocks and solid blocks. The player, shown as a cyan diamond shape, is located in the bottom-left corner. Several red 'H' characters, representing hostile beasts, are scattered on the right side of the screen. The game has a dark black background bordered by a yellow frame, with the environment laid out in a procedurally generated maze-like pattern.](assets/board.png "How do we want to represent this board in code, where's the source of truth, how do we render it and all that while keeping the sanity of future-us?")
 
 There are a couple of ways we could approach this.
-You could create instances of each tile you expect on the board, give each of them a position and a way to represent
-themselves and in the render function we just iterate over each entity and place them on a temporary buffer that then
-gets to be iterated over to form a String we simply print to [`stdout`](https://en.wikipedia.org/wiki/Standard_streams).
+You could create instances of each tile you expect to see on the board, give each of them a position and a way to
+represent themselves and in the render function we just iterate over each entity and place them on a temporary buffer
+that then gets to be iterated over to form a String we simply print to
+[`stdout`](https://en.wikipedia.org/wiki/Standard_streams).
 This is indeed a good way to approach this for a game with a large number of entities which all require instances
 to keep track of their own states.
 
@@ -164,6 +165,14 @@ Beasts need state to keep moving and path-find their way to the player and the p
 where it is.
 Knowing that, we could simplify the approach above by skipping instances for blocks, going straight to keeping a buffer
 of the board in memory and in the render function simply iterate over it and print it to stdout.
+
+It's a simple version of [scan-line rendering](https://en.m.wikipedia.org/wiki/Scanline_rendering) as you would see in
+old [CRT screens](https://en.wikipedia.org/wiki/Cathode-ray_tube).
+
+![A hand-drawn grid representing a 2D game board, labeled “Columns” across the top and “Rows” along the left. The grid
+is divided into 21 columns and 12 rows, with several cells shaded or marked to indicate different game elements. The
+style mimics how CRT screens render images using rows and columns.](assets/board-sketch.png "We split the board into
+rows and columns which now also means we have coordinates for each tile")
 
 So, we could represent the buffer of our board as a two-dimensional
 [array](https://doc.rust-lang.org/std/primitive.array.html) of tiles.

@@ -84,6 +84,40 @@ server {
 	ssl_stapling         on;
 	ssl_stapling_verify  on;
 
+	# GZip
+	gzip on;
+	gzip_vary on;
+	gzip_min_length 1024;
+	gzip_comp_level 6;
+	gzip_types
+		text/plain
+		text/css
+		text/xml
+		text/javascript
+		application/json
+		application/javascript
+		application/xml+rss
+		application/rss+xml
+		application/atom+xml
+		application/xhtml+xml
+		application/x-font-ttf
+		application/x-font-opentype
+		application/vnd.ms-fontobject
+		image/svg+xml
+		image/x-icon
+		application/x-javascript
+		text/x-javascript
+		text/x-component
+		font/opentype
+		font/ttf
+		font/otf
+		font/woff
+		font/woff2
+		application/font-woff
+		application/font-woff2;
+	gzip_disable "msie6";
+	gzip_proxied any;
+
 	# root server
 	#
 	location / {
