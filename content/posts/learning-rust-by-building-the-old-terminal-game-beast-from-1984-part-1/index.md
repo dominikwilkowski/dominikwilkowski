@@ -2555,12 +2555,12 @@ to tell us which direction the player is advancing in.
 Inside our method naturally we use the all-powerful `match` statement to branch off each `Direction` value.
 What do we do in each branch?
 
-If we go right, for example, we have to:
+If we go to the right, for example, we have to:
 - Change our old position on the buffer to `Tile::Empty`
-- Add 1 to the column of our position
+- Add `1` to the column of our position
 - Add `Tile::Player` to the board buffer at this new position
 
-That way when we call `render` next the player has moved and the next time we call the `advance` we go from the new
+That way when we call `render` next, the player has moved and the next time we call the `advance` we go from the new
 position.
 
 ```rust {data-file="player.rs", hl_lines=[1, 3, "13-23"]}
@@ -2591,9 +2591,250 @@ impl Player {
 }
 ```
 
-When we run `cargo run` we get an error again: `Player` doesn't implement `Debug`.
-That's fair because the `Player` struct is used in our `Game` struct and that struct has the `Debug` trait derived.
+Let's add our new player instance to our `Game` struct and call the `advance` method on keypress:
+
+```rust {data-file="main.rs", data-fold="['9-31', '74-84']", hl_lines=[7, 36, 43, 56, 59, 62, 65]}
+use std::io::{Read, stdin};
+
+mod board;
+mod player;
+mod raw_mode;
+
+use crate::{board::Board, player::Player, raw_mode::RawMode};
+
+pub const BOARD_WIDTH: usize = 39;
+pub const BOARD_HEIGHT: usize = 20;
+pub const TILE_SIZE: usize = 2;
+
+pub const ANSI_YELLOW: &str = "\x1B[33m";
+pub const ANSI_GREEN: &str = "\x1B[32m";
+pub const ANSI_CYAN: &str = "\x1B[36m";
+pub const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug)]
+pub enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+pub enum Direction {
+	Up,
+	Right,
+	Down,
+	Left,
+}
+
+#[derive(Debug)]
+struct Game {
+	board: Board,
+	player: Player,
+}
+
+impl Game {
+	fn new() -> Self {
+		Self {
+			board: Board::new(),
+			player: Player::new(),
+		}
+	}
+
+	fn play(&mut self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+		println!("{}", self.board.render());
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'w' => {
+					self.player.advance(&mut self.board, Direction::Up);
+				},
+				'd' => {
+					self.player.advance(&mut self.board, Direction::Right);
+				},
+				's' => {
+					self.player.advance(&mut self.board, Direction::Down);
+				},
+				'a' => {
+					self.player.advance(&mut self.board, Direction::Left);
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+
+			println!("\x1B[{}F{}", BOARD_HEIGHT + 1 + 1, self.board.render());
+		}
+	}
+}
+
+fn main() {
+	let _raw_mode = RawMode::enter();
+
+	let mut game = Game::new();
+	game.play();
+}
+```
+
+This gets us this:
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:red;">error[E0616]</span><span style="font-weight:bold;">: field `buffer` of struct `Board` is private</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/player.rs:13:9
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">13</span> <span style="font-weight:bold;color:#3333FF;">|</span>         board.buffer[self.position.1][self.position.0] = Tile::Empty;
+   <span style="font-weight:bold;color:#3333FF;">|</span>               <span style="font-weight:bold;color:red;">^^^^^^</span> <span style="font-weight:bold;color:red;">private field</span>
+
+<span style="font-weight:bold;color:red;">error[E0616]</span><span style="font-weight:bold;">: field `buffer` of struct `Board` is private</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/player.rs:22:9
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">22</span> <span style="font-weight:bold;color:#3333FF;">|</span>         board.buffer[self.position.1][self.position.0] = Tile::Player;
+   <span style="font-weight:bold;color:#3333FF;">|</span>               <span style="font-weight:bold;color:red;">^^^^^^</span> <span style="font-weight:bold;color:red;">private field</span>
+
+<span style="font-weight:bold;color:red;">error[E0277]</span><span style="font-weight:bold;">: `Player` doesn't implement `Debug`</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:36:2
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">33</span> <span style="font-weight:bold;color:#3333FF;">|</span> #[derive(Debug)]
+   <span style="font-weight:bold;color:#3333FF;">|</span>          <span style="font-weight:bold;color:#3333FF;">-----</span> <span style="font-weight:bold;color:#3333FF;">in this derive macro expansion</span>
+<span style="font-weight:bold;color:#3333FF;">...</span>
+<span style="font-weight:bold;color:#3333FF;">36</span> <span style="font-weight:bold;color:#3333FF;">|</span>     player: Player,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:red;">^^^^^^^^^^^^^^</span> <span style="font-weight:bold;color:red;">`Player` cannot be formatted using `{:?}`</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">help</span>: the trait `Debug` is not implemented for `Player`
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: add `#[derive(Debug)]` to `Player` or manually `impl Debug for Player`
+<span style="font-weight:bold;color:aqua;">help</span>: consider annotating `Player` with `#[derive(Debug)]`
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/player.rs:3:1
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">3</span>  <span style="color:lime;">+ #[derive(Debug)]</span>
+<span style="font-weight:bold;color:#3333FF;">4</span>  <span style="font-weight:bold;color:#3333FF;">| </span>pub struct Player {
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+
+<span style="font-weight:bold;color:red;">error[E0624]</span><span style="font-weight:bold;">: method `render` is private</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:51:29
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">51</span> <span style="font-weight:bold;color:#3333FF;">|</span>         println!(&quot;{}&quot;, self.board.render());
+   <span style="font-weight:bold;color:#3333FF;">|</span>                                   <span style="font-weight:bold;color:red;">^^^^^^</span> <span style="font-weight:bold;color:red;">private method</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+  <span style="font-weight:bold;color:#3333FF;">::: </span>src/board.rs:24:2
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">24</span> <span style="font-weight:bold;color:#3333FF;">|</span>     fn render(&amp;self) -&gt; String {
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:#3333FF;">--------------------------</span> <span style="font-weight:bold;color:#3333FF;">private method defined here</span>
+
+<span style="font-weight:bold;color:red;">error[E0624]</span><span style="font-weight:bold;">: method `render` is private</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:74:60
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">74</span> <span style="font-weight:bold;color:#3333FF;">|</span>             println!(&quot;\x1B[{}F{}&quot;, BOARD_HEIGHT + 1 + 1, self.board.render());
+   <span style="font-weight:bold;color:#3333FF;">|</span>                                                                     <span style="font-weight:bold;color:red;">^^^^^^</span> <span style="font-weight:bold;color:red;">private method</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+  <span style="font-weight:bold;color:#3333FF;">::: </span>src/board.rs:24:2
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">24</span> <span style="font-weight:bold;color:#3333FF;">|</span>     fn render(&amp;self) -&gt; String {
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:#3333FF;">--------------------------</span> <span style="font-weight:bold;color:#3333FF;">private method defined here</span>
+
+<span style="font-weight:bold;">Some errors have detailed explanations: E0277, E0616, E0624.</span>
+<span style="font-weight:bold;">For more information about an error, try `rustc --explain E0277`.</span>
+<span style="font-weight:bold;color:red;">error</span><span style="font-weight:bold;">:</span> could not compile `beast` (bin &quot;beast&quot;) due to 5 previous errors
+```
+
+Ok that's fair.
+The compiler let's us know that we've been using the `buffer` and the `render` method that hasn't been set to public
+yet:
+
+```rust {data-file="board.rs", data-fold="['1-4', '11-22', '30-55']", hl_lines=[8, 24]}
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	TILE_SIZE, Tile,
+};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		buffer[0][0] = Tile::Player;
+		buffer[2][5] = Tile::Block;
+		buffer[2][6] = Tile::Block;
+		buffer[2][7] = Tile::Block;
+		buffer[3][6] = Tile::StaticBlock;
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+It also told us that `Player` doesn't implement `Debug`.
+That's also fair because the `Player` struct is used in our `Game` struct and that struct has the `Debug` trait derived.
 If that struct has it, all its data must have it too.
+
+```rust {data-file="player.rs", data-fold="['7-25']", hl_lines=[3]}
+use crate::{Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: (usize, usize),
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self { position: (0, 0) }
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		board.buffer[self.position.1][self.position.0] = Tile::Empty;
+
+		match direction {
+			Direction::Up => self.position.1 -= 1,
+			Direction::Right => self.position.0 += 1,
+			Direction::Down => self.position.1 += 1,
+			Direction::Left => self.position.0 -= 1,
+		}
+
+		board.buffer[self.position.1][self.position.0] = Tile::Player;
+	}
+}
+```
 
 So we added the derive and all the other code but when we run our program again and walk left as the first thing we get
 a panic:
