@@ -255,8 +255,10 @@ impl Drop for RawMode {
 }
 ```
 
-While we're looking at this I feel like we should move our `Game` struct into it's own module and only keep shared types
-in our `main.rs` file.
+## Let's Do Some Cleaning
+
+While we're looking at this, I feel like we should move our `Game` struct into it's own module and only keep shared
+types in our `main.rs` file.
 It's probably more of a personal preference but I like to keep the `main.rs` file as clean as possible since it's the
 entry point to our binary and is responsible for orchestrating everything together rather than implementing logic.
 
@@ -445,13 +447,15 @@ impl Game {
 
 This all compiles again and our `main.rs` file is much cleaner.
 
-## Generate Terrain
+## Generating Our Terrain
 
 ## Indexing into our board
 
-## Stop Eating Obsticals
+## A Hungry Hungry Player
 
-## Moving a Blockchain
+Let's stop the player from eating Obsticals.
+
+## Now We Implement The Blockchain
 
 ## Adding Beasts
 

@@ -17,7 +17,7 @@ header: assets/header.jpg
 
 <div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg" title="I'm perfectly able to add my own em dashes, thank you very much!" width="120px" height="120px"></div>
 
-## Intro
+## Why Though?
 
 I've been teaching Rust to a couple of friends and colleagues in lots of different ways.
 In my latest sessions, I've been using [this game I built as a homage](https://github.com/dominikwilkowski/beast) to
@@ -31,7 +31,7 @@ I love the language and continue to learn, so if you find anything fishy in thes
 [_turbofish_](https://turbo.fish/)), do let me know by submitting
 [a pull request or an issue](https://github.com/dominikwilkowski/dominikwilkowski).
 
-## Prerequisites
+## What We Need
 
 I will assume you have some basic knowledge of Rust and won't go too deep into how the language works.
 What I want to focus on is the use of the language for something you can see and play with.
@@ -44,7 +44,7 @@ at [easy_rust](https://github.com/Dhghomon/easy_rust), which is a great way to l
 chapters, not longer than 20 minutes each, with videos in plain language.
 Lastly, checking out [rustlings](https://github.com/rust-lang/rustlings) helps you to get a feel for the language.
 
-## What we're building
+## What We're Building
 
 [BEAST](https://en.wikipedia.org/wiki/Beast_(video_game)) is a terminal-based action game developed for MS-DOS by Dan
 Baker, Alan Brown, Mark Hamilton, and Derrick Shadel.
@@ -80,7 +80,7 @@ add your own levels later yourself.
 For part 1, this post, we will be doing a bit of setup, go through some of the tooling and build our board to allow our
 player to move around on it.
 
-## Setup
+## Setting It Up
 
 Let's build a terminal game in Rust <span role="img" aria-label="Excitment" tabIndex="0" class="emoji">🥳</span>!
 
@@ -146,9 +146,9 @@ Look at us!
 Building binaries and executing them like there's no tomorrow.
 <span role="img" aria-label="High five hands" tabIndex="0" class="emoji">🙌</span>
 
-## The Board
+## Let's Think About This
 
-OK, let's start thinking about what we're doing.
+OK, what are we doing?
 
 ![Screenshot from the 1984 ASCII game BEAST. The screen is filled with a grid of green and yellow blocky patterns representing movable blocks and solid blocks. The player, shown as a cyan diamond shape, is located in the bottom-left corner. Several red 'H' characters, representing hostile beasts, are scattered on the right side of the screen. The game has a dark black background bordered by a yellow frame, with the environment laid out in a procedurally generated maze-like pattern.](assets/board.png "How do we want to represent this board in code, where's the source of truth, how do we render it and all that while keeping the sanity of future-us?")
 
@@ -183,6 +183,8 @@ Each inner array represents a row of tiles and contains all its columns:
 The render function would iterate over the array and print a new line for each row.
 
 OK, this was a lot of text, let's get out of our heads and into code.
+
+## Creating A Board
 
 The first thing we need to do is define our tiles.
 The tile should encapsulate what each tile on our board can represent.
@@ -284,6 +286,8 @@ Our `buffer` in the `new()` method looks like this:
 
 It helps to visualize it because if you squint a little, it actually looks like a board.
 We have rows and columns, we have items for each tile, it's square.
+
+## The Compiler, Our Friend
 
 Now let's actually try to get this output ourselves by printing our board:
 
@@ -671,6 +675,8 @@ Then we add the side border on line 25 before we start iterating over each item 
 line 34.
 We had to change our `push` to `push_str` because now we add more than a char into the `String`.
 Lastly we add the bottom border in a very similar way we added the top.
+
+## Taking The Magic Out Of Coding
 
 I don't know about you, but I don't like magic numbers in my code.
 We now have `39 * 2` and multiple instances of hardcoded `39` and `20` throughout our code.
@@ -1160,7 +1166,7 @@ This is how any animations in the terminal work, by moving the cursor we constan
 with the next frame.
 We will use this technique later when we start moving around on the board.
 
-## Rendering but with colors
+## Rendering But This Time Pretty
 
 Now that we know how to add colors to our output let's make our `render` method prettier:
 
@@ -1256,6 +1262,8 @@ cargo run
 <span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
 ```
 
+## How Did Magic Get Back Into The Code?
+
 But I gotta say: looking at the code, it's hard to see where an ANSI escape sequence ends and our output starts.
 Let's clean this up by adding some consts for each of the colors:
 
@@ -1347,7 +1355,7 @@ reference so we end up doing this: `output.push_str(&format!("Foo"));`.
 
 Our code is much more readable now and we can start listening to keyboard input.
 
-## Listening to `stdin`
+## Listening To Keyboard Input
 
 I mentioned `stdout` before but now it's time to actually briefly talk about what that is.
 `stdout` stands for `standard out` and is part of the three
@@ -1606,6 +1614,8 @@ fn main() {
 	board.play();
 }
 ```
+
+## What Is This Smell?
 
 OK, point of order: Looking at our code I'm getting a [code smell](https://en.wikipedia.org/wiki/Code_smell).
 
@@ -1985,7 +1995,7 @@ That's not a good way for a game to operate.
 Having to hit <kbd>Enter</kbd> after each move or even seeing the letters appear in my terminal when playing.
 We can fix all that by setting our terminal to "raw mode".
 
-## Terminal modes
+## Would You Like Your Terminal Cooked Or Raw?
 
 Unix-style terminals have [modes](https://en.wikipedia.org/wiki/Terminal_mode) that have different purposes.
 
@@ -2404,7 +2414,7 @@ without side effects.
 We now listen to the user's keyboard and are executing functions on each key we're interested in for navigation.
 Naturally our next step should be to actually navigate our player on the board.
 
-## Moving around
+## Giving Our Player Legs
 
 How do we move our player around the board?
 We have a board buffer that we need to manipulate in order for our `render` method to work.
@@ -2998,6 +3008,8 @@ Now we're checking to make sure we don't do anything illegal with our buffer or 
 us a nice way to walk across our board.
 
 We notice that we're "eating" the blocks on the board as we walk over them but that's OK for now.
+
+## We Have The Start Of A Game
 
 ![A screen recording of the board with the player walking around randomly also over Blocks and StaticBlocks and erasing
 them as we leave their tile.](assets/moving.svg)
