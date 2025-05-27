@@ -6,7 +6,9 @@ visibility: false
 summary: >
   You just read the Rust book and now want to apply your new skills to something real.
   Let's build a terminal game I grew up with, learn how the terminal works and how to control it.
-description: "We are building the terminal game BEAST together to learn to apply Rust to a project."
+description: >
+  We are building the terminal game BEAST together to learn to apply Rust to a project.
+  This is the first part in which we setup our board and learn how to move our player.
 toc: true
 readTime: true
 tags: ["rust", "terminal", "game development", "tutorial"]

@@ -6,7 +6,9 @@ visibility: false
 summary: >
   In the last post we setup our board and made the player walk around.
   In this post we will generate terrain, push blocks and add the first outlines of our beasts.
-description: "We are building the terminal game BEAST together to learn to apply Rust to a project."
+description: >
+  We are building the terminal game BEAST together to learn to apply Rust to a project.
+  This is the second part in which we generate our terrain and learn how to push our blocks.
 toc: true
 readTime: true
 tags: ["rust", "terminal", "game development", "tutorial"]
@@ -17,7 +19,7 @@ header: assets/header.jpg
 
 <div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg" title="I'm perfectly able to add my own em dashes, thank you very much!" width="120px" height="120px"></div>
 
-## Where we left of
+## Where We Left Of
 
 In [part 1 of this tutorial](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/), we ended up
 with a couple modules that got us to this:
@@ -447,15 +449,21 @@ impl Game {
 
 This all compiles again and our `main.rs` file is much cleaner.
 
-## Generating Our Terrain
+## Randomizing Our Board
 
-## Indexing into our board
+Generating Our Terrain
+
+## We Need Levels
+
+## Which One Is Row and Which Column?
+
+Indexing Into Our Board
 
 ## A Hungry Hungry Player
 
-Let's stop the player from eating Obsticals.
+Let's stop the player from eating everything on the board.
 
-## Now We Implement The Blockchain
+## Implementing The Blockchain
 
 ## Adding Beasts
 
