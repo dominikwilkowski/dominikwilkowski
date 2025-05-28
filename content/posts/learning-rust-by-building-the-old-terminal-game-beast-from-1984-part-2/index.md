@@ -451,7 +451,21 @@ This all compiles again and our `main.rs` file is much cleaner.
 
 ## Randomizing Our Board
 
-Generating Our Terrain
+We have our little hardcoded blocks we added in the first part of the tutorial but now we should look into generating
+our terrain.
+We want the terrain to be random each time so that each time we play the game it looks a little different.
+How would you do that though?
+Let's assume we have a function that generates random numbers for us within a range, how would you go about generating
+your coordinates for each block?
+Your first insinct might be to just generate a pair of numbers, check if the tile at that coordinate is `Tile::Empty`
+and then place it.
+It was my first thought too.
+But this is pretty inefficient because you're just brute-forcing your way to a full board and could get extraordinarily
+unlucky by generating multiple coordinates in a row that are not `Empty` and the more blocks you place on the board, the
+higher the chances of collisions like that.
+
+Instead of that let's just collect every possible coordinate on the board into a colleciton type like a `Vec` and then
+shuffle the vector and pop the last one out one by one for placing each block.
 
 ## We Need Levels
 
