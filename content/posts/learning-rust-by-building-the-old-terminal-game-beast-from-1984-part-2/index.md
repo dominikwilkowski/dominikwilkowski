@@ -449,11 +449,12 @@ impl Game {
 
 This all compiles again and our `main.rs` file is much cleaner.
 
-## Randomizing Our Board
+## Giving it a shuffle
 
-We have our little hardcoded blocks we added in the first part of the tutorial but now we should look into generating
-our terrain.
-We want the terrain to be random each time so that each time we play the game it looks a little different.
+We have our little hardcoded blocks we added in
+[the first part of the tutorial](https://dominik-wilkowski.com/posts/learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/#taking-the-magic-out-of-coding)
+but now we should look into generating our terrain.
+We want the terrain to be random each time so that each time we play the game, the challenge is a little different.
 How would you do that though?
 Let's assume we have a function that generates random numbers for us within a range, how would you go about generating
 your coordinates for each block?
@@ -464,12 +465,595 @@ But this is pretty inefficient because you're just brute-forcing your way to a f
 unlucky by generating multiple coordinates in a row that are not `Empty` and the more blocks you place on the board, the
 higher the chances of collisions like that.
 
-Instead of that let's just collect every possible coordinate on the board into a colleciton type like a `Vec` and then
-shuffle the vector and pop the last one out one by one for placing each block.
+Instead of that, let's just collect every possible coordinate on the board into a colleciton type like a `Vec` and then
+shuffle the vector and [pop](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop) the last one out one by one
+for placing each block.
 
-## We Need Levels
+```rust {data-file="board.rs", data-fold="['1-11', '21-53']", hl_lines=["15-17"]}
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	TILE_SIZE, Tile,
+};
 
-## Which One Is Row and Which Column?
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| (column, row)))
+			.collect::<Vec<(usize, usize)>>();
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+`all_coords` now contains every possible position on the board since our board at the start is completely empty.
+Now we need to shuffle this vec and for that we will need the [`rand`](https://crates.io/crates/rand) crate.
+
+```console
+cargo add rand
+<span style="font-weight:bold;color:lime;">    Updating</span> crates.io index
+<span style="font-weight:bold;color:lime;">      Adding</span> rand v0.9.1 to dependencies
+             Features:
+             <span style="font-weight:bold;color:lime;">+</span> alloc
+             <span style="font-weight:bold;color:lime;">+</span> os_rng
+             <span style="font-weight:bold;color:lime;">+</span> small_rng
+             <span style="font-weight:bold;color:lime;">+</span> std
+             <span style="font-weight:bold;color:lime;">+</span> std_rng
+             <span style="font-weight:bold;color:lime;">+</span> thread_rng
+             <span style="font-weight:bold;color:red;">-</span> log
+             <span style="font-weight:bold;color:red;">-</span> nightly
+             <span style="font-weight:bold;color:red;">-</span> serde
+             <span style="font-weight:bold;color:red;">-</span> simd_support
+             <span style="font-weight:bold;color:red;">-</span> unbiased
+<span style="font-weight:bold;color:lime;">    Updating</span> crates.io index
+<span style="font-weight:bold;color:aqua;">    Blocking</span> waiting for file lock on package cache
+<span style="font-weight:bold;color:lime;">     Locking</span> 17 packages to latest Rust 1.87.0 compatible versions
+<span style="font-weight:bold;color:aqua;">      Adding</span> bitflags v2.9.1
+<span style="font-weight:bold;color:aqua;">      Adding</span> cfg-if v1.0.0
+<span style="font-weight:bold;color:aqua;">      Adding</span> getrandom v0.3.3
+<span style="font-weight:bold;color:aqua;">      Adding</span> libc v0.2.172
+<span style="font-weight:bold;color:aqua;">      Adding</span> ppv-lite86 v0.2.21
+<span style="font-weight:bold;color:aqua;">      Adding</span> proc-macro2 v1.0.95
+<span style="font-weight:bold;color:aqua;">      Adding</span> quote v1.0.40
+<span style="font-weight:bold;color:aqua;">      Adding</span> r-efi v5.2.0
+<span style="font-weight:bold;color:aqua;">      Adding</span> rand v0.9.1
+<span style="font-weight:bold;color:aqua;">      Adding</span> rand_chacha v0.9.0
+<span style="font-weight:bold;color:aqua;">      Adding</span> rand_core v0.9.3
+<span style="font-weight:bold;color:aqua;">      Adding</span> syn v2.0.101
+<span style="font-weight:bold;color:aqua;">      Adding</span> unicode-ident v1.0.18
+<span style="font-weight:bold;color:aqua;">      Adding</span> wasi v0.14.2+wasi-0.2.4
+<span style="font-weight:bold;color:aqua;">      Adding</span> wit-bindgen-rt v0.39.0
+<span style="font-weight:bold;color:aqua;">      Adding</span> zerocopy v0.8.25
+<span style="font-weight:bold;color:aqua;">      Adding</span> zerocopy-derive v0.8.25
+```
+
+This has added our dependency to our `Cargo.toml`:
+
+```toml {data-file="Cargo.toml"}
+[package]
+name = "beast"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rand = "0.9.1"
+```
+
+From the `rand` crate we will use the [`SliceRandom`](https://docs.rs/rand/0.9.1/rand/seq/trait.SliceRandom.html) trait
+which implements a [`shuffle`](https://docs.rs/rand/0.9.1/rand/seq/trait.SliceRandom.html#tymethod.shuffle) method on
+`T` which in our case will be our vec.
+Let's use it in our code:
+
+```rust {data-file="board.rs", data-fold="['3-13', '25-57']", hl_lines=[1,"20-21"]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	TILE_SIZE, Tile,
+};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| (column, row)))
+			.collect::<Vec<(usize, usize)>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+Now `all_coords` contains all coordinates of our board in random order.
+Before we continue though, we should remove the player position from the vec since the player is inhabiting a coordinate
+on the board and we wouldn't want to overwrite it's position.
+But we just shuffled our vec and have no idea where that coordinate now is.
+Perhaps it's best to remove the player position from the vec before we shuffle:
+
+```rust {data-file="board.rs", data-fold="['1-13', '26-58']", hl_lines=[19]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	TILE_SIZE, Tile,
+};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| (column, row)))
+			.filter(|coord| !(coord.0 == 0 && coord.1 == 0))
+			.collect::<Vec<(usize, usize)>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+Removing our player position before we collect our `all_coords` iterator into a vec also means rust can do some
+optimizations on the filter.
+
+Ok now we have a complete set of coordinates, blocks could be placed on and we should start placing some blocks:
+
+```rust {data-file="board.rs", data-fold="['1-13', '33-65']", hl_lines=["24-29"]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	TILE_SIZE, Tile,
+};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| (column, row)))
+			.filter(|coord| !(coord.0 == 0 && coord.1 == 0))
+			.collect::<Vec<(usize, usize)>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		for _ in 0..50 {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.1][coord.0] = Tile::Block;
+		}
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+We create a loop from `0` to `50` and in each iteration `pop` off the last item from our shuffled `all_coords` vec and
+use it to place a `Tile::Block` on the `buffer`.
+We use [`except`](https://doc.rust-lang.org/std/option/enum.Option.html#method.expect) because `pop` returns an
+[`Option`](https://doc.rust-lang.org/std/option/enum.Option.html) because `pop` could very well fail when there is
+nothing left in our vec.
+Normally we would deal with the error case gracefully and not throw a `panic` but in this case we should stop our game
+and throw our hands up because we tried to place more blocks than there are empty tiles so I think it's ok to panic
+here.
+Also note that we're doing `buffer[coord.1][coord.0]` and not `buffer[coord.0][coord.1]` because the second argument in
+our coord tuple is the `row` and the first is the `column` and in our buffer it's the other way around.
+We will have to keep that in mind and I certainly have already mixed this up about three times.
+
+When we run our binary, we get something similar to this:
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.17s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span>                                                                            <span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:lime;">░░</span><span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                    <span style="color:lime;">░░</span>          <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                              <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>              <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>            <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>          <span style="color:lime;">░░</span>                        <span style="color:lime;">░░</span>        <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span>                                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                    <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span><span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>            <span style="color:lime;">░░</span>                                              <span style="color:lime;">░░</span><span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                              <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                            <span style="color:lime;">░░</span>        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>  <span style="color:lime;">░░</span>                                  <span style="color:lime;">░░</span>                      <span style="color:lime;">░░</span>              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                              <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>                                        <span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                  <span style="color:lime;">░░</span>                                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                    <span style="color:lime;">░░</span>                      <span style="color:lime;">░░</span>            <span style="color:lime;">░░</span>                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>      <span style="color:lime;">░░</span>            <span style="color:lime;">░░</span>                        <span style="color:lime;">░░</span>                    <span style="color:lime;">░░</span>        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>              <span style="color:lime;">░░</span>                                            <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                          <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                      <span style="color:lime;">░░</span>                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                            <span style="color:lime;">░░</span>                                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+```
+
+This is great!
+Let's do the same thing again for `StaticBlocks`:
+
+```rust {data-file="board.rs", data-fold="['1-13', '40-72']", hl_lines=["31-36"]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	TILE_SIZE, Tile,
+};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| (column, row)))
+			.filter(|coord| !(coord.0 == 0 && coord.1 == 0))
+			.collect::<Vec<(usize, usize)>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		for _ in 0..50 {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.1][coord.0] = Tile::Block;
+		}
+
+		for _ in 0..5 {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.1][coord.0] = Tile::StaticBlock;
+		}
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+And this now really makes our board look awesome:
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span>                      <span style="color:lime;">░░</span>                        <span style="color:lime;">░░</span>                    <span style="color:lime;">░░</span><span style="color:lime;">░░</span>    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                            <span style="color:lime;">░░</span>      <span style="color:yellow;">▓▓</span>                              <span style="color:lime;">░░</span>        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>  <span style="color:yellow;">▓▓</span>                      <span style="color:lime;">░░</span>                          <span style="color:lime;">░░</span>                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                            <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                    <span style="color:lime;">░░</span>                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                      <span style="color:lime;">░░</span><span style="color:lime;">░░</span>                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                      <span style="color:lime;">░░</span>        <span style="color:lime;">░░</span>                  <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>    <span style="color:lime;">░░</span>                  <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>                                  <span style="color:lime;">░░</span>          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>                      <span style="color:lime;">░░</span>                    <span style="color:yellow;">▓▓</span>                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                <span style="color:lime;">░░</span>                                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span>                                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                      <span style="color:lime;">░░</span>        <span style="color:lime;">░░</span>                        <span style="color:lime;">░░</span>                <span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                        <span style="color:lime;">░░</span><span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                      <span style="color:lime;">░░</span>        <span style="color:lime;">░░</span>      <span style="color:yellow;">▓▓</span>                                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                      <span style="color:yellow;">▓▓</span>      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>  <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span><span style="color:lime;">░░</span>            <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                  <span style="color:lime;">░░</span>                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                  <span style="color:lime;">░░</span>          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                <span style="color:lime;">░░</span>                                          <span style="color:lime;">░░</span>        <span style="color:lime;">░░</span>      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span>                                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>    <span style="color:lime;">░░</span>                                <span style="color:lime;">░░</span>                      <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+```
+
+Finishing touches: we add our player back on the board:
+
+```rust {data-file="board.rs", data-fold="['1-13', '42-74']", hl_lines=[24]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	TILE_SIZE, Tile,
+};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| (column, row)))
+			.filter(|coord| !(coord.0 == 0 && coord.1 == 0))
+			.collect::<Vec<(usize, usize)>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		buffer[0][0] = Tile::Player;
+
+		for _ in 0..50 {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.1][coord.0] = Tile::Block;
+		}
+
+		for _ in 0..5 {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.1][coord.0] = Tile::StaticBlock;
+		}
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.28s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span><span style="color:aqua;">◀▶</span>              <span style="color:lime;">░░</span>                        <span style="color:lime;">░░</span>        <span style="color:lime;">░░</span>                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                              <span style="color:lime;">░░</span>                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>        <span style="color:lime;">░░</span>          <span style="color:lime;">░░</span><span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>                                <span style="color:yellow;">▓▓</span>  <span style="color:lime;">░░</span>          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>  <span style="color:lime;">░░</span>                                                                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                      <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>          <span style="color:lime;">░░</span><span style="color:lime;">░░</span><span style="color:lime;">░░</span>              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                  <span style="color:lime;">░░</span>          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                  <span style="color:lime;">░░</span>                      <span style="color:lime;">░░</span>                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>        <span style="color:lime;">░░</span>                <span style="color:lime;">░░</span>                <span style="color:lime;">░░</span>                <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                    <span style="color:lime;">░░</span>        <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                        <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                      <span style="color:lime;">░░</span>                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                <span style="color:lime;">░░</span>                              <span style="color:lime;">░░</span>            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>                                                                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>                                              <span style="color:lime;">░░</span>                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                <span style="color:lime;">░░</span>            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>  <span style="color:lime;">░░</span>                <span style="color:lime;">░░</span>                                                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                <span style="color:yellow;">▓▓</span>                                                          <span style="color:yellow;">▓▓</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                          <span style="color:lime;">░░</span>                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>            <span style="color:lime;">░░</span><span style="color:lime;">░░</span>          <span style="color:yellow;">▓▓</span>                  <span style="color:lime;">░░</span>      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span><span style="color:lime;">░░</span>    <span style="color:yellow;">▓▓</span>    <span style="color:lime;">░░</span>              <span style="color:lime;">░░</span>                            <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span><span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+```
+
+## Hardcoded values?
+
+Our board now looks like the real thing but we got some hard-coded values in our code that probably needs to change
+depending on what level of the game we are in right?
+The idea is that in later levels the `Block` tiles are reduced and the `StaticBlocks` increased to give us fewer
+opportunities to squish the beasts, making each level a little harder.
+Thus we need to find a way to change the number of blocks and static blocks for each level.
+
+Ok that's fair, let's create a function on our `Game` struct that returns a level config with the block and static block
+counts and use it in our `new` method:
+
+## Which One Is Row And Which Column?
 
 Indexing Into Our Board
 

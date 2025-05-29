@@ -384,7 +384,6 @@ table code,
 p code {
 	background-color: var(--code-background);
 	border-radius: 3px;
-	padding: 2px;
 }
 
 :not(pre) > code {
