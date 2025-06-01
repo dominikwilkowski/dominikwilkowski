@@ -1050,8 +1050,106 @@ The idea is that in later levels the `Block` tiles are reduced and the `StaticBl
 opportunities to squish the beasts, making each level a little harder.
 Thus we need to find a way to change the number of blocks and static blocks for each level.
 
-Ok that's fair, let's create a function on our `Game` struct that returns a level config with the block and static block
-counts and use it in our `new` method:
+Ok that's fair, we will need way to express levels and then a way to get a level config for each level.
+An `enum` here seems to be the right fit and we can implement a function on the enum that returns a struct with the
+config per level.
+For this let's create a new module called `level.rs` and add our code there:
+
+```console
+.
+├── Cargo.lock
+├── Cargo.toml
+└── src
+    ├── board.rs
+    ├── game.rs
+    ├── level.rs
+    ├── main.rs
+    ├── player.rs
+    └── raw_mode.rs
+```
+
+Let's just create a `Level` enum and add `One`, `Two` and `Three` as options for now.
+We can expand the levels later.
+
+```rust {data-file="level.rs", data-fold="[]", hl_lines=[]}
+pub struct LevelConfig {
+	pub block_count: usize,
+	pub static_block_count: usize,
+}
+
+#[derive(Debug)]
+pub enum Level {
+	One,
+	Two,
+	Three,
+}
+
+impl Level {
+	pub fn get_level_config(&self) -> LevelConfig {
+		match self {
+			Level::One => LevelConfig {
+				block_count: 30,
+				static_block_count: 3,
+			},
+			Level::Two => LevelConfig {
+				block_count: 20,
+				static_block_count: 10,
+			},
+			Level::Three => LevelConfig {
+				block_count: 12,
+				static_block_count: 20,
+			},
+		}
+	}
+}
+```
+
+We added the `LevelConfig` struct for the return value and made sure we mark each field as public so that our other
+modules can read it.
+We also made our `Level` enum and `get_level_config` method on the enum public.
+
+Now we just need to include this new module in our code:
+
+```rust {data-file="main.rs", data-fold="['6-38']", hl_lines=[3]}
+mod board;
+mod game;
+mod level;
+mod player;
+mod raw_mode;
+
+use crate::{game::Game, raw_mode::RawMode};
+
+pub const BOARD_WIDTH: usize = 39;
+pub const BOARD_HEIGHT: usize = 20;
+pub const TILE_SIZE: usize = 2;
+
+pub const ANSI_YELLOW: &str = "\x1B[33m";
+pub const ANSI_GREEN: &str = "\x1B[32m";
+pub const ANSI_CYAN: &str = "\x1B[36m";
+pub const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug)]
+pub enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+pub enum Direction {
+	Up,
+	Right,
+	Down,
+	Left,
+}
+
+fn main() {
+	let _raw_mode = RawMode::enter();
+
+	let mut game = Game::new();
+	game.play();
+}
+```
 
 ## Which One Is Row And Which Column?
 
