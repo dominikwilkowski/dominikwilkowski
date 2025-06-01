@@ -1151,7 +1151,7 @@ fn main() {
 }
 ```
 
-## Which One Is Row And Which Column?
+## Which One Was The Row Again?
 
 Indexing Into Our Board
 
