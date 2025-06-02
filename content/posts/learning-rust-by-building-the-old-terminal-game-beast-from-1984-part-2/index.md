@@ -199,7 +199,7 @@ impl Board {
 The `player.rs` module contains the `Player` struct which is responsible for the player movements:
 
 ```rust {data-file="player.rs"}
-use crate::{Direction, Tile, board::Board};
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Direction, Tile, board::Board};
 
 #[derive(Debug)]
 pub struct Player {
@@ -215,10 +215,26 @@ impl Player {
 		board.buffer[self.position.1][self.position.0] = Tile::Empty;
 
 		match direction {
-			Direction::Up => self.position.1 -= 1,
-			Direction::Right => self.position.0 += 1,
-			Direction::Down => self.position.1 += 1,
-			Direction::Left => self.position.0 -= 1,
+			Direction::Up => {
+				if self.position.1 > 0 {
+					self.position.1 -= 1
+				}
+			},
+			Direction::Right => {
+				if self.position.0 < BOARD_WIDTH - 1 {
+					self.position.0 += 1
+				}
+			},
+			Direction::Down => {
+				if self.position.1 < BOARD_HEIGHT - 1 {
+					self.position.1 += 1
+				}
+			},
+			Direction::Left => {
+				if self.position.0 > 0 {
+					self.position.0 -= 1
+				}
+			},
 		}
 
 		board.buffer[self.position.1][self.position.0] = Tile::Player;
@@ -395,7 +411,7 @@ So we need to make our `Game` struct public because it's now in a different modu
 But we realize that also is true for our `new` and `play` method, even though rust isn't showing us these errors yet.
 But we know our friend well and so let's just make all three of them public:
 
-```rust {data-file="main.rs", data-fold="['25-49']", hl_lines=[6, 12, 19]}
+```rust {data-file="game.rs", data-fold="['25-49']", hl_lines=[6, 12, 19]}
 use std::io::{Read, stdin};
 
 use crate::{BOARD_HEIGHT, Direction, board::Board, player::Player};
@@ -1042,10 +1058,507 @@ cargo run
 <span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
 ```
 
+## Which One Was The Row Again?
+
+Our board now looks like the real thing but we've written `buffer[coord.1][coord.0]` a couple times now and have
+certainly stumbled across this bit.
+Everytime I have to ask myself:
+
+> Was it row first or column? How did the buffer work again?
+{caption="Me"}
+
+After bumping into this a couple times I think we had enough and should now implemented a new `Coord` struct to hold
+coordinates.
+That way we never have to wonder if `coord.1` was row or column.
+Let's add this new struct to the `main.rs` file because, much like `Tile`, it will be used througout the game:
+
+```rust {data-file="main.rs", data-fold="['1-32', '38-44']", hl_lines=["33-37"]}
+mod board;
+mod game;
+mod level;
+mod player;
+mod raw_mode;
+
+use crate::{game::Game, raw_mode::RawMode};
+
+pub const BOARD_WIDTH: usize = 39;
+pub const BOARD_HEIGHT: usize = 20;
+pub const TILE_SIZE: usize = 2;
+
+pub const ANSI_YELLOW: &str = "\x1B[33m";
+pub const ANSI_GREEN: &str = "\x1B[32m";
+pub const ANSI_CYAN: &str = "\x1B[36m";
+pub const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug)]
+pub enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+pub enum Direction {
+	Up,
+	Right,
+	Down,
+	Left,
+}
+
+#[derive(Debug)]
+pub struct Coord {
+	column: usize,
+	row: usize,
+}
+
+fn main() {
+	let _raw_mode = RawMode::enter();
+
+	let mut game = Game::new();
+	game.play();
+}
+```
+
+We can use that new `Coord` struct in our `player` module now:
+
+```rust {data-file="player.rs", data-fold="[]", hl_lines=[1, 5, 11, 16, "20-21", "25-26", "30-31", "35-36", 41]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		board.buffer[self.position.row][self.position.column] = Tile::Empty;
+
+		match direction {
+			Direction::Up => {
+				if self.position.row > 0 {
+					self.position.row -= 1
+				}
+			},
+			Direction::Right => {
+				if self.position.column < BOARD_WIDTH - 1 {
+					self.position.column += 1
+				}
+			},
+			Direction::Down => {
+				if self.position.row < BOARD_HEIGHT - 1 {
+					self.position.row += 1
+				}
+			},
+			Direction::Left => {
+				if self.position.column > 0 {
+					self.position.column -= 1
+				}
+			},
+		}
+
+		board.buffer[self.position.row][self.position.column] = Tile::Player;
+	}
+}
+```
+
+This is much more explicit and while we type a bit more, we know what is what and future us will thank us for it.
+
+We should use our coords also in our board module:
+
+```rust {data-file="game.rs", data-fold="['8-13', '42-74']", hl_lines=[5, "18-20", 30, 37]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	Coord, TILE_SIZE, Tile,
+};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| Coord { column, row }))
+			.filter(|coord| !(coord.column == 0 && coord.row == 0))
+			.collect::<Vec<Coord>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		buffer[0][0] = Tile::Player;
+
+		for _ in 0..50 {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::Block;
+		}
+
+		for _ in 0..5 {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::StaticBlock;
+		}
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+This also made our code more readable but we're noticing we're doing a lot of typing with things like
+`buffer[coord.row][coord.column]`.
+Having to type this every time we index into our board, seems a bit too much.
+Luckily rust gives us the ability to define our own [`Index`](https://doc.rust-lang.org/std/ops/trait.Index.html) trait
+to improve this:
+
+```rust {data-file="board.rs", data-fold="['1-7', '28-90']", hl_lines=[8, "15-27"]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	Coord, TILE_SIZE, Tile,
+};
+
+use std::ops::{Index, IndexMut};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Index<Coord> for Board {
+	type Output = Tile;
+
+	fn index(&self, coord: Coord) -> &Self::Output {
+		&self.buffer[coord.row][coord.column]
+	}
+}
+
+impl IndexMut<Coord> for Board {
+	fn index_mut(&mut self, coord: Coord) -> &mut Self::Output {
+		&mut self.buffer[coord.row][coord.column]
+	}
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| Coord { column, row }))
+			.filter(|coord| !(coord.column == 0 && coord.row == 0))
+			.collect::<Vec<Coord>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		buffer[0][0] = Tile::Player;
+
+		for _ in 0..50 {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::Block;
+		}
+
+		for _ in 0..5 {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::StaticBlock;
+		}
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+With the `Index` trait implemented we can now index into our board by simply writing `board[coord]` instead of
+`board[coord.row][coord.column]`.
+That's a massive improvement so let's apply this to our `player` module:
+
+```rust {data-file="player.rs", data-fold="['1-14', '18-39']", hl_lines=[16, 41]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		board[self.position] = Tile::Empty;
+
+		match direction {
+			Direction::Up => {
+				if self.position.row > 0 {
+					self.position.row -= 1
+				}
+			},
+			Direction::Right => {
+				if self.position.column < BOARD_WIDTH - 1 {
+					self.position.column += 1
+				}
+			},
+			Direction::Down => {
+				if self.position.row < BOARD_HEIGHT - 1 {
+					self.position.row += 1
+				}
+			},
+			Direction::Left => {
+				if self.position.column > 0 {
+					self.position.column -= 1
+				}
+			},
+		}
+
+		board[self.position] = Tile::Player;
+	}
+}
+```
+
+This kicks off a couple errors:
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:red;">error[E0507]</span><span style="font-weight:bold;">: cannot move out of `self.position` which is behind a mutable reference</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/player.rs:16:9
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">16</span> <span style="font-weight:bold;color:#3333FF;">|</span>         board[self.position] = Tile::Empty;
+   <span style="font-weight:bold;color:#3333FF;">|</span>               <span style="font-weight:bold;color:red;">^^^^^^^^^^^^^</span> <span style="font-weight:bold;color:red;">move occurs because `self.position` has type `Coord`, which does not implement the `Copy` trait</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:lime;">note</span>: if `Coord` implemented `Clone`, you could clone the value
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:34:1
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">34</span> <span style="font-weight:bold;color:#3333FF;">|</span> pub struct Coord {
+   <span style="font-weight:bold;color:#3333FF;">|</span> <span style="font-weight:bold;color:lime;">^^^^^^^^^^^^^^^^</span> <span style="font-weight:bold;color:lime;">consider implementing `Clone` for this type</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+  <span style="font-weight:bold;color:#3333FF;">::: </span>src/player.rs:16:9
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">16</span> <span style="font-weight:bold;color:#3333FF;">|</span>         board[self.position] = Tile::Empty;
+   <span style="font-weight:bold;color:#3333FF;">|</span>               <span style="font-weight:bold;color:#3333FF;">-------------</span> <span style="font-weight:bold;color:#3333FF;">you could clone this value</span>
+
+<span style="font-weight:bold;color:red;">error[E0507]</span><span style="font-weight:bold;">: cannot move out of `self.position` which is behind a mutable reference</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/player.rs:41:9
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">41</span> <span style="font-weight:bold;color:#3333FF;">|</span>         board[self.position] = Tile::Player;
+   <span style="font-weight:bold;color:#3333FF;">|</span>               <span style="font-weight:bold;color:red;">^^^^^^^^^^^^^</span> <span style="font-weight:bold;color:red;">move occurs because `self.position` has type `Coord`, which does not implement the `Copy` trait</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:lime;">note</span>: if `Coord` implemented `Clone`, you could clone the value
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:34:1
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">34</span> <span style="font-weight:bold;color:#3333FF;">|</span> pub struct Coord {
+   <span style="font-weight:bold;color:#3333FF;">|</span> <span style="font-weight:bold;color:lime;">^^^^^^^^^^^^^^^^</span> <span style="font-weight:bold;color:lime;">consider implementing `Clone` for this type</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+  <span style="font-weight:bold;color:#3333FF;">::: </span>src/player.rs:41:9
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">41</span> <span style="font-weight:bold;color:#3333FF;">|</span>         board[self.position] = Tile::Player;
+   <span style="font-weight:bold;color:#3333FF;">|</span>               <span style="font-weight:bold;color:#3333FF;">-------------</span> <span style="font-weight:bold;color:#3333FF;">you could clone this value</span>
+
+<span style="font-weight:bold;">For more information about this error, try `rustc --explain E0507`.</span>
+<span style="font-weight:bold;color:red;">error</span><span style="font-weight:bold;">:</span> could not compile `beast` (bin &quot;beast&quot;) due to 2 previous errors
+```
+
+Our trusted friend, the compiler, tells us that `Coord` doesn't implement the `Copy` trait which is needed for us to
+take ownership of the the coord passed into our `Index` trait.
+We have two options here now:
+1. We could derive the `Copy` and `Clone` trait for our `Coord` struct.
+	This is a pretty low impact thing since the struct only takes `usize` types which are itself copy types.
+2. Or we could not take ownership of the `Coord` within our `Index` trait implementation
+
+Due to the relative simple nature of the `Coord` struct the difference is much of a muchness really.
+But because this is a tutorial and we're learning still I would go with `2` mainly because there isn't a reason to take
+ownership of the `Coord` within our `Index` trait.
+And if we don't need it, why work around it?
+
+So let's change our trait implementation:
+
+```rust {data-file="board.rs", data-fold="['1-15', '29-96']", hl_lines=[16, 19, "24-25"]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	Coord, TILE_SIZE, Tile,
+	level::{Level, LevelConfig},
+};
+
+use std::ops::{Index, IndexMut};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Index<&Coord> for Board {
+	type Output = Tile;
+
+	fn index(&self, coord: &Coord) -> &Self::Output {
+		&self.buffer[coord.row][coord.column]
+	}
+}
+
+impl IndexMut<&Coord> for Board {
+	fn index_mut(&mut self, coord: &Coord) -> &mut Self::Output {
+		&mut self.buffer[coord.row][coord.column]
+	}
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| Coord { column, row }))
+			.filter(|coord| !(coord.column == 0 && coord.row == 0))
+			.collect::<Vec<Coord>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		buffer[0][0] = Tile::Player;
+
+		let LevelConfig {
+			block_count,
+			static_block_count,
+		} = Level::One.get_level_config();
+
+		for _ in 0..block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::Block;
+		}
+
+		for _ in 0..static_block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::StaticBlock;
+		}
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+We simply take `Coord` by reference and thus don't have to copy or clone anything.
+
 ## Hardcoded values?
 
-Our board now looks like the real thing but we got some hard-coded values in our code that probably needs to change
-depending on what level of the game we are in right?
+We got some hard-coded values in our code that probably needs to change depending on what level of the game we are in
+right?
 The idea is that in later levels the `Block` tiles are reduced and the `StaticBlocks` increased to give us fewer
 opportunities to squish the beasts, making each level a little harder.
 Thus we need to find a way to change the number of blocks and static blocks for each level.
@@ -1069,7 +1582,7 @@ For this let's create a new module called `level.rs` and add our code there:
 ```
 
 Let's just create a `Level` enum and add `One`, `Two` and `Three` as options for now.
-We can expand the levels later.
+We can add more levels later.
 
 ```rust {data-file="level.rs", data-fold="[]", hl_lines=[]}
 pub struct LevelConfig {
@@ -1143,6 +1656,12 @@ pub enum Direction {
 	Left,
 }
 
+#[derive(Debug)]
+pub struct Coord {
+	column: usize,
+	row: usize,
+}
+
 fn main() {
 	let _raw_mode = RawMode::enter();
 
@@ -1151,9 +1670,212 @@ fn main() {
 }
 ```
 
-## Which One Was The Row Again?
+And we use it in our board:
 
-Indexing Into Our Board
+```rust {data-file="board.rs", data-fold="['9-29', '64-96']", hl_lines=[6, "43-46", 48, 55]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	TILE_SIZE, Tile,
+	level::{Level, LevelConfig},
+};
+
+use std::ops::{Index, IndexMut};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Index<&Coord> for Board {
+	type Output = Tile;
+
+	fn index(&self, coord: &Coord) -> &Self::Output {
+		&self.buffer[coord.row][coord.column]
+	}
+}
+
+impl IndexMut<&Coord> for Board {
+	fn index_mut(&mut self, coord: &Coord) -> &mut Self::Output {
+		&mut self.buffer[coord.row][coord.column]
+	}
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| Coord { column, row }))
+			.filter(|coord| !(coord.column == 0 && coord.row == 0))
+			.collect::<Vec<Coord>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		buffer[0][0] = Tile::Player;
+
+		let LevelConfig {
+			block_count,
+			static_block_count,
+		} = Level::One.get_level_config();
+
+		for _ in 0..block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::Block;
+		}
+
+		for _ in 0..static_block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::StaticBlock;
+		}
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+We call `get_level_config` on `Level::One` because we find ourself in the `new` method of the board module and a new
+board will always start with level one.
+But this brings us to the next step: we need to store our current level somewhere so that we can increment it when we
+finish a level:
+
+```rust {data-file="game.rs", data-fold="['22-53']", hl_lines=[4, 11, 19]}
+use std::io::{Read, stdin};
+
+use crate::{
+	BOARD_HEIGHT, Direction, board::Board, level::Level, player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		Self {
+			board: Board::new(),
+			player: Player::new(),
+			level: Level::One,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+		println!("{}", self.board.render());
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'w' => {
+					self.player.advance(&mut self.board, Direction::Up);
+				},
+				'd' => {
+					self.player.advance(&mut self.board, Direction::Right);
+				},
+				's' => {
+					self.player.advance(&mut self.board, Direction::Down);
+				},
+				'a' => {
+					self.player.advance(&mut self.board, Direction::Left);
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+
+			println!("\x1B[{}F{}", BOARD_HEIGHT + 1 + 1, self.board.render());
+		}
+	}
+}
+```
+
+We don't have a way to kill beasts yet but that doesn't stop us from building out the level bits.
+To add a way for levels to be incremented we just add a `next` method to our `Level` enum which returns an `Option` so
+we can detect when there are no more levels thus ending the game:
+
+```rust {data-file="level.rs", data-fold="['1-30']", hl_lines=["31-37"]}
+pub struct LevelConfig {
+	pub block_count: usize,
+	pub static_block_count: usize,
+}
+
+#[derive(Debug)]
+pub enum Level {
+	One,
+	Two,
+	Three,
+}
+
+impl Level {
+	pub fn get_level_config(&self) -> LevelConfig {
+		match self {
+			Level::One => LevelConfig {
+				block_count: 30,
+				static_block_count: 3,
+			},
+			Level::Two => LevelConfig {
+				block_count: 20,
+				static_block_count: 10,
+			},
+			Level::Three => LevelConfig {
+				block_count: 12,
+				static_block_count: 20,
+			},
+		}
+	}
+
+	pub fn next(&self) -> Option<Self> {
+		match self {
+			Self::One => Some(Self::Two),
+			Self::Two => Some(Self::Three),
+			Self::Three => None,
+		}
+	}
+}
+```
 
 ## A Hungry Hungry Player
 
