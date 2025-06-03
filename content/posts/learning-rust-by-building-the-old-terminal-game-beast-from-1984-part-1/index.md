@@ -2705,7 +2705,7 @@ This gets us this:
 
 ```console
 cargo run
-<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
 <span style="font-weight:bold;color:red;">error[E0616]</span><span style="font-weight:bold;">: field `buffer` of struct `Board` is private</span>
   <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/player.rs:13:9
    <span style="font-weight:bold;color:#3333FF;">|</span>

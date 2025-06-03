@@ -73,7 +73,7 @@ Console block with color output:
 
 ```console
 cargo --color=always run 2>&1 | aha --black | pbcopy
-<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
 <span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">: constant `BOARD_WIDTH` is never used</span>
  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:1:7
   <span style="font-weight:bold;color:#3333FF;">|</span>
@@ -103,6 +103,7 @@ Cleaning:
 - remove HTML at start till `<pre>` and in footer from `</pre>`
 - remove `<span style="font-weight:bold;"></span>`
 - remove `filter: contrast(70%) brightness(190%);`
+- replace `/Users/dominik/Desktop/beast` with `/Users/code/beast`
 
 Code Diff:
 

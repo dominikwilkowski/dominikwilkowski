@@ -1,7 +1,7 @@
 ---
 title: 'An Introduction to Rust by building an old terminal game from 1984, Part 2'
 date: '2025-05-21T22:11:29+10:00'
-draft: true
+draft: false
 visibility: false
 summary: >
   In the last post we setup our board and made the player walk around.
@@ -390,7 +390,7 @@ After running `cargo run` we get an error:
 
 ```console
 cargo run
-<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
 <span style="font-weight:bold;color:red;">error[E0603]</span><span style="font-weight:bold;">: struct `Game` is private</span>
  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:6:19
   <span style="font-weight:bold;color:#3333FF;">|</span>
@@ -815,7 +815,7 @@ When we run our binary, we get something similar to this:
 
 ```console
 cargo run
-<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
 <span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.17s
 <span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
 <span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
@@ -1031,7 +1031,7 @@ impl Board {
 
 ```console
 cargo run
-<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
 <span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.28s
 <span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
 <span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
@@ -1072,10 +1072,9 @@ coordinates.
 That way we never have to wonder if `coord.1` was row or column.
 Let's add this new struct to the `main.rs` file because, much like `Tile`, it will be used througout the game:
 
-```rust {data-file="main.rs", data-fold="['1-32', '38-44']", hl_lines=["33-37"]}
+```rust {data-file="main.rs", data-fold="['1-32', '38-43']", hl_lines=["33-37"]}
 mod board;
 mod game;
-mod level;
 mod player;
 mod raw_mode;
 
@@ -1171,7 +1170,7 @@ This is much more explicit and while we type a bit more, we know what is what an
 
 We should use our coords also in our board module:
 
-```rust {data-file="game.rs", data-fold="['8-13', '42-74']", hl_lines=[5, "18-20", 30, 37]}
+```rust {data-file="board.rs", data-fold="['8-13', '42-74']", hl_lines=[5, "18-20", 30, 37]}
 use rand::seq::SliceRandom;
 
 use crate::{
@@ -1401,7 +1400,7 @@ This kicks off a couple errors:
 
 ```console
 cargo run
-<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/Desktop/beast)
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
 <span style="font-weight:bold;color:red;">error[E0507]</span><span style="font-weight:bold;">: cannot move out of `self.position` which is behind a mutable reference</span>
   <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/player.rs:16:9
    <span style="font-weight:bold;color:#3333FF;">|</span>
@@ -1454,13 +1453,12 @@ And if we don't need it, why work around it?
 
 So let's change our trait implementation:
 
-```rust {data-file="board.rs", data-fold="['1-15', '29-96']", hl_lines=[16, 19, "24-25"]}
+```rust {data-file="board.rs", data-fold="['1-14', '29-90']", hl_lines=[15, 18, "23-24"]}
 use rand::seq::SliceRandom;
 
 use crate::{
 	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
 	Coord, TILE_SIZE, Tile,
-	level::{Level, LevelConfig},
 };
 
 use std::ops::{Index, IndexMut};
@@ -1497,19 +1495,14 @@ impl Board {
 
 		buffer[0][0] = Tile::Player;
 
-		let LevelConfig {
-			block_count,
-			static_block_count,
-		} = Level::One.get_level_config();
-
-		for _ in 0..block_count {
+		for _ in 0..50 {
 			let coord = all_coords.pop().expect(
 				"We tried to place more blocks then there were avaiable spaces on the board",
 			);
 			buffer[coord.row][coord.column] = Tile::Block;
 		}
 
-		for _ in 0..static_block_count {
+		for _ in 0..3 {
 			let coord = all_coords.pop().expect(
 				"We tried to place more static blocks then there were avaiable spaces on the board",
 			);
@@ -1554,11 +1547,155 @@ impl Board {
 ```
 
 We simply take `Coord` by reference and thus don't have to copy or clone anything.
+Now we need to change how we index into our board in the `player` module:
+
+```rust {data-file="player.rs", data-fold="['1-14', '18-39']", hl_lines=[16, 41]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		board[&self.position] = Tile::Empty;
+
+		match direction {
+			Direction::Up => {
+				if self.position.row > 0 {
+					self.position.row -= 1
+				}
+			},
+			Direction::Right => {
+				if self.position.column < BOARD_WIDTH - 1 {
+					self.position.column += 1
+				}
+			},
+			Direction::Down => {
+				if self.position.row < BOARD_HEIGHT - 1 {
+					self.position.row += 1
+				}
+			},
+			Direction::Left => {
+				if self.position.column > 0 {
+					self.position.column -= 1
+				}
+			},
+		}
+
+		board[&self.position] = Tile::Player;
+	}
+}
+```
+
+This all compiles and we got a nice looking board with nice looking code!
+But what is this `50` and `3` in our `board` module?
 
 ## Hardcoded values?
 
 We got some hard-coded values in our code that probably needs to change depending on what level of the game we are in
 right?
+
+```rust {data-file="board.rs", data-fold="['1-40', '55-90']", hl_lines=[42, 49]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	Coord, TILE_SIZE, Tile,
+};
+
+use std::ops::{Index, IndexMut};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Index<&Coord> for Board {
+	type Output = Tile;
+
+	fn index(&self, coord: &Coord) -> &Self::Output {
+		&self.buffer[coord.row][coord.column]
+	}
+}
+
+impl IndexMut<&Coord> for Board {
+	fn index_mut(&mut self, coord: &Coord) -> &mut Self::Output {
+		&mut self.buffer[coord.row][coord.column]
+	}
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| Coord { column, row }))
+			.filter(|coord| !(coord.column == 0 && coord.row == 0))
+			.collect::<Vec<Coord>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		buffer[0][0] = Tile::Player;
+
+		for _ in 0..50 {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::Block;
+		}
+
+		for _ in 0..3 {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks then there were avaiable spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::StaticBlock;
+		}
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
 The idea is that in later levels the `Block` tiles are reduced and the `StaticBlocks` increased to give us fewer
 opportunities to squish the beasts, making each level a little harder.
 Thus we need to find a way to change the number of blocks and static blocks for each level.
@@ -1677,7 +1814,7 @@ use rand::seq::SliceRandom;
 
 use crate::{
 	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
-	TILE_SIZE, Tile,
+	Coord, TILE_SIZE, Tile,
 	level::{Level, LevelConfig},
 };
 
@@ -1832,50 +1969,324 @@ impl Game {
 }
 ```
 
-We don't have a way to kill beasts yet but that doesn't stop us from building out the level bits.
-To add a way for levels to be incremented we just add a `next` method to our `Level` enum which returns an `Option` so
-we can detect when there are no more levels thus ending the game:
+We should probably display our level in the footer?
 
-```rust {data-file="level.rs", data-fold="['1-30']", hl_lines=["31-37"]}
-pub struct LevelConfig {
-	pub block_count: usize,
-	pub static_block_count: usize,
-}
+The issue is that we store our `level` value on our `Game` struct and the render method of the board is implemented on
+our `Board` struct.
+We would have to pass in our level in order to print it in that method.
+I don't like passing thigns around like this.
+You end up drilling function arguments all over the place and quickly loose track plus strictly speaking the board
+shouldn't be concerned about thing outside of its own domain which is the board only.
+So let's create a new method on the `Game` struct that wraps our render method from our `Board`.
+That way we keep everything strictly within their own area and avoid having to pass arguments around.
+
+```rust {data-file="game.rs", data-fold="['1-23', '30-49']", hl_lines=[28, 51, "55-66"]}
+use std::io::{Read, stdin};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, board::Board, level::Level,
+	player::Player,
+};
 
 #[derive(Debug)]
-pub enum Level {
-	One,
-	Two,
-	Three,
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
 }
 
-impl Level {
-	pub fn get_level_config(&self) -> LevelConfig {
-		match self {
-			Level::One => LevelConfig {
-				block_count: 30,
-				static_block_count: 3,
-			},
-			Level::Two => LevelConfig {
-				block_count: 20,
-				static_block_count: 10,
-			},
-			Level::Three => LevelConfig {
-				block_count: 12,
-				static_block_count: 20,
-			},
+impl Game {
+	pub fn new() -> Self {
+		Self {
+			board: Board::new(),
+			player: Player::new(),
+			level: Level::One,
 		}
 	}
 
-	pub fn next(&self) -> Option<Self> {
-		match self {
-			Self::One => Some(Self::Two),
-			Self::Two => Some(Self::Three),
-			Self::Three => None,
+	pub fn play(&mut self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+		println!("{}", self.render());
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'w' => {
+					self.player.advance(&mut self.board, Direction::Up);
+				},
+				'd' => {
+					self.player.advance(&mut self.board, Direction::Right);
+				},
+				's' => {
+					self.player.advance(&mut self.board, Direction::Down);
+				},
+				'a' => {
+					self.player.advance(&mut self.board, Direction::Left);
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+
+			println!("\x1B[{}F{}", BOARD_HEIGHT + 1 + 1, self.render());
 		}
+	}
+
+	fn render(&self) -> String {
+		let mut board = String::new();
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			width = 1 + BOARD_WIDTH * 2 + 1 - 1,
+		));
+
+		board
 	}
 }
 ```
+
+Ok what's going on here?
+We're making use of the [`format`](https://doc.rust-lang.org/std/fmt/index.html) macro and it's superpowers.
+We create a new String then push a reference of what our format macro returns into it.
+To increase the macro readability we named each item.
+You can always do that but it's mostly not needed since we often don't use more than two or three items.
+So that explains the names but what is this: `{footer:>width$}`?
+We bascially tell our macro to fill our variable a space of `width` with spaces because that's the default.
+How did we come up with the `width`, you may ask?
+
+```console
+1 + BOARD_WIDTH * 2 + 1 - 1
+
+^-- Border size
+       ^-- Board width
+                  ^-- Each tile is two columns wide
+                      ^-- Border size
+                          ^-- Level number width
+```
+
+We could leave this illustration as a comment in our code... or we could just not use magic numbers and name them.
+
+```rust {data-file="game.rs", data-fold="['1-54']", hl_lines=["56-58", 66]}
+use std::io::{Read, stdin};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, board::Board, level::Level,
+	player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		Self {
+			board: Board::new(),
+			player: Player::new(),
+			level: Level::One,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+		println!("{}", self.render());
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'w' => {
+					self.player.advance(&mut self.board, Direction::Up);
+				},
+				'd' => {
+					self.player.advance(&mut self.board, Direction::Right);
+				},
+				's' => {
+					self.player.advance(&mut self.board, Direction::Down);
+				},
+				'a' => {
+					self.player.advance(&mut self.board, Direction::Left);
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+
+			println!("\x1B[{}F{}", BOARD_HEIGHT + 1 + 1, self.render());
+		}
+	}
+
+	fn render(&self) -> String {
+		const BORDER_SIZE: usize = 1;
+		const TILE_SIZE: usize = 2;
+		const FOOTER_SIZE: usize = 1;
+
+		let mut board = String::new();
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			width = BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_SIZE,
+		));
+
+		board
+	}
+}
+```
+
+That's at least readable and we may even understand what's happening here in a few months when we come back to this
+code.
+But when we run this code we notice as we move along the board the output is eating it's way downwards our terminal
+buffer.
+
+```console
+cargo run
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">: variants `Two` and `Three` are never constructed</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/level.rs:9:2
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">7</span>  <span style="font-weight:bold;color:#3333FF;">|</span> pub enum Level {
+   <span style="font-weight:bold;color:#3333FF;">|</span>          <span style="font-weight:bold;color:#3333FF;">-----</span> <span style="font-weight:bold;color:#3333FF;">variants in this enum</span>
+<span style="font-weight:bold;color:#3333FF;">8</span>  <span style="font-weight:bold;color:#3333FF;">|</span>     One,
+<span style="font-weight:bold;color:#3333FF;">9</span>  <span style="font-weight:bold;color:#3333FF;">|</span>     Two,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:yellow;">^^^</span>
+<span style="font-weight:bold;color:#3333FF;">10</span> <span style="font-weight:bold;color:#3333FF;">|</span>     Three,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:yellow;">^^^^^</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `Level` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `#[warn(dead_code)]` on by default
+
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">:</span> `beast` (bin &quot;beast&quot;) generated 1 warning
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span>    <span style="color:aqua;">◀▶</span>                                                                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                <span style="color:lime;">░░                      ░░              ░░░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>      <span style="color:lime;">░░                                      ░░</span>                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                <span style="color:lime;">░░          ░░                          ░░</span>                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                          <span style="color:yellow;">▓▓</span>                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:lime;">░░                                      ░░░░        ░░</span>      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                              <span style="color:lime;">░░</span>                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                      <span style="color:lime;">░░                          ░░                  ░░</span>      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>            <span style="color:lime;">░░</span>                                                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                  <span style="color:lime;">░░      ░░</span>                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>            <span style="color:lime;">░░                        ░░</span>                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                              <span style="color:yellow;">▓▓</span>  <span style="color:lime;">░░</span><span style="color:yellow;">▓▓</span>                                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                  <span style="color:lime;">░░</span>          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>        <span style="color:lime;">░░                                              ░░</span>                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                <span style="color:lime;">░░</span>                                                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                        <span style="color:lime;">░░</span>                                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                        <span style="color:lime;">░░</span>                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                    <span style="color:lime;">░░</span>                                                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+                                                                        Level: 1
+```
+
+That's because we have added our footer which increases the height of our board and not adjusted our ANSI escape
+sequence that moves our cursor up `n` lines.
+We're printing our sequence right now in our `play` function and now we would need to add a magic number to that
+output but we just named all of those numbers nicely within our `render` function.
+So let's move this reset into our `render` function and clean it up:
+
+```rust {data-file="game.rs", data-fold="['1-23', '30-49']", hl_lines=[28, 51, "60-67"]}
+use std::io::{Read, stdin};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, board::Board, level::Level,
+	player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		Self {
+			board: Board::new(),
+			player: Player::new(),
+			level: Level::One,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+		println!("{}", self.render(false));
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'w' => {
+					self.player.advance(&mut self.board, Direction::Up);
+				},
+				'd' => {
+					self.player.advance(&mut self.board, Direction::Right);
+				},
+				's' => {
+					self.player.advance(&mut self.board, Direction::Down);
+				},
+				'a' => {
+					self.player.advance(&mut self.board, Direction::Left);
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+
+			println!("{}", self.render(true));
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const TILE_SIZE: usize = 2;
+		const FOOTER_SIZE: usize = 1;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			width = BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_SIZE,
+		));
+
+		board
+	}
+}
+```
+
+Now our board renders again nicely, we display a footer with a right aligned `level` display and we kept each of our
+render function to their respective areas of concerns.
+Let's now deal with the fact that our player overwrites our blocks when it moves over those blocks.
 
 ## A Hungry Hungry Player
 

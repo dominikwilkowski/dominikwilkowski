@@ -255,6 +255,10 @@ div.goat.svg-container {
 	line-height: 1.3;
 	overflow: hidden;
 
+	&.highlight-console {
+		line-height: 1;
+	}
+
 	svg text {
 		font-family: var(--font-mono) !important;
 		font-size: 13px !important;
@@ -358,6 +362,13 @@ pre {
 		padding-top: 6px;
 		padding-bottom: 4px;
 		vertical-align: baseline;
+	}
+
+	.language-console {
+		> span {
+			padding-top: 0;
+			padding-bottom: 0;
+		}
 	}
 
 	code > span[style="background-color:#e1e1e1"],
