@@ -2286,13 +2286,311 @@ impl Game {
 
 Now our board renders again nicely, we display a footer with a right aligned `level` display and we kept each of our
 render function to their respective areas of concerns.
-Let's now deal with the fact that our player overwrites our blocks when it moves over those blocks.
+Now let's stop the player from eating everything on the board.
 
 ## A Hungry Hungry Player
 
-Let's stop the player from eating everything on the board.
+Right now when we move around the board we just overwrite anything in our path with `Tile::Empty` which isn't right.
+Ideally we need to push blocks and stop at static blocks.
+So what does our advance method look like right now?
+
+```rust {data-file="player.rs", data-fold="['1-14']", hl_lines=[]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		board[&self.position] = Tile::Empty;
+
+		match direction {
+			Direction::Up => {
+				if self.position.row > 0 {
+					self.position.row -= 1
+				}
+			},
+			Direction::Right => {
+				if self.position.column < BOARD_WIDTH - 1 {
+					self.position.column += 1
+				}
+			},
+			Direction::Down => {
+				if self.position.row < BOARD_HEIGHT - 1 {
+					self.position.row += 1
+				}
+			},
+			Direction::Left => {
+				if self.position.column > 0 {
+					self.position.column -= 1
+				}
+			},
+		}
+
+		board[&self.position] = Tile::Player;
+	}
+}
+```
+
+Regardless of what the next tile is we move into, we just overwrite it with `Tile::Player` and when we leave the tile we
+set it to `Tile::Empty`.
+We're probably going to have to match the `Tile` we're about to move into and then decide what to do there:
+
+```rust {data-file="player.rs", data-fold="['1-14']", hl_lines=[16, "20-21", "25-26", "30-31", "35-36", "41-51"]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		let mut next_position = self.position;
+
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				}
+			},
+		}
+
+		match board[&next_position] {
+			Tile::Empty => {
+				board[&self.position] = Tile::Empty;
+				self.position = next_position;
+				board[&next_position] = Tile::Player;
+			},
+			Tile::Block => {
+				// TODO: we need to move this block and any behind it
+			},
+			Tile::Player | Tile::StaticBlock => {},
+		}
+	}
+}
+```
+Instead of manipulating `self.position` in place, we change a cpy of it and then match the tile for that position from
+our board.
+- When we find an `Empty` we do what we did before: set our last position to `Empty`, store our new position
+and set the new position on the board to `Player`.
+- When we find that the next tile is of type `Player` or `StaticBlock` we do nothing.
+- But when we find a `Block` we note we will push it which we will implement in the next section.
+
+For now when we're walking around the baord we can bump into obstacles but never overwrite them or move them.
 
 ## Implementing The Blockchain
+
+_(My favorit pun in this entire tutorial series)_
+
+Ok let's think about what we expect to happen when we hit a block while moving around.
+If we move the player to the right:
+
+```console
+  <span style="color:aqua;">◀▶</span><span style="color:lime;">░░</span>
+```
+
+We would expect the player to push the block to the right:
+
+```console
+    <span style="color:aqua;">◀▶</span><span style="color:lime;">░░</span>
+```
+
+But it's entirely possible there are more blocks than just one:
+
+```console
+  <span style="color:aqua;">◀▶</span><span style="color:lime;">░░░░░░</span>
+```
+
+Or there is a static block at the end:
+
+```console
+  <span style="color:aqua;">◀▶</span><span style="color:lime;">░░░░</span><span style="color:yellow;">▓▓</span>
+```
+
+Or the board ends:
+
+```console
+  <span style="color:aqua;">◀▶</span><span style="color:lime;">░░░░</span><span style="color:yellow;">▐</span>
+```
+
+The problem is we don't know what is beyond our `next_position` yet and we will have to search into a direction until we
+find anything other than a `Tile::block`.
+
+We will need to loop into a given direction and calculate the next position for each iteration.
+Best to move our next position logic into it's own function so we can use it in our loop later:
+
+```rust {data-file="player.rs", data-fold="['1-14']", hl_lines=["15-41", 44]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	fn get_next_position(position: Coord, direction: Direction) -> Coord {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				}
+			},
+		}
+
+		next_position
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		let next_position = Self::get_next_position(self.position, direction);
+
+		match board[&next_position] {
+			Tile::Empty => {
+				board[&self.position] = Tile::Empty;
+				self.position = next_position;
+				board[&next_position] = Tile::Player;
+			},
+			Tile::Block => {
+				// TODO: we need to move this block and any behind it
+			},
+			Tile::Player | Tile::StaticBlock => {},
+		}
+	}
+}
+```
+
+All we did here is we moved our logic into a new private method called `get_next_position` and use that in our `advance`
+method.
+This all works but if we walk against the boundary of our board we will just get back the same coordinate as we put in
+and end up setting the same tile to `Empty` and to `Player` right after.
+This isn't just inefficient, it also makes it hard for us to know we bumped against the wall of the board.
+So let's change our function signature to return an `Option` and return `None` when we hit the board walls.
+
+```rust {data-file="player.rs", data-fold="['1-14']", hl_lines=[15, "21-23", "28-30", "35-37", "42-44", 48, "52-54", 66]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	fn get_next_position(position: Coord, direction: Direction) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		if let Some(next_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&next_position] {
+				Tile::Empty => {
+					board[&self.position] = Tile::Empty;
+					self.position = next_position;
+					board[&next_position] = Tile::Player;
+				},
+				Tile::Block => {
+					// TODO: we need to move this block and any behind it
+				},
+				Tile::Player | Tile::StaticBlock => {},
+			}
+		}
+	}
+}
+```
+
+Now that we're returning an `Option` we can use
+[`if let Some`](https://doc.rust-lang.org/rust-by-example/flow_control/if_let.html) which is pretty cool.
+We don't have to use a match statement here since we're only interested in the `Some` case.
 
 ## Adding Beasts
 
