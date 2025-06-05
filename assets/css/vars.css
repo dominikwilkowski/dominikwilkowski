@@ -53,7 +53,7 @@
 	--caption-font-size: 0.8em;
 
 	/* Lists */
-	--li-indent: 2rem;
+	--li-indent: 0.75em;
 	--ul-margin-top: 1rem;
 	--ul-margin-bottom: 1rem;
 	--li-checkbox-size: 0.8em;

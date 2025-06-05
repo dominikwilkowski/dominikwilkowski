@@ -353,7 +353,7 @@ Some text ![Placeholder image alt text](assets/placeholder.png#lineheight#inline
 Use [termsvg](https://github.com/MrMarble/termsvg) and run:
 
 ```sh
-termsvg rec ~/Desktop/my-cast.svg
+termsvg rec ~/Desktop/my-cast.cast
 cargo run
 # do stuff and end program
 exit
@@ -365,3 +365,10 @@ To convert the cast:
 termsvg export -m -n -b "rgb(40, 42, 44)" ~/Desktop/my-cast.cast
 ```
 
+Fix up:
+- fix up cast to get the right size (slamp width and height)
+- remove frames
+- reset timer
+- last step: edit SVG
+  - fix size to clap even more
+  - make font size `19.9px`

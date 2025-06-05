@@ -4,11 +4,11 @@ date: '2025-05-21T22:11:29+10:00'
 draft: false
 visibility: false
 summary: >
-  In the last post we setup our board and made the player walk around.
+  In the last post we set up our board and made the player walk around.
   In this post we will generate terrain, push blocks and add the first outlines of our beasts.
 description: >
-  We are building the terminal game BEAST together to learn to apply Rust to a project.
-  This is the second part in which we generate our terrain and learn how to push our blocks.
+  We are building the terminal game BEAST together to learn how to apply Rust to a project.
+  This is the second part in which we generate our terrain and learn how to push blocks.
 toc: true
 readTime: true
 tags: ["rust", "terminal", "game development", "tutorial"]
@@ -19,13 +19,13 @@ header: assets/header.jpg
 
 <div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg" title="I'm perfectly able to add my own em dashes, thank you very much!" width="120px" height="120px"></div>
 
-## Where We Left Of
+## Where We Left Off
 
 In [part 1 of this tutorial](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/), we ended up
 with a couple modules that got us to this:
 
-![A screen recording of the board with the player walking around randomly also over Blocks and StaticBlocks and erasing
-them as we leave their tile.](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/assets/moving.svg)
+![A screen recording of the board with the player walking around randomly including over Blocks and StaticBlocks and
+erasing them as they walk over the tiles.](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/assets/moving.svg)
 
 ```console
 .
@@ -471,18 +471,18 @@ We have our little hardcoded blocks we added in
 [the first part of the tutorial](https://dominik-wilkowski.com/posts/learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/#taking-the-magic-out-of-coding)
 but now we should look into generating our terrain.
 We want the terrain to be random each time so that each time we play the game, the challenge is a little different.
-How would you do that though?
+How would you do that, though?
 Let's assume we have a function that generates random numbers for us within a range, how would you go about generating
 your coordinates for each block?
-Your first insinct might be to just generate a pair of numbers, check if the tile at that coordinate is `Tile::Empty`
+Your first instinct might be to just generate a pair of numbers, check if the tile at that coordinate is `Tile::Empty`
 and then place it.
 It was my first thought too.
 But this is pretty inefficient because you're just brute-forcing your way to a full board and could get extraordinarily
 unlucky by generating multiple coordinates in a row that are not `Empty` and the more blocks you place on the board, the
 higher the chances of collisions like that.
 
-Instead of that, let's just collect every possible coordinate on the board into a colleciton type like a `Vec` and then
-shuffle the vector and [pop](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop) the last one out one by one
+Instead of that, let's just collect every possible coordinate on the board into a collection type like a `Vec` and then
+shuffle the vector and [pop](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop) the last one out, one by one
 for placing each block.
 
 ```rust {data-file="board.rs", data-fold="['1-11', '21-53']", hl_lines=["15-17"]}
@@ -757,7 +757,7 @@ impl Board {
 
 		for _ in 0..50 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more blocks then there were avaiable spaces on the board",
+				"We tried to place more blocks than there were available spaces on the board",
 			);
 			buffer[coord.1][coord.0] = Tile::Block;
 		}
@@ -871,14 +871,14 @@ impl Board {
 
 		for _ in 0..50 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more blocks then there were avaiable spaces on the board",
+				"We tried to place more blocks than there were available spaces on the board",
 			);
 			buffer[coord.1][coord.0] = Tile::Block;
 		}
 
 		for _ in 0..5 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more static blocks then there were avaiable spaces on the board",
+				"We tried to place more static blocks than there were available spaces on the board",
 			);
 			buffer[coord.1][coord.0] = Tile::StaticBlock;
 		}
@@ -980,14 +980,14 @@ impl Board {
 
 		for _ in 0..50 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more blocks then there were avaiable spaces on the board",
+				"We tried to place more blocks than there were available spaces on the board",
 			);
 			buffer[coord.1][coord.0] = Tile::Block;
 		}
 
 		for _ in 0..5 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more static blocks then there were avaiable spaces on the board",
+				"We tried to place more static blocks than there were available spaces on the board",
 			);
 			buffer[coord.1][coord.0] = Tile::StaticBlock;
 		}
@@ -1067,10 +1067,10 @@ Everytime I have to ask myself:
 > Was it row first or column? How did the buffer work again?
 {caption="Me"}
 
-After bumping into this a couple times I think we had enough and should now implemented a new `Coord` struct to hold
+After bumping into this a couple of times I think we had enough and should now implemented a new `Coord` struct to hold
 coordinates.
 That way we never have to wonder if `coord.1` was row or column.
-Let's add this new struct to the `main.rs` file because, much like `Tile`, it will be used througout the game:
+Let's add this new struct to the `main.rs` file because, much like `Tile`, it will be used throughout the game:
 
 ```rust {data-file="main.rs", data-fold="['1-32', '38-43']", hl_lines=["33-37"]}
 mod board;
@@ -1198,14 +1198,14 @@ impl Board {
 
 		for _ in 0..50 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more blocks then there were avaiable spaces on the board",
+				"We tried to place more blocks than there were available spaces on the board",
 			);
 			buffer[coord.row][coord.column] = Tile::Block;
 		}
 
 		for _ in 0..5 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more static blocks then there were avaiable spaces on the board",
+				"We tried to place more static blocks than there were available spaces on the board",
 			);
 			buffer[coord.row][coord.column] = Tile::StaticBlock;
 		}
@@ -1297,14 +1297,14 @@ impl Board {
 
 		for _ in 0..50 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more blocks then there were avaiable spaces on the board",
+				"We tried to place more blocks than there were available spaces on the board",
 			);
 			buffer[coord.row][coord.column] = Tile::Block;
 		}
 
 		for _ in 0..5 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more static blocks then there were avaiable spaces on the board",
+				"We tried to place more static blocks than there were available spaces on the board",
 			);
 			buffer[coord.row][coord.column] = Tile::StaticBlock;
 		}
@@ -1497,14 +1497,14 @@ impl Board {
 
 		for _ in 0..50 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more blocks then there were avaiable spaces on the board",
+				"We tried to place more blocks than there were available spaces on the board",
 			);
 			buffer[coord.row][coord.column] = Tile::Block;
 		}
 
 		for _ in 0..3 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more static blocks then there were avaiable spaces on the board",
+				"We tried to place more static blocks than there were available spaces on the board",
 			);
 			buffer[coord.row][coord.column] = Tile::StaticBlock;
 		}
@@ -1600,7 +1600,7 @@ But what is this `50` and `3` in our `board` module?
 
 ## Hardcoded values?
 
-We got some hard-coded values in our code that probably needs to change depending on what level of the game we are in
+We got some hard-coded values in our code that probably need to change depending on what level of the game we are in
 right?
 
 ```rust {data-file="board.rs", data-fold="['1-40', '55-90']", hl_lines=[42, 49]}
@@ -1647,14 +1647,14 @@ impl Board {
 
 		for _ in 0..50 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more blocks then there were avaiable spaces on the board",
+				"We tried to place more blocks than there were available spaces on the board",
 			);
 			buffer[coord.row][coord.column] = Tile::Block;
 		}
 
 		for _ in 0..3 {
 			let coord = all_coords.pop().expect(
-				"We tried to place more static blocks then there were avaiable spaces on the board",
+				"We tried to place more static blocks than there were available spaces on the board",
 			);
 			buffer[coord.row][coord.column] = Tile::StaticBlock;
 		}
@@ -1859,14 +1859,14 @@ impl Board {
 
 		for _ in 0..block_count {
 			let coord = all_coords.pop().expect(
-				"We tried to place more blocks then there were avaiable spaces on the board",
+				"We tried to place more blocks than there were available spaces on the board",
 			);
 			buffer[coord.row][coord.column] = Tile::Block;
 		}
 
 		for _ in 0..static_block_count {
 			let coord = all_coords.pop().expect(
-				"We tried to place more static blocks then there were avaiable spaces on the board",
+				"We tried to place more static blocks than there were available spaces on the board",
 			);
 			buffer[coord.row][coord.column] = Tile::StaticBlock;
 		}
@@ -1975,8 +1975,8 @@ The issue is that we store our `level` value on our `Game` struct and the render
 our `Board` struct.
 We would have to pass in our level in order to print it in that method.
 I don't like passing thigns around like this.
-You end up drilling function arguments all over the place and quickly loose track plus strictly speaking the board
-shouldn't be concerned about thing outside of its own domain which is the board only.
+You end up drilling function arguments all over the place and quickly lose track plus strictly speaking the board
+shouldn't be concerned about things outside of its own domain which is the board only.
 So let's create a new method on the `Game` struct that wraps our render method from our `Board`.
 That way we keep everything strictly within their own area and avoid having to pass arguments around.
 
@@ -2408,9 +2408,7 @@ and set the new position on the board to `Player`.
 
 For now when we're walking around the baord we can bump into obstacles but never overwrite them or move them.
 
-## Implementing The Blockchain
-
-_(My favorit pun in this entire tutorial series)_
+## Pushing, Not Eating
 
 Ok let's think about what we expect to happen when we hit a block while moving around.
 If we move the player to the right:
@@ -2444,7 +2442,7 @@ Or the board ends:
 ```
 
 The problem is we don't know what is beyond our `next_position` yet and we will have to search into a direction until we
-find anything other than a `Tile::block`.
+find anything other than a `Tile::Block`.
 
 We will need to loop into a given direction and calculate the next position for each iteration.
 Best to move our next position logic into it's own function so we can use it in our loop later:
@@ -2590,12 +2588,705 @@ impl Player {
 
 Now that we're returning an `Option` we can use
 [`if let Some`](https://doc.rust-lang.org/rust-by-example/flow_control/if_let.html) which is pretty cool.
-We don't have to use a match statement here since we're only interested in the `Some` case.
+We don't have to use a match statement since we're only interested in the `Some` case.
 
-## Adding Beasts
+Now we can look into pushing a bunch of blocks, a "chain" if you will.
+
+## Implementing The Blockchain
+
+_(My favorite pun in this entire tutorial series)_
+
+What do we actually need to execute a blockchain move?
+You're first instinct might be to take each block in the chain and move them by one.
+Consider this scenario:
+
+```console
+<table class="console_grid">
+	<thead>
+		<tr>
+			<td>0</td>
+			<td>1</td>
+			<td>2</td>
+			<td>3</td>
+			<td>4</td>
+			<td>5</td>
+			<td>6</td>
+			<td>7</td>
+			<td>8</td>
+			<td>9</td>
+			<td>10</td>
+		</tr>
+	</thead>
+	<tr>
+		<td><span style="color:aqua;">◀▶</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+	</tr>
+</table>
+```
+
+The changes required to move would be this:
+
+```console
+<table class="console_grid">
+	<thead>
+		<tr>
+			<td>0</td>
+			<td>1</td>
+			<td>2</td>
+			<td>3</td>
+			<td>4</td>
+			<td>5</td>
+			<td>6</td>
+			<td>7</td>
+			<td>8</td>
+			<td>9</td>
+			<td>10</td>
+		</tr>
+	</thead>
+	<tr>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:aqua;">◀▶</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+	</tr>
+</table>
+```
+
+- Position at coordiante `0` has to be set to `Empty`
+- Position at coordiante `1` has to be set to `Player`
+- Position at coordiante `2` has to be set to `Block`
+
+That makes sense.
+But what is required to do the same for a longer chain?
+
+```console
+<table class="console_grid">
+	<thead>
+		<tr>
+			<td>0</td>
+			<td>1</td>
+			<td>2</td>
+			<td>3</td>
+			<td>4</td>
+			<td>5</td>
+			<td>6</td>
+			<td>7</td>
+			<td>8</td>
+			<td>9</td>
+			<td>10</td>
+		</tr>
+	</thead>
+	<tr>
+		<td><span style="color:aqua;">◀▶</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:lime;">  </span></td>
+	</tr>
+</table>
+```
+
+The executed push would look like this:
+
+```console
+<table class="console_grid">
+	<thead>
+		<tr>
+			<td>0</td>
+			<td>1</td>
+			<td>2</td>
+			<td>3</td>
+			<td>4</td>
+			<td>5</td>
+			<td>6</td>
+			<td>7</td>
+			<td>8</td>
+			<td>9</td>
+			<td>10</td>
+		</tr>
+	</thead>
+	<tr>
+		<td><span style="color:lime;">  </span></td>
+		<td><span style="color:aqua;">◀▶</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">░░</span></td>
+		<td><span style="color:lime;">  </span></td>
+	</tr>
+</table>
+```
+
+- Position at coordiante `0` has to be set to `Empty`
+- Position at coordiante `1` has to be set to `Player`
+- Position at coordiante `9` has to be set to `Block`
+
+Even though the chain is much longer we're still only doing 3 operations!
+What we need to execute the blockchain push is:
+
+- The previous position the player was at
+- The next position the player is moving into
+- The first `Empty` tile after the block chain ends
+
+So as soon as we hit a `Block` when calculating the next position, we need to start iterating over each tile in that
+direction until we hit anything other than `Block`.
+
+```rust {data-file="player.rs", data-fold="['1-50']", hl_lines=["62-80"]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	fn get_next_position(position: Coord, direction: Direction) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: Direction) {
+		if let Some(next_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&next_position] {
+				Tile::Empty => {
+					board[&self.position] = Tile::Empty;
+					self.position = next_position;
+					board[&next_position] = Tile::Player;
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = next_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									// we found the end
+								},
+								Tile::StaticBlock | Tile::Player => break,
+							}
+						}
+					}
+				},
+				Tile::Player | Tile::StaticBlock => {},
+			}
+		}
+	}
+}
+```
+
+So when we find a `Block` in our next position we first store our tile and position into a mutable variable.
+Then we start a while loop that will go on until `current_tile` isn't `Tile::Block` anymore.
+Inside the loop we get the next tile for our given direction with our handy `get_next_position` method and re-assign our
+`current_tile` to the tile we find in the this iteration.
+Now we can do things inside this loop, like matching on that tile.
+If that tile is a `Block` we just continue our search.
+If the tile is `Empty` we have found the end of the blockchain and can execute our push.
+If the tile is `StaticBlock` or `Player` we break from our loop because we now know the blocks we're trying to move,
+push up against an immovable object.
+
+Now when we try to run the compiler, we are told about an issue:
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
+<span style="font-weight:bold;color:red;">error[E0382]</span><span style="font-weight:bold;">: use of moved value: `direction`</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/player.rs:67:50
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">51</span> <span style="font-weight:bold;color:#3333FF;">|</span>     pub fn advance(&amp;mut self, board: &amp;mut Board, direction: Direction) {
+   <span style="font-weight:bold;color:#3333FF;">|</span>                                                  <span style="font-weight:bold;color:#3333FF;">---------</span> <span style="font-weight:bold;color:#3333FF;">move occurs because `direction` has type `Direction`, which does not implement the `Copy` trait</span>
+<span style="font-weight:bold;color:#3333FF;">52</span> <span style="font-weight:bold;color:#3333FF;">|</span>         if let Some(next_position) =
+<span style="font-weight:bold;color:#3333FF;">53</span> <span style="font-weight:bold;color:#3333FF;">|</span>             Self::get_next_position(self.position, direction)
+   <span style="font-weight:bold;color:#3333FF;">|</span>                                                    <span style="font-weight:bold;color:#3333FF;">---------</span> <span style="font-weight:bold;color:#3333FF;">value moved here</span>
+<span style="font-weight:bold;color:#3333FF;">...</span>
+<span style="font-weight:bold;color:#3333FF;">67</span> <span style="font-weight:bold;color:#3333FF;">|</span>                             Self::get_next_position(current_position, direction)
+   <span style="font-weight:bold;color:#3333FF;">|</span>                                                                       <span style="font-weight:bold;color:red;">^^^^^^^^^</span> <span style="font-weight:bold;color:red;">value used here after move</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:lime;">note</span>: consider changing this parameter type in method `get_next_position` to borrow instead if owning the value isn't necessary
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/player.rs:15:51
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">15</span> <span style="font-weight:bold;color:#3333FF;">|</span>     fn get_next_position(position: Coord, direction: Direction) -&gt; Option&lt;Coord&gt; {
+   <span style="font-weight:bold;color:#3333FF;">|</span>        <span style="font-weight:bold;color:#3333FF;">-----------------</span> <span style="font-weight:bold;color:#3333FF;">in this method</span>              <span style="font-weight:bold;color:lime;">^^^^^^^^^</span> <span style="font-weight:bold;color:lime;">this parameter takes ownership of the value</span>
+
+<span style="font-weight:bold;">For more information about this error, try `rustc --explain E0382`.</span>
+<span style="font-weight:bold;color:red;">error</span><span style="font-weight:bold;">:</span> could not compile `beast` (bin &quot;beast&quot;) due to 1 previous error
+```
+
+We're taking ownership of `direction` when we wrote the `advance` methods function signature but the type `Direction`
+isn't a copy type.
+But we're trying to pass direction by value to the `get_next_position` method twice which also is told to own it.
+That's no good so let's fix that up.
+We don't need ownership, we just need to read the direction so a reference will do just fine:
+
+```rust {data-file="player.rs", data-fold="['1-14', '19-51', '55-87']", hl_lines=["15-18", 54]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: &Direction) {
+		if let Some(next_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&next_position] {
+				Tile::Empty => {
+					board[&self.position] = Tile::Empty;
+					self.position = next_position;
+					board[&next_position] = Tile::Player;
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = next_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									// we found the end
+								},
+								Tile::StaticBlock | Tile::Player => break,
+							}
+						}
+					}
+				},
+				Tile::Player | Tile::StaticBlock => {},
+			}
+		}
+	}
+}
+```
+
+Now just fix our call of `advance` in our game module:
+
+```rust {data-file="game.rs", data-fold="['1-30', '48-79']", hl_lines=[33, 36, 39, 42]}
+use std::io::{Read, stdin};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, board::Board, level::Level,
+	player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		Self {
+			board: Board::new(),
+			player: Player::new(),
+			level: Level::One,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+		println!("{}", self.render(false));
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'w' => {
+					self.player.advance(&mut self.board, &Direction::Up);
+				},
+				'd' => {
+					self.player.advance(&mut self.board, &Direction::Right);
+				},
+				's' => {
+					self.player.advance(&mut self.board, &Direction::Down);
+				},
+				'a' => {
+					self.player.advance(&mut self.board, &Direction::Left);
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+
+			println!("{}", self.render(true));
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const TILE_SIZE: usize = 2;
+		const FOOTER_SIZE: usize = 1;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			width = BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_SIZE,
+		));
+
+		board
+	}
+}
+```
+
+Now we compile again and our game runs but we haven't done anything when we try to push a block.
+
+```rust {data-file="player.rs", data-fold="['1-53']", hl_lines=[55, 58, "61-62", 66, "78-81"]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: &Direction) {
+		if let Some(first_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&first_position] {
+				Tile::Empty => {
+					board[&self.position] = Tile::Empty;
+					self.position = first_position;
+					board[&first_position] = Tile::Player;
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = first_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									board[&self.position] = Tile::Empty;
+									self.position = first_position;
+									board[&first_position] = Tile::Player;
+									board[&current_position] = Tile::Block;
+								},
+								Tile::StaticBlock | Tile::Player => break,
+							}
+						}
+					}
+				},
+				Tile::Player | Tile::StaticBlock => {},
+			}
+		}
+	}
+}
+```
+
+We had to rename our first `next_position` to `first_position` because it's the first tile we move into and we will need
+that position when executing our push.
+We could have also come up with a new name for the `next_position` variable inside our `while` loop but naming is hard
+and this seems more natural.
+
+So we hit a block, seek until the end of the blockchain in the direction we're going in until we find an empty tile.
+Then we set our last position to `Empty`, our new position to `Player`, store our new position in our player instance
+and set the first `Empty` tile we found at the end of the chain to `Block`.
+
+But there is a bug!
+
+When you push a bunch of blocks against the wall of our board, the game stops responding and eventually crashes.
+That's because we are doing nothing in our `while` loop when the `if let` statement is false meaning when the next
+position while we're looking for the end of the blockchain, is outside the board.
+Because we do nothing, the loop continues indefinitely.
+
+```rust {data-file="player.rs", data-fold="['1-63', '72-83', '90-94']", hl_lines=["85-87"]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: &Direction) {
+		if let Some(first_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&first_position] {
+				Tile::Empty => {
+					board[&self.position] = Tile::Empty;
+					self.position = first_position;
+					board[&first_position] = Tile::Player;
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = first_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									board[&self.position] = Tile::Empty;
+									self.position = first_position;
+									board[&first_position] = Tile::Player;
+									board[&current_position] = Tile::Block;
+								},
+								Tile::StaticBlock | Tile::Player => break,
+							}
+						} else {
+							break;
+						}
+					}
+				},
+				Tile::Player | Tile::StaticBlock => {},
+			}
+		}
+	}
+}
+```
+
+## We've Done It
+
+![A screen recording of the board with the player walking around pushing blocks as they go.](assets/pushing.svg)
+
+That's it!
+We did it.
+Part two is done.
+
+In part three we will add beasts and pathfinding and finally a real game loop.
 
 <br><br><br>
 ![A vintage-style roadside billboard features a sleazy-looking man with slicked-back hair and a smug expression,
 pointing directly at the viewer. He's wearing a brown pinstripe suit with a shiny tie. The billboard background is a
-dull yellow, and large red block letters read: "SHARE THIS POST." The overall tone mimics tacky 1980s lawyer ads, with
+dull yellow, and large red block letters read: \"SHARE THIS POST.\" The overall tone mimics tacky 1980s lawyer ads, with
 an intentionally over-the-top, untrustworthy vibe.](assets/share.png)

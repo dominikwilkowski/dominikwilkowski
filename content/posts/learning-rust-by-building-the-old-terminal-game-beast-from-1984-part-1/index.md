@@ -3013,8 +3013,8 @@ We notice that we're "eating" the blocks on the board as we walk over them but t
 
 ## We Have The Start Of A Game
 
-![A screen recording of the board with the player walking around randomly also over Blocks and StaticBlocks and erasing
-them as we leave their tile.](assets/moving.svg)
+![A screen recording of the board with the player walking around randomly including over Blocks and StaticBlocks and
+erasing them as they walk over the tiles.](assets/moving.svg)
 
 This is it.
 We did it!
