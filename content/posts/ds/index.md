@@ -371,4 +371,4 @@ Fix up:
 - reset timer
 - last step: edit SVG
   - fix size to clap even more
-  - make font size `19.9px`
+  - make font size `19.94px`

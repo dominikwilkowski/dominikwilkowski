@@ -1,5 +1,5 @@
 ---
-title: 'An Introduction to Rust by building an old terminal game from 1984, Part 1'
+title: 'An Introduction to Rust by Building an Old Terminal Game from 1984, Part 1'
 date: '2025-05-21T21:11:29+10:00'
 draft: false
 visibility: false
@@ -1641,7 +1641,7 @@ Let's create a new file in our `src` folder called `board.rs` and move all our b
 ├── Cargo.lock
 ├── Cargo.toml
 └── src
-    ├── board.rs
+<span class="console-add">    ├── board.rs</span>
     └── main.rs
 ```
 
@@ -2025,7 +2025,7 @@ Let's do this by creating a new module called `raw_mode` in a new file `raw_mode
 └── src
     ├── board.rs
     ├── main.rs
-    └── raw_mode.rs
+<span class="console-add">    └── raw_mode.rs</span>
 ```
 
 In there we will use the [`std::process::Command`](https://doc.rust-lang.org/std/process/struct.Command.html) struct to
@@ -2443,7 +2443,7 @@ With all that in mind let's create a new file called `player.rs`:
 └── src
     ├── board.rs
     ├── main.rs
-    ├── player.rs
+<span class="console-add">    ├── player.rs</span>
     └── raw_mode.rs
 ```
 

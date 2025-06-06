@@ -1,5 +1,5 @@
 ---
-title: 'An Introduction to Rust by building an old terminal game from 1984, Part 3'
+title: 'An Introduction to Rust by Building an Old Terminal Game from 1984, Part 3'
 date: '2025-05-21T22:11:29+10:00'
 draft: true
 visibility: false
@@ -27,12 +27,15 @@ board and setup movements for our player.
 In [part 2](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/), we the added our terrain and
 made blockchain puns and ended up with this code:
 
-![A screen recording of the board with the player walking around randomly also over Blocks and StaticBlocks and erasing
-them as we leave their tile.](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/assets/moving.svg)
+![A screen recording of the board with the player walking around pushing blocks as they go.](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/assets/pushing.svg)
+
+## Adding Our Enemies
+
+## The Game Loop
 
 ## Adding Path-Finding
 
-## The Game Loop
+## Detecting The End Of A Level
 
 ## A Help
 

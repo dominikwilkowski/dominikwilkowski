@@ -15,11 +15,20 @@ body {
 	line-height: var(--body-line-height);
 }
 
+.main.home {
+	padding-left: 1rem;
+	padding-right: 1rem;
+}
+
 @media (min-width: 480px) {
 	body {
 		font-size: var(--body-font-size);
 		padding-left: var(--main-padding);
 		padding-right: var(--main-padding);
+	}
+
+	.main.home {
+		padding: 0;
 	}
 }
 
@@ -282,6 +291,19 @@ div.goat.svg-container {
 
 		table.console_grid thead td {
 			text-align: center;
+		}
+
+		.console-add,
+		.console-del {
+			display: inline-block !important;
+			width: 100%;
+			background: #1e4839;
+			color: #b9e0d3;
+		}
+
+		.console-del {
+			background: #4c232d;
+			color: #e8b9b8;
 		}
 	}
 

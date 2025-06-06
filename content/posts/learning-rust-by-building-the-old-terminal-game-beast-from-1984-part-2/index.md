@@ -1,11 +1,11 @@
 ---
-title: 'An Introduction to Rust by building an old terminal game from 1984, Part 2'
-date: '2025-05-21T22:11:29+10:00'
+title: 'An Introduction to Rust by Building an Old Terminal Game from 1984, Part 2'
+date: '2025-06-06T22:11:29+10:00'
 draft: false
 visibility: false
 summary: >
   In the last post we set up our board and made the player walk around.
-  In this post we will generate terrain, push blocks and add the first outlines of our beasts.
+  In this post we will generate terrain for each level and implement a way for the player to push blocks.
 description: >
   We are building the terminal game BEAST together to learn how to apply Rust to a project.
   This is the second part in which we generate our terrain and learn how to push blocks.
@@ -22,7 +22,7 @@ header: assets/header.jpg
 ## Where We Left Off
 
 In [part 1 of this tutorial](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/), we ended up
-with a couple modules that got us to this:
+with a couple of modules that got us to this:
 
 ![A screen recording of the board with the player walking around randomly including over Blocks and StaticBlocks and
 erasing them as they walk over the tiles.](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/assets/moving.svg)
@@ -136,7 +136,7 @@ fn main() {
 }
 ```
 
-Our `board.rs` file contains the `Board` struct which implements a way to render it:
+Our `board.rs` file contains the `Board` struct with a few hardcoded obsticals and a method to render it all:
 
 ```rust {data-file="board.rs"}
 use crate::{
@@ -275,7 +275,7 @@ impl Drop for RawMode {
 
 ## Let's Do Some Cleaning
 
-While we're looking at this, I feel like we should move our `Game` struct into it's own module and only keep shared
+While we're looking at this, I feel like we should move our `Game` struct into its own module and only keep shared
 types in our `main.rs` file.
 It's probably more of a personal preference but I like to keep the `main.rs` file as clean as possible since it's the
 entry point to our binary and is responsible for orchestrating everything together rather than implementing logic.
@@ -286,7 +286,7 @@ entry point to our binary and is responsible for orchestrating everything togeth
 ├── Cargo.toml
 └── src
     ├── board.rs
-    ├── game.rs
+<span class="console-add">    ├── game.rs</span>
     ├── main.rs
     ├── player.rs
     └── raw_mode.rs
@@ -408,7 +408,7 @@ cargo run
 ```
 
 So we need to make our `Game` struct public because it's now in a different module.
-But we realize that also is true for our `new` and `play` method, even though rust isn't showing us these errors yet.
+But we realize that also is true for our `new` and `play` method, even though Rust isn't showing us these errors yet.
 But we know our friend well and so let's just make all three of them public:
 
 ```rust {data-file="game.rs", data-fold="['25-49']", hl_lines=[6, 12, 19]}
@@ -470,7 +470,7 @@ This all compiles again and our `main.rs` file is much cleaner.
 We have our little hardcoded blocks we added in
 [the first part of the tutorial](https://dominik-wilkowski.com/posts/learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/#taking-the-magic-out-of-coding)
 but now we should look into generating our terrain.
-We want the terrain to be random each time so that each time we play the game, the challenge is a little different.
+We want the terrain to be random each time so that when we play the game, the challenge is always a little different.
 How would you do that, though?
 Let's assume we have a function that generates random numbers for us within a range, how would you go about generating
 your coordinates for each block?
@@ -482,8 +482,9 @@ unlucky by generating multiple coordinates in a row that are not `Empty` and the
 higher the chances of collisions like that.
 
 Instead of that, let's just collect every possible coordinate on the board into a collection type like a `Vec` and then
-shuffle the vector and [pop](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop) the last one out, one by one
-for placing each block.
+shuffle the vector and [`pop`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop) the last one out, one by one
+to place each block.
+That way we guarantee that each pick only exists once and is empty on the board.
 
 ```rust {data-file="board.rs", data-fold="['1-11', '21-53']", hl_lines=["15-17"]}
 use crate::{
@@ -729,7 +730,7 @@ impl Board {
 Removing our player position before we collect our `all_coords` iterator into a vec also means rust can do some
 optimizations on the filter.
 
-Ok now we have a complete set of coordinates, blocks could be placed on and we should start placing some blocks:
+OK now we have a complete set of coordinates, blocks could be placed on and we should start placing some blocks:
 
 ```rust {data-file="board.rs", data-fold="['1-13', '33-65']", hl_lines=["24-29"]}
 use rand::seq::SliceRandom;
@@ -801,11 +802,11 @@ impl Board {
 
 We create a loop from `0` to `50` and in each iteration `pop` off the last item from our shuffled `all_coords` vec and
 use it to place a `Tile::Block` on the `buffer`.
-We use [`except`](https://doc.rust-lang.org/std/option/enum.Option.html#method.expect) because `pop` returns an
+We use [`expect`](https://doc.rust-lang.org/std/option/enum.Option.html#method.expect) because `pop` returns an
 [`Option`](https://doc.rust-lang.org/std/option/enum.Option.html) because `pop` could very well fail when there is
 nothing left in our vec.
 Normally we would deal with the error case gracefully and not throw a `panic` but in this case we should stop our game
-and throw our hands up because we tried to place more blocks than there are empty tiles so I think it's ok to panic
+and throw our hands up because we tried to place more blocks than there are empty tiles so I think it's OK to panic
 here.
 Also note that we're doing `buffer[coord.1][coord.0]` and not `buffer[coord.0][coord.1]` because the second argument in
 our coord tuple is the `row` and the first is the `column` and in our buffer it's the other way around.
@@ -950,7 +951,7 @@ cargo run
 <span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
 ```
 
-Finishing touches: we add our player back on the board:
+For the finishing touches: we add our player back on the board:
 
 ```rust {data-file="board.rs", data-fold="['1-13', '42-74']", hl_lines=[24]}
 use rand::seq::SliceRandom;
@@ -1061,13 +1062,13 @@ cargo run
 ## Which One Was The Row Again?
 
 Our board now looks like the real thing but we've written `buffer[coord.1][coord.0]` a couple times now and have
-certainly stumbled across this bit.
+certainly stumbled writing this a few times.
 Everytime I have to ask myself:
 
 > Was it row first or column? How did the buffer work again?
 {caption="Me"}
 
-After bumping into this a couple of times I think we had enough and should now implemented a new `Coord` struct to hold
+After bumping into this enough times, I think we had enough and should now implement a new `Coord` struct to hold
 coordinates.
 That way we never have to wonder if `coord.1` was row or column.
 Let's add this new struct to the `main.rs` file because, much like `Tile`, it will be used throughout the game:
@@ -1249,8 +1250,8 @@ impl Board {
 
 This also made our code more readable but we're noticing we're doing a lot of typing with things like
 `buffer[coord.row][coord.column]`.
-Having to type this every time we index into our board, seems a bit too much.
-Luckily rust gives us the ability to define our own [`Index`](https://doc.rust-lang.org/std/ops/trait.Index.html) trait
+Having to type this every time we index into our board seems a bit too much.
+Luckily Rust gives us the ability to define our own [`Index`](https://doc.rust-lang.org/std/ops/trait.Index.html) trait
 to improve this:
 
 ```rust {data-file="board.rs", data-fold="['1-7', '28-90']", hl_lines=[8, "15-27"]}
@@ -1396,7 +1397,7 @@ impl Player {
 }
 ```
 
-This kicks off a couple errors:
+This kicks off a couple of errors:
 
 ```console
 cargo run
@@ -1440,14 +1441,14 @@ cargo run
 ```
 
 Our trusted friend, the compiler, tells us that `Coord` doesn't implement the `Copy` trait which is needed for us to
-take ownership of the the coord passed into our `Index` trait.
+take ownership of the coord passed into our `Index` trait.
 We have two options here now:
 1. We could derive the `Copy` and `Clone` trait for our `Coord` struct.
-	This is a pretty low impact thing since the struct only takes `usize` types which are itself copy types.
-2. Or we could not take ownership of the `Coord` within our `Index` trait implementation
+	This is a pretty low impact thing since the struct only takes `usize` types which are themselves copy types.
+2. Or we could not take ownership of the `Coord` within our `Index` trait implementation in the first place.
 
-Due to the relative simple nature of the `Coord` struct the difference is much of a muchness really.
-But because this is a tutorial and we're learning still I would go with `2` mainly because there isn't a reason to take
+Due to the relatively simple nature of the `Coord` struct the difference is much of a muchness really.
+But because this is a tutorial and we're learning still, I would go with `2` mainly because there isn't a reason to take
 ownership of the `Coord` within our `Index` trait.
 And if we don't need it, why work around it?
 
@@ -1502,7 +1503,7 @@ impl Board {
 			buffer[coord.row][coord.column] = Tile::Block;
 		}
 
-		for _ in 0..3 {
+		for _ in 0..5 {
 			let coord = all_coords.pop().expect(
 				"We tried to place more static blocks than there were available spaces on the board",
 			);
@@ -1596,11 +1597,11 @@ impl Player {
 ```
 
 This all compiles and we got a nice looking board with nice looking code!
-But what is this `50` and `3` in our `board` module?
+But what is this `50` and `5` in our `board` module?
 
 ## Hardcoded values?
 
-We got some hard-coded values in our code that probably need to change depending on what level of the game we are in
+We got some hard-coded values in our code that probably need to change depending on what level of the game we are in,
 right?
 
 ```rust {data-file="board.rs", data-fold="['1-40', '55-90']", hl_lines=[42, 49]}
@@ -1652,7 +1653,7 @@ impl Board {
 			buffer[coord.row][coord.column] = Tile::Block;
 		}
 
-		for _ in 0..3 {
+		for _ in 0..5 {
 			let coord = all_coords.pop().expect(
 				"We tried to place more static blocks than there were available spaces on the board",
 			);
@@ -1700,7 +1701,7 @@ The idea is that in later levels the `Block` tiles are reduced and the `StaticBl
 opportunities to squish the beasts, making each level a little harder.
 Thus we need to find a way to change the number of blocks and static blocks for each level.
 
-Ok that's fair, we will need way to express levels and then a way to get a level config for each level.
+OK that's fair, we will need a way to express levels and then a way to get a level config for each level.
 An `enum` here seems to be the right fit and we can implement a function on the enum that returns a struct with the
 config per level.
 For this let's create a new module called `level.rs` and add our code there:
@@ -1712,7 +1713,7 @@ For this let's create a new module called `level.rs` and add our code there:
 └── src
     ├── board.rs
     ├── game.rs
-    ├── level.rs
+<span class="console-add">    ├── level.rs</span>
     ├── main.rs
     ├── player.rs
     └── raw_mode.rs
@@ -1739,7 +1740,7 @@ impl Level {
 		match self {
 			Level::One => LevelConfig {
 				block_count: 30,
-				static_block_count: 3,
+				static_block_count: 5,
 			},
 			Level::Two => LevelConfig {
 				block_count: 20,
@@ -1908,7 +1909,7 @@ impl Board {
 }
 ```
 
-We call `get_level_config` on `Level::One` because we find ourself in the `new` method of the board module and a new
+We call `get_level_config` on `Level::One` because we find ourselves in the `new` method of the board module and a new
 board will always start with level one.
 But this brings us to the next step: we need to store our current level somewhere so that we can increment it when we
 finish a level:
@@ -1974,9 +1975,10 @@ We should probably display our level in the footer?
 The issue is that we store our `level` value on our `Game` struct and the render method of the board is implemented on
 our `Board` struct.
 We would have to pass in our level in order to print it in that method.
-I don't like passing thigns around like this.
+I don't like passing things around like this.
 You end up drilling function arguments all over the place and quickly lose track plus strictly speaking the board
 shouldn't be concerned about things outside of its own domain which is the board only.
+
 So let's create a new method on the `Game` struct that wraps our render method from our `Board`.
 That way we keep everything strictly within their own area and avoid having to pass arguments around.
 
@@ -2050,13 +2052,18 @@ impl Game {
 }
 ```
 
-Ok what's going on here?
-We're making use of the [`format`](https://doc.rust-lang.org/std/fmt/index.html) macro and it's superpowers.
-We create a new String then push a reference of what our format macro returns into it.
-To increase the macro readability we named each item.
+OK what's going on here?
+We're making use of the [`format`](https://doc.rust-lang.org/std/fmt/index.html) macro and its superpowers.
+We create a new `String`, then push a reference of what our format macro returns into it.
+To increase the macro's readability we named each item.
 You can always do that but it's mostly not needed since we often don't use more than two or three items.
-So that explains the names but what is this: `{footer:>width$}`?
-We bascially tell our macro to fill our variable a space of `width` with spaces because that's the default.
+
+That explains the names but what is this: `{footer:>width$}`?
+We basically tell our macro to take an amount of characters of `width` and then place our `footer` variable, right
+aligned, into it.
+That effectively guarantees us always the same space taken up by this variable as long as the size of the variable is
+smaller than `width`.
+
 How did we come up with the `width`, you may ask?
 
 ```console
@@ -2069,7 +2076,8 @@ How did we come up with the `width`, you may ask?
                           ^-- Level number width
 ```
 
-We could leave this illustration as a comment in our code... or we could just not use magic numbers and name them.
+We could leave this illustration as a comment in our code... or we could just *not* use magic numbers and stick them
+into named variables:
 
 ```rust {data-file="game.rs", data-fold="['1-54']", hl_lines=["56-58", 66]}
 use std::io::{Read, stdin};
@@ -2145,10 +2153,10 @@ impl Game {
 }
 ```
 
-That's at least readable and we may even understand what's happening here in a few months when we come back to this
-code.
-But when we run this code we notice as we move along the board the output is eating it's way downwards our terminal
-buffer.
+That's at least readable and we may even understand what's happening here in a few months from now when we come back to
+this code.
+But when we run this code we notice, as we move along the board, the output is eating its way downward through our
+terminal buffer.
 
 ```console
 cargo run
@@ -2181,7 +2189,7 @@ cargo run
 <span style="color:yellow;">▌</span>                  <span style="color:lime;">░░                                      ░░░░        ░░</span>      <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▌</span>                                              <span style="color:lime;">░░</span>                              <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▌</span>                      <span style="color:lime;">░░                          ░░                  ░░</span>      <span style="color:yellow;">▐</span>
-<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                    <span style="color:yellow;">▓▓</span>                                        <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▌</span>            <span style="color:lime;">░░</span>                                                                <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▌</span>                                  <span style="color:lime;">░░      ░░</span>                                  <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▌</span>            <span style="color:lime;">░░                        ░░</span>                                      <span style="color:yellow;">▐</span>
@@ -2190,13 +2198,13 @@ cargo run
 <span style="color:yellow;">▌</span>        <span style="color:lime;">░░                                              ░░</span>                    <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▌</span>                <span style="color:lime;">░░</span>                                                            <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▌</span>                                        <span style="color:lime;">░░</span>                                    <span style="color:yellow;">▐</span>
-<span style="color:yellow;">▌</span>                                                        <span style="color:lime;">░░</span>                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>            <span style="color:yellow;">▓▓</span>                                          <span style="color:lime;">░░</span>                    <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▌</span>                    <span style="color:lime;">░░</span>                                                        <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
                                                                         Level: 1
 ```
 
-That's because we have added our footer which increases the height of our board and not adjusted our ANSI escape
+That's because we have added our footer which increases the height of our board and have not adjusted our ANSI escape
 sequence that moves our cursor up `n` lines.
 We're printing our sequence right now in our `play` function and now we would need to add a magic number to that
 output but we just named all of those numbers nicely within our `render` function.
@@ -2285,12 +2293,12 @@ impl Game {
 ```
 
 Now our board renders again nicely, we display a footer with a right aligned `level` display and we kept each of our
-render function to their respective areas of concerns.
+render functions to their respective areas of concerns.
 Now let's stop the player from eating everything on the board.
 
 ## A Hungry Hungry Player
 
-Right now when we move around the board we just overwrite anything in our path with `Tile::Empty` which isn't right.
+Right now, when we move around the board, we just overwrite anything in our path with `Tile::Empty` which isn't right.
 Ideally we need to push blocks and stop at static blocks.
 So what does our advance method look like right now?
 
@@ -2342,7 +2350,7 @@ impl Player {
 
 Regardless of what the next tile is we move into, we just overwrite it with `Tile::Player` and when we leave the tile we
 set it to `Tile::Empty`.
-We're probably going to have to match the `Tile` we're about to move into and then decide what to do there:
+We're probably going to have to match on the `Tile` we're about to move into and then decide what to do there:
 
 ```rust {data-file="player.rs", data-fold="['1-14']", hl_lines=[16, "20-21", "25-26", "30-31", "35-36", "41-51"]}
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
@@ -2399,18 +2407,19 @@ impl Player {
 	}
 }
 ```
-Instead of manipulating `self.position` in place, we change a cpy of it and then match the tile for that position from
+Instead of manipulating `self.position` in place, we change a copy of it and then match the tile for that position from
 our board.
 - When we find an `Empty` we do what we did before: set our last position to `Empty`, store our new position
 and set the new position on the board to `Player`.
-- When we find that the next tile is of type `Player` or `StaticBlock` we do nothing.
-- But when we find a `Block` we note we will push it which we will implement in the next section.
+- When we find that the next tile is of type `Player` or `StaticBlock` we do nothing because our player should be
+prevented from walking into these.
+- But when we find a `Block`, we note we will push it, which we will implement in the next section.
 
-For now when we're walking around the baord we can bump into obstacles but never overwrite them or move them.
+For now when we're walking around the board, we can bump into obstacles but never overwrite them or move them.
 
 ## Pushing, Not Eating
 
-Ok let's think about what we expect to happen when we hit a block while moving around.
+OK let's think about what we expect to happen when we hit a block while moving around.
 If we move the player to the right:
 
 ```console
@@ -2441,11 +2450,11 @@ Or the board ends:
   <span style="color:aqua;">◀▶</span><span style="color:lime;">░░░░</span><span style="color:yellow;">▐</span>
 ```
 
-The problem is we don't know what is beyond our `next_position` yet and we will have to search into a direction until we
+The problem is, we don't know what's beyond our `next_position` yet and we will have to search in a direction until we
 find anything other than a `Tile::Block`.
 
-We will need to loop into a given direction and calculate the next position for each iteration.
-Best to move our next position logic into it's own function so we can use it in our loop later:
+We will need to loop in a given direction and calculate the next position for each iteration.
+Best to move our next position logic into its own function so we can use it in our loop later:
 
 ```rust {data-file="player.rs", data-fold="['1-14']", hl_lines=["15-41", 44]}
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
@@ -2510,8 +2519,8 @@ impl Player {
 
 All we did here is we moved our logic into a new private method called `get_next_position` and use that in our `advance`
 method.
-This all works but if we walk against the boundary of our board we will just get back the same coordinate as we put in
-and end up setting the same tile to `Empty` and to `Player` right after.
+This all works but if we walk against the boundary of our board we will just get back the same coordinate as we passed
+into the function and end up setting the same tile first to `Empty` and then to `Player` right after.
 This isn't just inefficient, it also makes it hard for us to know we bumped against the wall of the board.
 So let's change our function signature to return an `Option` and return `None` when we hit the board walls.
 
@@ -2586,18 +2595,19 @@ impl Player {
 }
 ```
 
-Now that we're returning an `Option` we can use
+Now that we're returning an `Option`, we can use
 [`if let Some`](https://doc.rust-lang.org/rust-by-example/flow_control/if_let.html) which is pretty cool.
-We don't have to use a match statement since we're only interested in the `Some` case.
+We don't have to match on the `Option` since we're only interested in the `Some` case.
 
-Now we can look into pushing a bunch of blocks, a "chain" if you will.
+Now we can look into pushing a bunch of blocks, a "*chain*" of blocks, if you will.
 
 ## Implementing The Blockchain
 
 _(My favorite pun in this entire tutorial series)_
 
 What do we actually need to execute a blockchain move?
-You're first instinct might be to take each block in the chain and move them by one.
+Your first instinct might be to take each block in the chain and move them, one by one.
+
 Consider this scenario:
 
 ```console
@@ -2668,9 +2678,9 @@ The changes required to move would be this:
 </table>
 ```
 
-- Position at coordiante `0` has to be set to `Empty`
-- Position at coordiante `1` has to be set to `Player`
-- Position at coordiante `2` has to be set to `Block`
+- Position at coordinate `0` has to be set to `Empty`
+- Position at coordinate `1` has to be set to `Player`
+- Position at coordinate `2` has to be set to `Block`
 
 That makes sense.
 But what is required to do the same for a longer chain?
@@ -2708,7 +2718,7 @@ But what is required to do the same for a longer chain?
 </table>
 ```
 
-The executed push would look like this:
+A successful push would look like this:
 
 ```console
 <table class="console_grid">
@@ -2743,18 +2753,18 @@ The executed push would look like this:
 </table>
 ```
 
-- Position at coordiante `0` has to be set to `Empty`
-- Position at coordiante `1` has to be set to `Player`
-- Position at coordiante `9` has to be set to `Block`
+- Position at coordinate `0` has to be set to `Empty`
+- Position at coordinate `1` has to be set to `Player`
+- Position at coordinate `9` has to be set to `Block`
 
 Even though the chain is much longer we're still only doing 3 operations!
-What we need to execute the blockchain push is:
+So, what we really need to execute the blockchain push, however long it might be, is:
 
 - The previous position the player was at
-- The next position the player is moving into
-- The first `Empty` tile after the block chain ends
+- The new position the player is moving into
+- The first `Empty` tile at the end of the block chain we're pushing
 
-So as soon as we hit a `Block` when calculating the next position, we need to start iterating over each tile in that
+So as soon as we hit a `Block`, when calculating the next position, we need to start iterating over each tile in that
 direction until we hit anything other than `Block`.
 
 ```rust {data-file="player.rs", data-fold="['1-50']", hl_lines=["62-80"]}
@@ -2846,14 +2856,16 @@ impl Player {
 }
 ```
 
-So when we find a `Block` in our next position we first store our tile and position into a mutable variable.
+When we find a `Block` in the position the player is about to move into, we first store our tile and position into a
+mutable variable.
 Then we start a while loop that will go on until `current_tile` isn't `Tile::Block` anymore.
 Inside the loop we get the next tile for our given direction with our handy `get_next_position` method and re-assign our
-`current_tile` to the tile we find in the this iteration.
+`current_tile` to the tile we find in this iteration.
 Now we can do things inside this loop, like matching on that tile.
+
 If that tile is a `Block` we just continue our search.
 If the tile is `Empty` we have found the end of the blockchain and can execute our push.
-If the tile is `StaticBlock` or `Player` we break from our loop because we now know the blocks we're trying to move,
+If the tile is `StaticBlock` or `Player` we break from our loop because we now know the blocks we're trying to move
 push up against an immovable object.
 
 Now when we try to run the compiler, we are told about an issue:
@@ -2883,11 +2895,12 @@ cargo run
 <span style="font-weight:bold;color:red;">error</span><span style="font-weight:bold;">:</span> could not compile `beast` (bin &quot;beast&quot;) due to 1 previous error
 ```
 
-We're taking ownership of `direction` when we wrote the `advance` methods function signature but the type `Direction`
+We're taking ownership of `direction` when we wrote the `advance` method's function signature but the type `Direction`
 isn't a copy type.
-But we're trying to pass direction by value to the `get_next_position` method twice which also is told to own it.
+Then we're trying to pass `direction` by value to the `get_next_position` method twice which is also told to own it.
+
 That's no good so let's fix that up.
-We don't need ownership, we just need to read the direction so a reference will do just fine:
+We don't need ownership, we can just pass `direction` by reference:
 
 ```rust {data-file="player.rs", data-fold="['1-14', '19-51', '55-87']", hl_lines=["15-18", 54]}
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
@@ -2981,7 +2994,7 @@ impl Player {
 }
 ```
 
-Now just fix our call of `advance` in our game module:
+Now just fix our `advance` calls in our game module:
 
 ```rust {data-file="game.rs", data-fold="['1-30', '48-79']", hl_lines=[33, 36, 39, 42]}
 use std::io::{Read, stdin};
@@ -3065,7 +3078,11 @@ impl Game {
 }
 ```
 
-Now we compile again and our game runs but we haven't done anything when we try to push a block.
+And our friend the compiler is happy again.
+We haven't done anything when we try to push a block, though.
+Naming is hard which we're now seeing in our code.
+If the first step our player takes in our algorithm is called `next_position`, what do we call the steps within our
+iterator?
 
 ```rust {data-file="player.rs", data-fold="['1-53']", hl_lines=[55, 58, "61-62", 66, "78-81"]}
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
@@ -3162,10 +3179,11 @@ impl Player {
 }
 ```
 
-We had to rename our first `next_position` to `first_position` because it's the first tile we move into and we will need
-that position when executing our push.
-We could have also come up with a new name for the `next_position` variable inside our `while` loop but naming is hard
-and this seems more natural.
+We renamed our `next_position` to `first_position` because it's the first tile we move into and we will need that
+position when executing our push.
+We name the variable to store positions within our loop `next_position` as that seems most fitting.
+We could have also come up with a new name for the `next_position` variable inside our `while` loop but I can't think of
+a better name right now.
 
 So we hit a block, seek until the end of the blockchain in the direction we're going in until we find an empty tile.
 Then we set our last position to `Empty`, our new position to `Player`, store our new position in our player instance
@@ -3174,7 +3192,7 @@ and set the first `Empty` tile we found at the end of the chain to `Block`.
 But there is a bug!
 
 When you push a bunch of blocks against the wall of our board, the game stops responding and eventually crashes.
-That's because we are doing nothing in our `while` loop when the `if let` statement is false meaning when the next
+That's because we are doing nothing in our `while` loop when the `if let` statement is `false`, meaning when the next
 position while we're looking for the end of the blockchain, is outside the board.
 Because we do nothing, the loop continues indefinitely.
 
@@ -3274,6 +3292,8 @@ impl Player {
 	}
 }
 ```
+
+Now our loop stops when a blockchain we're about to push hits the wall of our board.
 
 ## We've Done It
 
