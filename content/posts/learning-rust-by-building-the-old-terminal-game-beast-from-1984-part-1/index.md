@@ -1,11 +1,12 @@
 ---
-title: 'An Introduction to Rust by Building an Old Terminal Game from 1984, Part 1'
+title: 'Learning Rust By Building The Old Terminal Game Beast From 1984, Part 1'
 date: '2025-05-21T21:11:29+10:00'
 draft: false
 visibility: false
 summary: >
   You just read the Rust book and now want to apply your new skills to something real.
-  Let's build a terminal game I grew up with, learn how the terminal works and how to control it.
+  Let's build the terminal game I grew up with to harden your new skills and in the process learn how the terminal works
+  and how to control it.
 description: >
   We are building the terminal game BEAST together to learn to apply Rust to a project.
   This is the first part in which we setup our board and learn how to move our player.
@@ -22,29 +23,30 @@ header: assets/header.jpg
 ## Why Though?
 
 I've been teaching Rust to a couple of friends and colleagues in lots of different ways.
-In my latest sessions, I've been using [this game I built as a homage](https://github.com/dominikwilkowski/beast) to
-apply their newly learned rust skills to a project.
+In my latest sessions, I've been using [this game I built](https://github.com/dominikwilkowski/beast), as a homage to
+[the original](https://en.wikipedia.org/wiki/Beast_(video_game)), to apply their newly learned rust skills to a project.
 It seems to go over well with people because it's something real people can reason about, it's fun to work on as you can
 add your own spin to it and it happens to touch on a lot of the important aspects of the language.
 So I thought I'd write it up in a series of blog posts.
 
-A small note to start: I'm by no means an expert in Rust.
+A small note to start:
 I love the language and continue to learn, so if you find anything fishy in these posts (and it's not a
 [_turbofish_](https://turbo.fish/)), do let me know by submitting
 [a pull request or an issue](https://github.com/dominikwilkowski/dominikwilkowski).
 
 ## What We Need
 
-I will assume you have some basic knowledge of Rust and won't go too deep into how the language works.
+I will assume you have some basic knowledge of Rust and won't go too deep into how language primitives works.
 What I want to focus on is the use of the language for something you can see and play with.
 This is how I learn myself.
 
-> It's not just knowing what each of the bits are in the language, it's how you use them and how it all comes together.
+It's not just knowing what each of the bits are in the language, it's how you use them and how it all comes together.
 
 I recommend you have read the [official book](https://doc.rust-lang.org/book/) and if you're so inclined, do have a look
 at [easy_rust](https://github.com/Dhghomon/easy_rust), which is a great way to learn Rust as it is organized in small
 chapters, not longer than 20 minutes each, with videos in plain language.
-Lastly, checking out [rustlings](https://github.com/rust-lang/rustlings) helps you to get a feel for the language.
+Lastly, checking out [rustlings](https://github.com/rust-lang/rustlings) helps you to get a feel for the types of the
+language.
 
 ## What We're Building
 

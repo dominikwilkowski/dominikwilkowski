@@ -1,5 +1,5 @@
 ---
-title: 'An Introduction to Rust by Building an Old Terminal Game from 1984, Part 3'
+title: 'Learning Rust By Building The Old Terminal Game Beast From 1984, Part 3'
 date: '2025-05-21T22:11:29+10:00'
 draft: true
 visibility: false

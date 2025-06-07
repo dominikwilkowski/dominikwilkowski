@@ -529,6 +529,16 @@ hr {
 
 	a {
 		text-decoration: none;
+		text-shadow:
+			0px 4px 3px rgba(0, 0, 0, 0.4),
+			0px 8px 13px rgba(0, 0, 0, 0.1),
+			0px 18px 23px rgba(0, 0, 0, 0.1),
+			0px 0px #555,
+			1px 0px #555,
+			2px 1px #555,
+			3px 1px #555,
+			4px 2px #555,
+			5px 2px #555;
 	}
 
 	span {
@@ -538,6 +548,7 @@ hr {
 		font-weight: 100;
 		margin-top: -0.45rem;
 		margin-left: 0.55rem;
+		text-shadow: none;
 	}
 }
 
