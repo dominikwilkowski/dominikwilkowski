@@ -473,8 +473,9 @@ easier.
 
 We've used a couple traits from the standard library in the past parts like `Copy` and `Debug`.
 It's time now to build our very own.
-To start off let's create a folder which will contain our beasts, aptly named `beasts` inside `src`.
-Inside that folder we will need two empty files for now: `beast_trait.rs` and `mod.rs`.
+To start off let's create a folder which will contain our beasts, aptly named `beasts` and a module file called
+`beasts.rs`.
+Inside the beast folder we add a file file called `beast_trait.rs`.
 
 ```console
 .
@@ -482,8 +483,8 @@ Inside that folder we will need two empty files for now: `beast_trait.rs` and `m
 ├── Cargo.toml
 └── src
 <span class="console-add">    ├── beasts</span>
-<span class="console-add">    │   ├── beast_trait.rs</span>
-<span class="console-add">    │   └── mod.rs</span>
+<span class="console-add">    │   └── beast_trait.rs</span>
+<span class="console-add">    ├── beasts.rs</span>
     ├── board.rs
     ├── game.rs
     ├── level.rs
@@ -491,6 +492,94 @@ Inside that folder we will need two empty files for now: `beast_trait.rs` and `m
     ├── player.rs
     └── raw_mode.rs
 ```
+
+The `beasts.rs` file we use to re-export everything inside the `beasts/` folder to make importing a little easier.
+For now, let's just re-export anything that is inside our `beasts/beast_trait.rs` file:
+
+```rust {data-file="beasts.rs"}
+pub mod beast_trait;
+pub use beast_trait::*;
+```
+
+Now we only need to include the `beasts` module in our `main.rs` file and not each file inside the beasts folder.
+
+```rust {data-file="main.rs", data-fold="['4-45']", hl_lines=[1]}
+mod beasts;
+mod board;
+mod game;
+mod level;
+mod player;
+mod raw_mode;
+
+use crate::{game::Game, raw_mode::RawMode};
+
+pub const BOARD_WIDTH: usize = 39;
+pub const BOARD_HEIGHT: usize = 20;
+pub const TILE_SIZE: usize = 2;
+
+pub const ANSI_YELLOW: &str = "\x1B[33m";
+pub const ANSI_GREEN: &str = "\x1B[32m";
+pub const ANSI_CYAN: &str = "\x1B[36m";
+pub const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Tile {
+	Empty,       // There will be empty spaces on our board "  "
+	Player,      // We will need the player "◀▶"
+	Block,       // Some tiles will be blocks "░░"
+	StaticBlock, // Others will be blocks that can't be moved "▓▓"
+}
+
+pub enum Direction {
+	Up,
+	Right,
+	Down,
+	Left,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Coord {
+	column: usize,
+	row: usize,
+}
+
+fn main() {
+	let _raw_mode = RawMode::enter();
+
+	let mut game = Game::new();
+	game.play();
+}
+```
+
+The idea is to contain all types for beasts in the beasts folder and re-export them from within the `beasts.rs` file.
+You might end up with your own enemies later and that folder is where you'd drop them in.
+
+Ok let's now look at the `beasts/beast_trait.rs` file.
+What do we need for a beast to slot into our game?
+We need to be able to create a new beast and we need to move/advance the beast:
+
+```rust {data-file="beasts/beast_trait.rs", data-fold="[]", hl_lines=[]}
+use crate::{Coord, board::Board};
+
+pub trait Beast {
+	fn new(position: Coord) -> Self;
+
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord>;
+}
+```
+
+When creating a new instance of a beast with the `new` method, we will have to tell it where we placed the beast on the
+board.
+And the `advance` method will need to know about the board and where the player is.
+It also may or may not find a coordinate to move into so we return an `Option`.
+We will return the coordinate and only take `Board` by immutable reference because the beast could kill a player which
+is logic we don't really want to keep in the beast module.
+That kind of logic should be contained in the `Game` module as it will effect changes to the players lives and possible
+end the game.
 
 ## The Game Loop
 
