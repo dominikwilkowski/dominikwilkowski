@@ -1,7 +1,7 @@
 ---
 title: 'Learning Rust By Building The Old Terminal Game Beast From 1984, Part 3'
 date: '2025-05-21T22:11:29+10:00'
-draft: true
+draft: false
 visibility: false
 summary: >
   In the last post we setup our board and made the player push blocks around.
@@ -581,13 +581,599 @@ is logic we don't really want to keep in the beast module.
 That kind of logic should be contained in the `Game` module as it will effect changes to the players lives and possible
 end the game.
 
+Now that we have our trait definition done, let's add our first beast.
+In the original came the simplest beasts that appeared in the first view levels were called `Common Beast` so let's roll
+with that:
+
+```console
+.
+├── Cargo.lock
+├── Cargo.toml
+└── src
+    ├── beasts
+    │   ├── beast_trait.rs
+<span class="console-add">    │   └── common_beast.rs</span>
+    ├── beasts.rs
+    ├── board.rs
+    ├── game.rs
+    ├── level.rs
+    ├── main.rs
+    ├── player.rs
+    └── raw_mode.rs
+```
+
+Inside our new file called `beasts/common_beast.rs` we add the simplest implementation of our trait we can think of:
+
+```rust {data-file="beasts/common_beast.rs", data-fold="[]", hl_lines=[]}
+use crate::{Coord, beasts::Beast, board::Board};
+
+pub struct CommonBeast {
+	pub position: Coord,
+}
+
+impl Beast for CommonBeast {
+	fn new(position: Coord) -> Self {
+		Self { position }
+	}
+
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord> {
+		None
+	}
+}
+```
+
+We imported our trait, `Coord` and `Board` and then setup a new struct called `CommonBeast` which will hold a `Coord` in
+the position variable.
+Then we implement our trait on that new struct.
+To keep things simple for now, we just return a `None` from our `advance` method.
+Now all we need to do make this new module available to the rest of the codebase is to re-export it from our `beasts.rs`
+file:
+
+```rust {data-file="beasts.rs", data-fold="[]", hl_lines=["4-5"]}
+pub mod beast_trait;
+pub use beast_trait::*;
+
+pub mod common_beast;
+pub use common_beast::*;
+```
+
+Now any other module in our codebase can import our `CommonBeast` (because we also made it public).
+Next, let's us integrate the beast into our code so we have something to look at when we build out the pathfinding
+later.
+
+First we need to extend our `Tile` enum to include a common beast:
+
+```rust {data-file="main.rs", data-fold="['1-18', '27-46']", hl_lines=["25"]}
+mod beasts;
+mod board;
+mod game;
+mod level;
+mod player;
+mod raw_mode;
+
+use crate::{game::Game, raw_mode::RawMode};
+
+pub const BOARD_WIDTH: usize = 39;
+pub const BOARD_HEIGHT: usize = 20;
+pub const TILE_SIZE: usize = 2;
+
+pub const ANSI_YELLOW: &str = "\x1B[33m";
+pub const ANSI_GREEN: &str = "\x1B[32m";
+pub const ANSI_CYAN: &str = "\x1B[36m";
+pub const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Tile {
+	Empty,
+	Player,
+	Block,
+	StaticBlock,
+	CommonBeast,
+}
+
+pub enum Direction {
+	Up,
+	Right,
+	Down,
+	Left,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Coord {
+	column: usize,
+	row: usize,
+}
+
+fn main() {
+	let _raw_mode = RawMode::enter();
+
+	let mut game = Game::new();
+	game.play();
+}
+```
+
+We also removed the comments for each `Tile` option just to keep things clean.
+With new options in options, our compiler will tell us that the `match` call in our `render` method in our `board`
+module is non-exhaustive anymore:
+
+```console
+cargo check
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
+<span style="font-weight:bold;color:red;">error[E0004]</span><span style="font-weight:bold;">: non-exhaustive patterns: `Tile::CommonBeast` not covered</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/board.rs:74:11
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">74</span> <span style="font-weight:bold;color:#3333FF;">|</span>                 match tile {
+   <span style="font-weight:bold;color:#3333FF;">|</span>                       <span style="font-weight:bold;color:red;">^^^^</span> <span style="font-weight:bold;color:red;">pattern `Tile::CommonBeast` not covered</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:lime;">note</span>: `Tile` defined here
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:20:10
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">20</span> <span style="font-weight:bold;color:#3333FF;">|</span> pub enum Tile {
+   <span style="font-weight:bold;color:#3333FF;">|</span>          <span style="font-weight:bold;color:lime;">^^^^</span>
+<span style="font-weight:bold;color:#3333FF;">...</span>
+<span style="font-weight:bold;color:#3333FF;">25</span> <span style="font-weight:bold;color:#3333FF;">|</span>     CommonBeast,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:#3333FF;">-----------</span> <span style="font-weight:bold;color:#3333FF;">not covered</span>
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: the matched value is of type `Tile`
+<span style="font-weight:bold;color:aqua;">help</span>: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">84</span> <span style="color:lime;">~ </span>                    }<span style="color:lime;">,</span>
+<span style="font-weight:bold;color:#3333FF;">85</span> <span style="color:lime;">~                     Tile::CommonBeast =&gt; todo!()</span>,
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+
+<span style="font-weight:bold;color:red;">error[E0004]</span><span style="font-weight:bold;">: non-exhaustive patterns: `Tile::CommonBeast` not covered</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/player.rs:58:10
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">58</span> <span style="font-weight:bold;color:#3333FF;">|</span>             match board[&amp;first_position] {
+   <span style="font-weight:bold;color:#3333FF;">|</span>                   <span style="font-weight:bold;color:red;">^^^^^^^^^^^^^^^^^^^^^^</span> <span style="font-weight:bold;color:red;">pattern `Tile::CommonBeast` not covered</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:lime;">note</span>: `Tile` defined here
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:20:10
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">20</span> <span style="font-weight:bold;color:#3333FF;">|</span> pub enum Tile {
+   <span style="font-weight:bold;color:#3333FF;">|</span>          <span style="font-weight:bold;color:lime;">^^^^</span>
+<span style="font-weight:bold;color:#3333FF;">...</span>
+<span style="font-weight:bold;color:#3333FF;">25</span> <span style="font-weight:bold;color:#3333FF;">|</span>     CommonBeast,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:#3333FF;">-----------</span> <span style="font-weight:bold;color:#3333FF;">not covered</span>
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: the matched value is of type `Tile`
+<span style="font-weight:bold;color:aqua;">help</span>: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">90</span> <span style="color:lime;">~ </span>                Tile::Player | Tile::StaticBlock =&gt; {}<span style="color:lime;">,</span>
+<span style="font-weight:bold;color:#3333FF;">91</span> <span style="color:lime;">~                 Tile::CommonBeast =&gt; todo!()</span>,
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+
+<span style="font-weight:bold;color:red;">error[E0004]</span><span style="font-weight:bold;">: non-exhaustive patterns: `Tile::CommonBeast` not covered</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/player.rs:75:14
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">75</span> <span style="font-weight:bold;color:#3333FF;">|</span>                             match current_tile {
+   <span style="font-weight:bold;color:#3333FF;">|</span>                                   <span style="font-weight:bold;color:red;">^^^^^^^^^^^^</span> <span style="font-weight:bold;color:red;">pattern `Tile::CommonBeast` not covered</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:lime;">note</span>: `Tile` defined here
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:20:10
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">20</span> <span style="font-weight:bold;color:#3333FF;">|</span> pub enum Tile {
+   <span style="font-weight:bold;color:#3333FF;">|</span>          <span style="font-weight:bold;color:lime;">^^^^</span>
+<span style="font-weight:bold;color:#3333FF;">...</span>
+<span style="font-weight:bold;color:#3333FF;">25</span> <span style="font-weight:bold;color:#3333FF;">|</span>     CommonBeast,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:#3333FF;">-----------</span> <span style="font-weight:bold;color:#3333FF;">not covered</span>
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: the matched value is of type `Tile`
+<span style="font-weight:bold;color:aqua;">help</span>: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">83</span> <span style="color:lime;">~ </span>                                Tile::StaticBlock | Tile::Player =&gt; break<span style="color:lime;">,</span>
+<span style="font-weight:bold;color:#3333FF;">84</span> <span style="color:lime;">~                                 Tile::CommonBeast =&gt; todo!()</span>,
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+
+<span style="font-weight:bold;">For more information about this error, try `rustc --explain E0004`.</span>
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">:</span> `beast` (bin &quot;beast&quot;) generated 3 warnings
+<span style="font-weight:bold;color:red;">error</span><span style="font-weight:bold;">:</span> could not compile `beast` (bin &quot;beast&quot;) due to 3 previous errors; 3 warnings emitted
+```
+
+In fact, it finds three areas in our code where we match against `Tile`.
+How good is it to have the compiler help us like this?
+Refactoring code becomes very straight forward.
+
+Ok let's fix up the board module first:
+
+```rust {data-file="board.rs", data-fold="['1-71', '90-99']", hl_lines=["85-87"]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT, BOARD_WIDTH,
+	Coord, TILE_SIZE, Tile,
+	level::{Level, LevelConfig},
+};
+
+use std::ops::{Index, IndexMut};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Index<&Coord> for Board {
+	type Output = Tile;
+
+	fn index(&self, coord: &Coord) -> &Self::Output {
+		&self.buffer[coord.row][coord.column]
+	}
+}
+
+impl IndexMut<&Coord> for Board {
+	fn index_mut(&mut self, coord: &Coord) -> &mut Self::Output {
+		&mut self.buffer[coord.row][coord.column]
+	}
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| Coord { column, row }))
+			.filter(|coord| !(coord.column == 0 && coord.row == 0))
+			.collect::<Vec<Coord>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		buffer[0][0] = Tile::Player;
+
+		let LevelConfig {
+			block_count,
+			static_block_count,
+		} = Level::One.get_level_config();
+
+		for _ in 0..block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::Block;
+		}
+
+		for _ in 0..static_block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::StaticBlock;
+		}
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+					Tile::CommonBeast => {
+						output.push_str(&format!("{ANSI_YELLOW}├┤{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+But the beast should be red so let's add a `ANSI_RED` const to our main file and import it here:
+
+```rust {data-file="main.rs", data-fold="['1-13', '19-47']", hl_lines=[17]}
+mod beasts;
+mod board;
+mod game;
+mod level;
+mod player;
+mod raw_mode;
+
+use crate::{game::Game, raw_mode::RawMode};
+
+pub const BOARD_WIDTH: usize = 39;
+pub const BOARD_HEIGHT: usize = 20;
+pub const TILE_SIZE: usize = 2;
+
+pub const ANSI_YELLOW: &str = "\x1B[33m";
+pub const ANSI_GREEN: &str = "\x1B[32m";
+pub const ANSI_CYAN: &str = "\x1B[36m";
+pub const ANSI_RED: &str = "\x1b[31m";
+pub const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Tile {
+	Empty,
+	Player,
+	Block,
+	StaticBlock,
+	CommonBeast,
+}
+
+pub enum Direction {
+	Up,
+	Right,
+	Down,
+	Left,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Coord {
+	column: usize,
+	row: usize,
+}
+
+fn main() {
+	let _raw_mode = RawMode::enter();
+
+	let mut game = Game::new();
+	game.play();
+}
+```
+
+And use it in our board module:
+
+```rust {data-file="board.rs", data-fold="['8-84', '90-99']", hl_lines=[4, 86]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RED, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT,
+	BOARD_WIDTH, Coord, TILE_SIZE, Tile,
+	level::{Level, LevelConfig},
+};
+
+use std::ops::{Index, IndexMut};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Index<&Coord> for Board {
+	type Output = Tile;
+
+	fn index(&self, coord: &Coord) -> &Self::Output {
+		&self.buffer[coord.row][coord.column]
+	}
+}
+
+impl IndexMut<&Coord> for Board {
+	fn index_mut(&mut self, coord: &Coord) -> &mut Self::Output {
+		&mut self.buffer[coord.row][coord.column]
+	}
+}
+
+impl Board {
+	pub fn new() -> Self {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| Coord { column, row }))
+			.filter(|coord| !(coord.column == 0 && coord.row == 0))
+			.collect::<Vec<Coord>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		buffer[0][0] = Tile::Player;
+
+		let LevelConfig {
+			block_count,
+			static_block_count,
+		} = Level::One.get_level_config();
+
+		for _ in 0..block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::Block;
+		}
+
+		for _ in 0..static_block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::StaticBlock;
+		}
+
+		Self { buffer }
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+					Tile::CommonBeast => {
+						output.push_str(&format!("{ANSI_RED}├┤{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+Now let's fix the player module:
+
+```rust {data-file="player.rs", data-fold="['1-53']", hl_lines=[83, "91-93"]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	position: Coord,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: &Direction) {
+		if let Some(first_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&first_position] {
+				Tile::Empty => {
+					board[&self.position] = Tile::Empty;
+					self.position = first_position;
+					board[&first_position] = Tile::Player;
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = first_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									board[&self.position] = Tile::Empty;
+									self.position = first_position;
+									board[&first_position] = Tile::Player;
+									board[&current_position] = Tile::Block;
+								},
+								Tile::StaticBlock | Tile::Player | Tile::CommonBeast => break,
+							}
+						} else {
+							break;
+						}
+					}
+				},
+				Tile::Player | Tile::StaticBlock => {},
+				Tile::CommonBeast => {
+					todo!("The player ran into a beast and died");
+				},
+			}
+		}
+	}
+}
+```
+
+We had to add our new `Tile` option to two places.
+First we added it to the blockchain seeker (I just came up with this term) and we're saying in the code:
+
+> When you hit a `Block` when moving, look into the direction of the movement until you find anything other than
+> `Block`.
+> At the end if you find an `Empty`, move there.
+> If you find anything else, like `StaticBlock` or... `CommonBeast` then stop the search because the player is trying to
+> push a bunch of blocks against those things and you can't push a beast much less a `StaticBlock`.
+
+We can also just as easily use the `_` (underscore) as a catch all at the end of the match to include all other `Tiles`
+we might find but since you might add your own Beast later and may decided that your beast is totally pushable, it might
+be best to stay explicit in our code for now.
+
+The second place we added the new `Tile` option was in the first match which just checks what `Tile` you're about to
+move into.
+If that happens to be a beast then, by all means, you should perish and re-spawn if you got enough lives left.
+We shall implement that later so for now we use the `todo` macro.
+
+So everything compiles again and all is good in the (computer) world again.
+Now we need to add our beasts onto our board.
+
 ## The Game Loop
 
 ## Finding Our Player
 
+Pathfinding
+
 ## Detecting The End Of A Level
+
+Adding lives
+
+## Coming Back To Live
+
+Re-spawning
 
 ## A Help
 
 <br><br><br>
 ![Illustration of a terminal window styled like the Rust borrow checker, displaying the message: "TRANSFER OWNERSHIP, SHARE THIS POST" on a pink background](assets/share.png)
+{title="I won't tell you how to share it, that's up to you. Tell you friends, share on some social site, whisper it to you imaginary friend... up to you. All of it is appreciated"}

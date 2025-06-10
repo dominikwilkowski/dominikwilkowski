@@ -3310,3 +3310,4 @@ In part three we will add beasts and pathfinding and finally a real game loop.
 pointing directly at the viewer. He's wearing a brown pinstripe suit with a shiny tie. The billboard background is a
 dull yellow, and large red block letters read: \"SHARE THIS POST.\" The overall tone mimics tacky 1980s lawyer ads, with
 an intentionally over-the-top, untrustworthy vibe.](assets/share.png)
+{title="I won't tell you how to share it, that's up to you. Tell you friends, share on some social site, whisper it to you imaginary friend... up to you. All of it is appreciated"}
