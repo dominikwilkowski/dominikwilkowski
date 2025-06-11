@@ -607,6 +607,7 @@ Inside our new file called `beasts/common_beast.rs` we add the simplest implemen
 ```rust {data-file="beasts/common_beast.rs", data-fold="[]", hl_lines=[]}
 use crate::{Coord, beasts::Beast, board::Board};
 
+#[derive(Debug)]
 pub struct CommonBeast {
 	pub position: Coord,
 }
@@ -1157,6 +1158,152 @@ We shall implement that later so for now we use the `todo` macro.
 
 So everything compiles again and all is good in the (computer) world again.
 Now we need to add our beasts onto our board.
+
+## Adding A Dash Of Beasts
+
+We need to add beasts to our board and also make sure they move every second toward the player.
+To top this all off, we also need to add different amounts of beasts per level when we start a new level.
+
+So let's start this from the back: add our beasts to our level config we return from our `level` module:
+
+```rust {data-file="level.rs", data-fold="['6-23']", hl_lines=[4, 30, 35, 40]}
+pub struct LevelConfig {
+	pub block_count: usize,
+	pub static_block_count: usize,
+	pub common_beast_count: usize,
+}
+
+#[derive(Debug)]
+pub enum Level {
+	One,
+	Two,
+	Three,
+}
+
+impl std::fmt::Display for Level {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		match self {
+			Level::One => write!(f, "1"),
+			Level::Two => write!(f, "2"),
+			Level::Three => write!(f, "3"),
+		}
+	}
+}
+
+impl Level {
+	pub fn get_level_config(&self) -> LevelConfig {
+		match self {
+			Level::One => LevelConfig {
+				block_count: 30,
+				static_block_count: 5,
+				common_beast_count: 3,
+			},
+			Level::Two => LevelConfig {
+				block_count: 20,
+				static_block_count: 10,
+				common_beast_count: 5,
+			},
+			Level::Three => LevelConfig {
+				block_count: 12,
+				static_block_count: 20,
+				common_beast_count: 15,
+			},
+		}
+	}
+}
+```
+
+We will want to keep all beasts on the `Game` struct in order to move them each second:
+
+```rust {data-file="game.rs", data-fold="['15-80']", hl_lines=[4, 13]}
+use std::io::{Read, stdin};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, beasts::CommonBeast, board::Board,
+	level::Level, player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		Self {
+			board: Board::new(),
+			player: Player::new(),
+			level: Level::One,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+		println!("{}", self.render(false));
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'w' => {
+					self.player.advance(&mut self.board, &Direction::Up);
+				},
+				'd' => {
+					self.player.advance(&mut self.board, &Direction::Right);
+				},
+				's' => {
+					self.player.advance(&mut self.board, &Direction::Down);
+				},
+				'a' => {
+					self.player.advance(&mut self.board, &Direction::Left);
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+
+			println!("{}", self.render(true));
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const TILE_SIZE: usize = 2;
+		const FOOTER_SIZE: usize = 1;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			width = BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_SIZE,
+		));
+
+		board
+	}
+}
+```
+
+Now we need to use that new `common_beast_count` field in our `new` method in the `board` module.
+Because we don't want to hold the collection of beasts on the `Board` struct, we will have to somehow return more from
+the `new` method than just `Self`.
+This is a classic case of:
+
+> How do we return extra stuff from a constructor while keeping ergonomics clean and code idiomatic?
 
 ## The Game Loop
 
