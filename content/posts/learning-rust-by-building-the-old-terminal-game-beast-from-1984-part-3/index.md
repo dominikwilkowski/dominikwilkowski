@@ -704,6 +704,7 @@ module is non-exhaustive anymore:
 ```console
 cargo check
 <span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
+<span style="font-style:italic;color:yellow;">   [...some warnings removed]</span>
 <span style="font-weight:bold;color:red;">error[E0004]</span><span style="font-weight:bold;">: non-exhaustive patterns: `Tile::CommonBeast` not covered</span>
   <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/board.rs:74:11
    <span style="font-weight:bold;color:#3333FF;">|</span>
@@ -1305,7 +1306,286 @@ This is a classic case of:
 
 > How do we return extra stuff from a constructor while keeping ergonomics clean and code idiomatic?
 
-## The Game Loop
+There are multiple ways you could do this:
+
+1. You could create a new struct with two keys `buffer` and `beasts` and return that from the `new` function
+2. You could create a separate method called `generate_terrain` and use that to generate both `buffer` and `beasts` Vec
+	and then in the `new` method accept a function argument for the `buffer`
+3. You could simply return a Tuple from the `new` method with `buffer` and `beasts`
+
+The most common (and fastest) way in rust is `3` so let's go with that.
+
+```rust {data-file="board.rs", data-fold="['9-30', '35-42', '50-62', '75-110']", hl_lines=[6, 32, 47, "64-73"]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RED, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT,
+	BOARD_WIDTH, Coord, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	level::{Level, LevelConfig},
+};
+
+use std::ops::{Index, IndexMut};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Index<&Coord> for Board {
+	type Output = Tile;
+
+	fn index(&self, coord: &Coord) -> &Self::Output {
+		&self.buffer[coord.row][coord.column]
+	}
+}
+
+impl IndexMut<&Coord> for Board {
+	fn index_mut(&mut self, coord: &Coord) -> &mut Self::Output {
+		&mut self.buffer[coord.row][coord.column]
+	}
+}
+
+impl Board {
+	pub fn new() -> (Self, Vec<CommonBeast>) {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| Coord { column, row }))
+			.filter(|coord| !(coord.column == 0 && coord.row == 0))
+			.collect::<Vec<Coord>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		buffer[0][0] = Tile::Player;
+
+		let LevelConfig {
+			block_count,
+			static_block_count,
+			common_beast_count,
+		} = Level::One.get_level_config();
+
+		for _ in 0..block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::Block;
+		}
+
+		for _ in 0..static_block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::StaticBlock;
+		}
+
+		let mut beasts = Vec::with_capacity(common_beast_count);
+		for _ in 0..common_beast_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more common beasts than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::CommonBeast;
+			beasts.push(CommonBeast::new(coord));
+		}
+
+		(Self { buffer }, beasts)
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+					Tile::CommonBeast => {
+						output.push_str(&format!("{ANSI_RED}├┤{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+Now we just need to fix up our `new` method in the `Game` struct:
+
+```rust {data-file="game.rs", data-fold="['1-15', '26-82']", hl_lines=[18, 20, 23]}
+use std::io::{Read, stdin};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, beasts::CommonBeast, board::Board,
+	level::Level, player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+		println!("{}", self.render(false));
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'w' => {
+					self.player.advance(&mut self.board, &Direction::Up);
+				},
+				'd' => {
+					self.player.advance(&mut self.board, &Direction::Right);
+				},
+				's' => {
+					self.player.advance(&mut self.board, &Direction::Down);
+				},
+				'a' => {
+					self.player.advance(&mut self.board, &Direction::Left);
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+
+			println!("{}", self.render(true));
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const TILE_SIZE: usize = 2;
+		const FOOTER_SIZE: usize = 1;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			width = BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_SIZE,
+		));
+
+		board
+	}
+}
+```
+
+Ok we now have a collection of beasts that are placed randomly on the board:
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
+<span style="font-style:italic;color:yellow;">   [...some warnings removed]</span>
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.38s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span><span style="color:aqua;">◀▶</span>                <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                                <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                    <span style="color:lime;">░░</span>                                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                      <span style="color:yellow;">▓▓</span>      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>              <span style="color:lime;">░░</span>              <span style="color:lime;">░░</span><span style="color:lime;">░░</span>                                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>            <span style="color:yellow;">▓▓</span>                                          <span style="color:lime;">░░</span>              <span style="color:yellow;">▓▓</span>    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span>                                                              <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:lime;">░░</span>                  <span style="color:lime;">░░</span>                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                <span style="color:lime;">░░</span>            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                      <span style="color:lime;">░░</span>      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                            <span style="color:lime;">░░</span>                              <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:lime;">░░</span>                                                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                        <span style="color:red;">├┤</span>                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>      <span style="color:lime;">░░</span>                      <span style="color:yellow;">▓▓</span>                                <span style="color:lime;">░░</span>            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>  <span style="color:lime;">░░</span>            <span style="color:yellow;">▓▓</span>                                            <span style="color:lime;">░░</span>              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                              <span style="color:red;">├┤</span>              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>    <span style="color:lime;">░░</span>                                                                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                <span style="color:lime;">░░</span>          <span style="color:lime;">░░</span>              <span style="color:red;">├┤</span>                <span style="color:lime;">░░</span>          <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                <span style="color:lime;">░░</span>                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+                                                                        Level: 1
+```
+
+For simplicity, let's make our beasts walk in a direction until they can't anymore.
+That way we can see them move when we integrate them.
+
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-12']", hl_lines=["18-23"]}
+use crate::{Coord, beasts::Beast, board::Board};
+
+#[derive(Debug)]
+pub struct CommonBeast {
+	pub position: Coord,
+}
+
+impl Beast for CommonBeast {
+	fn new(position: Coord) -> Self {
+		Self { position }
+	}
+
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord> {
+		let mut next_position = self.position;
+		if next_position.column > 0 {
+			next_position.column -= 1;
+			return Some(next_position);
+		}
+
+		None
+	}
+}
+```
+
+Now our common beast will walk left until it hits the wall of the board when you call the `advance` method periodically.
+But how do we call the `advance` method periodically?
+
+## Making The Beasts Move
+
+How do we make the beasts move every second while also allowing the player to move freely?
 
 ## Finding Our Player
 
