@@ -1586,6 +1586,241 @@ But how do we call the `advance` method periodically?
 ## Making The Beasts Move
 
 How do we make the beasts move every second while also allowing the player to move freely?
+Right now, this is what our `play` method looks like:
+
+```rust {data-file="game.rs", data-fold="['1-26', '57-82']", hl_lines=[]}
+use std::io::{Read, stdin};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, beasts::CommonBeast, board::Board,
+	level::Level, player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let stdin = stdin();
+		let mut lock = stdin.lock();
+		let mut buffer = [0_u8; 1];
+		println!("{}", self.render(false));
+
+		while lock.read_exact(&mut buffer).is_ok() {
+			match buffer[0] as char {
+				'w' => {
+					self.player.advance(&mut self.board, &Direction::Up);
+				},
+				'd' => {
+					self.player.advance(&mut self.board, &Direction::Right);
+				},
+				's' => {
+					self.player.advance(&mut self.board, &Direction::Down);
+				},
+				'a' => {
+					self.player.advance(&mut self.board, &Direction::Left);
+				},
+				'q' => {
+					println!("Good bye");
+					break;
+				},
+				_ => {},
+			}
+
+			println!("{}", self.render(true));
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const TILE_SIZE: usize = 2;
+		const FOOTER_SIZE: usize = 1;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			width = BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_SIZE,
+		));
+
+		board
+	}
+}
+```
+
+We only make changes to the board and render when the player uses the keyboard.
+Now we want the beasts to move every second.
+We can't do that within that `while` loop as that only executes when a key on the keyboard is pressed.
+We will have to create a game loop that runs in the background and calls our `advance` method of each of our beasts
+every second.
+
+But we also have another problem: our call to `read_exact` is blocking which means within our game loop the code will
+wait for it to be `Ok` before continuing which means our beasts would only move when keypresses are sent to `sdtin`.
+Also later we might want to listen to `stdin` but react to different keys that are pressed like in a help screen for
+scrolling through pages.
+
+## Threading A Channel
+
+For all the above reasons and more (_this is a tutorial after all_), let's throw our `stdin` listener into its own
+[`thread`](https://doc.rust-lang.org/std/thread/) and listen to it via a
+[`channel`](https://doc.rust-lang.org/std/sync/mpsc/fn.channel.html).
+
+```rust {data-file="game.rs", data-fold="['6-11', '53-69', '76-101']", hl_lines=["3-4", 18, "24-36", 43, "50-52", 74]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, beasts::CommonBeast, board::Board,
+	level::Level, player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		{
+			let stdin = stdin();
+			thread::spawn(move || {
+				let mut lock = stdin.lock();
+				let mut buffer = [0_u8; 1];
+				while lock.read_exact(&mut buffer).is_ok() {
+					if input_sender.send(buffer[0]).is_err() {
+						break;
+					}
+				}
+			});
+		}
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		println!("{}", self.render(false));
+
+		loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				match byte as char {
+					'w' => {
+						self.player.advance(&mut self.board, &Direction::Up);
+					},
+					'd' => {
+						self.player.advance(&mut self.board, &Direction::Right);
+					},
+					's' => {
+						self.player.advance(&mut self.board, &Direction::Down);
+					},
+					'a' => {
+						self.player.advance(&mut self.board, &Direction::Left);
+					},
+					'q' => {
+						println!("Good bye");
+						break;
+					},
+					_ => {},
+				}
+
+				println!("{}", self.render(true));
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const TILE_SIZE: usize = 2;
+		const FOOTER_SIZE: usize = 1;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			width = BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_SIZE,
+		));
+
+		board
+	}
+}
+```
+
+Within our `new` method we first create a channel for `u8`.
+This channel constructor will return two things: a sender and a receiver.
+Those will be our way to communicate between threads or more accurately, our way to send data from our `stdin` thread to
+our main thread with our game.
+
+Then we create an empty block to make sure whatever is inside is dropped right after we're done with it.
+Inside that block we movd our `stdin` call from our `play` method and off we go creating our thread.
+The thread constructor takes a closure which we tell to move all ownership to.
+Only inside the thread do we lock `stdin`, move our buffer in and try to read from it.
+This is all very similar to what we wrote in
+[part 1](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/#listening-to-keyboard-input).
+The difference is we now send the bytes we receive from `stdin` to our channel sender instead of matching against it
+right away.
+
+We add the channel receiver to our `Game` struct so we can listen to that channel anytime we need to and lastly we do
+just that in our `play` method by changing our `while` loop to `loop` loop and call `try_recv` on the channel receiver.
+That call is non-blocking and will allow us to do more in that `loop` like moving the beasts.
+
+Everything still runs like before but we now have a separate thread dedicated just for listening to `stdin`.
+
+> [!TIP]
+> Usually, when working with threads, you'd' want to join threads when you don't need them anymore but in our case we will
+> listen to `stdin` for the entirety of the game.
+
+## Making The Beasts Move, For Real This Time
+
+Now we can add a [`tick`](https://en.wikipedia.org/wiki/Timekeeping_in_games#Ticks) to our game.
 
 ## Finding Our Player
 
@@ -1595,7 +1830,7 @@ Pathfinding
 
 Adding lives
 
-## Coming Back To Live
+## Coming Back To Life
 
 Re-spawning
 
