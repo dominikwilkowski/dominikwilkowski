@@ -1690,7 +1690,7 @@ For all the above reasons and more (_this is a tutorial after all_), let's throw
 [`thread`](https://doc.rust-lang.org/std/thread/) and listen to it via a
 [`channel`](https://doc.rust-lang.org/std/sync/mpsc/fn.channel.html).
 
-```rust {data-file="game.rs", data-fold="['6-11', '53-69', '76-101']", hl_lines=["3-4", 18, "24-36", 43, "50-52", 74]}
+```rust {data-file="game.rs", data-fold="['6-11', '53-69', '76-99']", hl_lines=["3-4", 18, "24-34", 41, "48-50", 72]}
 use std::{
 	io::{Read, stdin},
 	sync::mpsc,
@@ -1715,18 +1715,16 @@ impl Game {
 	pub fn new() -> Self {
 		let (board, beasts) = Board::new();
 		let (input_sender, input_receiver) = mpsc::channel::<u8>();
-		{
-			let stdin = stdin();
-			thread::spawn(move || {
-				let mut lock = stdin.lock();
-				let mut buffer = [0_u8; 1];
-				while lock.read_exact(&mut buffer).is_ok() {
-					if input_sender.send(buffer[0]).is_err() {
-						break;
-					}
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
 				}
-			});
-		}
+			}
+		});
 
 		Self {
 			board,
@@ -1799,8 +1797,7 @@ This channel constructor will return two things: a sender and a receiver.
 Those will be our way to communicate between threads or more accurately, our way to send data from our `stdin` thread to
 our main thread with our game.
 
-Then we create an empty block to make sure whatever is inside is dropped right after we're done with it.
-Inside that block we movd our `stdin` call from our `play` method and off we go creating our thread.
+Then we moved our `stdin` call from our `play` method to our `new` method and off we go creating our thread.
 The thread constructor takes a closure which we tell to move all ownership to.
 Only inside the thread do we lock `stdin`, move our buffer in and try to read from it.
 This is all very similar to what we wrote in
@@ -1815,8 +1812,19 @@ That call is non-blocking and will allow us to do more in that `loop` like movin
 Everything still runs like before but we now have a separate thread dedicated just for listening to `stdin`.
 
 > [!TIP]
-> Usually, when working with threads, you'd' want to join threads when you don't need them anymore but in our case we will
-> listen to `stdin` for the entirety of the game.
+> Usually, when working with threads, you'd want to signal threads to stop when you don't need them anymore.
+> You'd also want to make sure you gracefully join threads after they stopped.
+>
+> When our game exits, the thread will be blocked waiting for input because `read_exact` is a blocking call.
+> Upon the first keystroke, after the game exits, the loop in the thread will notice the receiver has been dropped and
+> exit.
+> If no key is pressed, the thread will be cleaned up by the operating system when the process exits, which is perfectly
+> fine for our game.
+>
+> Since we need the `stdin` listening thread for the lifetime of the game, joining it at the end doesn't make much of
+> a difference.
+> For a real game you'd want to use a crate like [`crossterm`](https://crates.io/crates/crossterm) that provides
+> non-blocking input and proper terminal control.
 
 ## Making The Beasts Move, For Real This Time
 
