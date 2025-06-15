@@ -1828,7 +1828,305 @@ Everything still runs like before but we now have a separate thread dedicated ju
 
 ## Making The Beasts Move, For Real This Time
 
-Now we can add a [`tick`](https://en.wikipedia.org/wiki/Timekeeping_in_games#Ticks) to our game.
+Now we can add the game loop, we talked about earlier:
+
+```rust {data-file="game.rs", data-fold="['13-44', '51-74', '96-123']", hl_lines=[5, 9, 47, "75-95"]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, Tile, beasts::CommonBeast,
+	board::Board, level::Level, player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				match byte as char {
+					'w' => {
+						self.player.advance(&mut self.board, &Direction::Up);
+					},
+					'd' => {
+						self.player.advance(&mut self.board, &Direction::Right);
+					},
+					's' => {
+						self.player.advance(&mut self.board, &Direction::Down);
+					},
+					'a' => {
+						self.player.advance(&mut self.board, &Direction::Left);
+					},
+					'q' => {
+						println!("Good bye");
+						break;
+					},
+					_ => {},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&mut self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								todo!("The beast just killed our player");
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const TILE_SIZE: usize = 2;
+		const FOOTER_SIZE: usize = 1;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			width = BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_SIZE,
+		));
+
+		board
+	}
+}
+```
+
+We've added a [`tick`](https://en.wikipedia.org/wiki/Timekeeping_in_games#Ticks) to our game.
+Every second we reset our `last_tick` variable to make sure our beasts don't move too fast.
+Within our tick we iterate over each beast in our board and call the `advance` method.
+Then we check if the result of the method is a `Some` and match against the `Tile` on the board the beast wants to go
+to.
+This way our beast modules are responsible for movements while our our game engine is responsible for checking the
+correctness of the movements.
+When we find the beast is going to an `Empty` tile, we set the previous position to `Empty` on the board, we store the
+new position of the beast and set the new position to `CommonBeast`.
+If we find that the beast is going into a `Tile` that is of type `Player` then we know the beast just killed the player
+and we will have to implement the logic for the beast to kill us.
+Lastly we ignore all other Tile types the beast might want to move into because those would be illegal moves and render
+the board after all beasts position have been set.
+
+But when we run our game we get this:
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
+<span style="font-weight:bold;color:red;">error[E0599]</span><span style="font-weight:bold;">: no method named `advance` found for mutable reference `&amp;mut common_beast::CommonBeast` in the current scope</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/game.rs:79:13
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">79</span> <span style="font-weight:bold;color:#3333FF;">|</span>                         beast.advance(&amp;mut self.board, &amp;self.player.position)
+   <span style="font-weight:bold;color:#3333FF;">|</span>                               <span style="font-weight:bold;color:red;">^^^^^^^</span> <span style="font-weight:bold;color:red;">method not found in `&amp;mut CommonBeast`</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">help</span>: items from traits can only be used if the trait is in scope
+<span style="font-weight:bold;color:aqua;">help</span>: trait `Beast` which provides `advance` is implemented but not in scope; perhaps you want to import it
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">1</span>  <span style="color:lime;">+ use crate::beasts::beast_trait::Beast;</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+```
+
+Apparently the `advance` method of our `CommonBeast` isn't public but since we're using a trait implementation, instead
+of making that method just `pub` (which would give is a "Syntax Error: Unnecessary visibility qualifier" error) we need
+to import the trait into the game module just like the compiler tells us to.
+
+```rust {data-file="game.rs", data-fold="['1-7', '15-126']", hl_lines=[10]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				match byte as char {
+					'w' => {
+						self.player.advance(&mut self.board, &Direction::Up);
+					},
+					'd' => {
+						self.player.advance(&mut self.board, &Direction::Right);
+					},
+					's' => {
+						self.player.advance(&mut self.board, &Direction::Down);
+					},
+					'a' => {
+						self.player.advance(&mut self.board, &Direction::Left);
+					},
+					'q' => {
+						println!("Good bye");
+						break;
+					},
+					_ => {},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&mut self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								todo!("The beast just killed our player");
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const TILE_SIZE: usize = 2;
+		const FOOTER_SIZE: usize = 1;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			width = BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_SIZE,
+		));
+
+		board
+	}
+}
+```
+
+That's all we need to do and our games runs:
+
+![A screen recording pf the game with three beasts walking one step to the left every second.](assets/beast_movement.svg)
+
+Look at our beasts!
+They walk, all to the left for now but they walk!
 
 ## Finding Our Player
 

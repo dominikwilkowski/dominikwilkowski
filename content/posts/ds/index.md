@@ -369,6 +369,7 @@ Fix up:
 - fix up cast to get the right size (slamp width and height)
 - remove frames
 - reset timer
+- remove `\ufffd`
 - last step: edit SVG
   - fix size to clap even more
   - make font size `19.94px`
