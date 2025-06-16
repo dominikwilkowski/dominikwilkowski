@@ -2765,7 +2765,7 @@ cargo run
 <span style="font-weight:bold;color:red;">error</span><span style="font-weight:bold;">:</span> could not compile `beast` (bin &quot;beast&quot;) due to 5 previous errors
 ```
 
-Ok that's fair.
+OK that's fair.
 The compiler let's us know that we've been using the `buffer` and the `render` method that hasn't been set to public
 yet:
 

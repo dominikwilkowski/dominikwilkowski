@@ -2614,31 +2614,31 @@ Consider this scenario:
 <table class="console_grid">
 	<thead>
 		<tr>
-			<td>0</td>
-			<td>1</td>
-			<td>2</td>
-			<td>3</td>
-			<td>4</td>
-			<td>5</td>
-			<td>6</td>
-			<td>7</td>
-			<td>8</td>
-			<td>9</td>
-			<td>10</td>
+			<th>0</th>
+			<th>1</th>
+			<th>2</th>
+			<th>3</th>
+			<th>4</th>
+			<th>5</th>
+			<th>6</th>
+			<th>7</th>
+			<th>8</th>
+			<th>9</th>
+			<th>10</th>
 		</tr>
 	</thead>
 	<tr>
 		<td><span style="color:aqua;">◀▶</span></td>
 		<td><span style="color:lime;">░░</span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
 	</tr>
 </table>
 ```
@@ -2649,31 +2649,31 @@ The changes required to move would be this:
 <table class="console_grid">
 	<thead>
 		<tr>
-			<td>0</td>
-			<td>1</td>
-			<td>2</td>
-			<td>3</td>
-			<td>4</td>
-			<td>5</td>
-			<td>6</td>
-			<td>7</td>
-			<td>8</td>
-			<td>9</td>
-			<td>10</td>
+			<th>0</th>
+			<th>1</th>
+			<th>2</th>
+			<th>3</th>
+			<th>4</th>
+			<th>5</th>
+			<th>6</th>
+			<th>7</th>
+			<th>8</th>
+			<th>9</th>
+			<th>10</th>
 		</tr>
 	</thead>
 	<tr>
-		<td><span style="color:lime;">  </span></td>
+		<td><span>  </span></td>
 		<td><span style="color:aqua;">◀▶</span></td>
 		<td><span style="color:lime;">░░</span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
 	</tr>
 </table>
 ```
@@ -2689,17 +2689,17 @@ But what is required to do the same for a longer chain?
 <table class="console_grid">
 	<thead>
 		<tr>
-			<td>0</td>
-			<td>1</td>
-			<td>2</td>
-			<td>3</td>
-			<td>4</td>
-			<td>5</td>
-			<td>6</td>
-			<td>7</td>
-			<td>8</td>
-			<td>9</td>
-			<td>10</td>
+			<th>0</th>
+			<th>1</th>
+			<th>2</th>
+			<th>3</th>
+			<th>4</th>
+			<th>5</th>
+			<th>6</th>
+			<th>7</th>
+			<th>8</th>
+			<th>9</th>
+			<th>10</th>
 		</tr>
 	</thead>
 	<tr>
@@ -2712,8 +2712,8 @@ But what is required to do the same for a longer chain?
 		<td><span style="color:lime;">░░</span></td>
 		<td><span style="color:lime;">░░</span></td>
 		<td><span style="color:lime;">░░</span></td>
-		<td><span style="color:lime;">  </span></td>
-		<td><span style="color:lime;">  </span></td>
+		<td><span>  </span></td>
+		<td><span>  </span></td>
 	</tr>
 </table>
 ```
@@ -2724,21 +2724,21 @@ A successful push would look like this:
 <table class="console_grid">
 	<thead>
 		<tr>
-			<td>0</td>
-			<td>1</td>
-			<td>2</td>
-			<td>3</td>
-			<td>4</td>
-			<td>5</td>
-			<td>6</td>
-			<td>7</td>
-			<td>8</td>
-			<td>9</td>
-			<td>10</td>
+			<th>0</th>
+			<th>1</th>
+			<th>2</th>
+			<th>3</th>
+			<th>4</th>
+			<th>5</th>
+			<th>6</th>
+			<th>7</th>
+			<th>8</th>
+			<th>9</th>
+			<th>10</th>
 		</tr>
 	</thead>
 	<tr>
-		<td><span style="color:lime;">  </span></td>
+		<td><span>  </span></td>
 		<td><span style="color:aqua;">◀▶</span></td>
 		<td><span style="color:lime;">░░</span></td>
 		<td><span style="color:lime;">░░</span></td>
@@ -2748,7 +2748,7 @@ A successful push would look like this:
 		<td><span style="color:lime;">░░</span></td>
 		<td><span style="color:lime;">░░</span></td>
 		<td><span style="color:lime;">░░</span></td>
-		<td><span style="color:lime;">  </span></td>
+		<td><span>  </span></td>
 	</tr>
 </table>
 ```

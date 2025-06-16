@@ -466,7 +466,7 @@ impl Drop for RawMode {
 }
 ```
 
-Ok so how should we add our enemies?
+OK so how should we add our enemies?
 
 ## Adding Our Enemies
 
@@ -567,7 +567,7 @@ fn main() {
 The idea is to contain all types for beasts in the beasts folder and re-export them from within the `beasts.rs` file.
 You might end up with your own enemies later and that folder is where you'd drop them in.
 
-Ok let's now look at the `beasts/beast_trait.rs` file.
+OK let's now look at the `beasts/beast_trait.rs` file.
 What do we need for a beast to slot into our game?
 We need to be able to create a new beast and we need to move/advance the beast:
 
@@ -790,7 +790,7 @@ In fact, it finds three areas in our code where we match against `Tile`.
 How good is it to have the compiler help us like this?
 Refactoring code becomes very straight forward.
 
-Ok let's fix up the board module first:
+OK let's fix up the board module first:
 
 ```rust {data-file="board.rs", data-fold="['1-71', '90-99']", hl_lines=["85-87"]}
 use rand::seq::SliceRandom;
@@ -1528,7 +1528,7 @@ impl Game {
 }
 ```
 
-Ok we now have a collection of beasts that are placed randomly on the board:
+OK we now have a collection of beasts that are placed randomly on the board:
 
 ```console
 cargo run
@@ -2139,11 +2139,292 @@ That's all we need to do and our games runs:
 ![A screen recording pf the game with three beasts walking one step to the left every second.](assets/beast_movement.svg)
 
 Look at our beasts!
-They walk, only to the left for now but they walk!
+They move, only to the left for now but they move!
 
-## Finding Our Player
+## Moving In The Right Direction
 
-Pathfinding
+OK, now that we have our beasts walk, how do we make sure they walk towards the player?
+Especially for the common beast because that beast is meant to be less smart.
+For the game play the first beasts we have to fight with are easier because they may get stuck behind blocks.
+Later beasts, you're supposed to add yourself outside this tutorial, should be smarter and gradually get more difficult
+to defeat.
+
+You may have heard about [pathfinding](https://en.wikipedia.org/wiki/Pathfinding) before.
+There are many ways to find a path through a maze but we want a simple way that isn't too smart because our
+`CommonBeast` should be easier to squash.
+
+Let's build our own!
+Something very simple that "just" decides the first step in the direction of the player without actually analyzing if
+there is a path in the first place.
+
+At each turn, the beast has the option to choose from 8 possible moves because it can go diagonally as well as straight:
+
+```console
+<table class="console_grid console_grid_3d">
+	<thead>
+		<tr>
+			<th style="border-top-color:var(--code-panel-background);border-left-color:var(--code-panel-background);width:2.27em;"></th>
+			<th style="width:2.27em;" scope="col">1</th>
+			<th style="width:2.27em;" scope="col">2</th>
+			<th style="width:2.27em;" scope="col">3</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<th scope="row">1</th>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<th scope="row">2</th>
+			<td></td>
+			<td><span style="color:red;">├┤</span></td>
+			<td></td>
+		</tr>
+		<tr>
+			<th scope="row">3</th>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+	</tbody>
+</table>
+```
+
+Depending on where the player is relative to the beast, the beast should go in as straight of a line to the player as it
+can.
+
+```console
+<table class="console_grid console_grid_3d">
+	<thead>
+		<tr>
+			<th style="border-top-color:var(--code-panel-background);border-left-color:var(--code-panel-background);width:2.27em;"></th>
+			<th style="width:2.27em;" scope="col">1</th>
+			<th style="width:2.27em;" scope="col">2</th>
+			<th style="width:2.27em;" scope="col">3</th>
+			<th style="width:2.27em;" scope="col">4</th>
+			<th style="width:2.27em;" scope="col">5</th>
+			<th style="width:2.27em;" scope="col">6</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<th scope="row">1</th>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<th scope="row">2</th>
+			<td></td>
+			<td><span style="color:red;">├┤</span></td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td><span style="color:aqua;">◀▶</span></td>
+		</tr>
+		<tr>
+			<th scope="row">3</th>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+	</tbody>
+</table>
+```
+
+Here the player is to the right of the beast.
+The best move it could is a straight line to the player which in our case is position column: 3, row: 2.
+But what if that position is blocked?
+Then the beast would need to have a fallback option it could go to.
+We have two equally good fallback options in our case: column: 3, row: 1 and column: 3, row: 3.
+But what if those are blocked too?
+
+So really, we need to take all 8 steps a beast can take and prioritize them relative to the position the player is at.
+
+```console
+<table class="console_grid console_grid_3d">
+	<thead>
+		<tr>
+			<th style="border-top-color:var(--code-panel-background);border-left-color:var(--code-panel-background);width:2.27em;"></th>
+			<th style="width:2.27em;" scope="col">1</th>
+			<th style="width:2.27em;" scope="col">2</th>
+			<th style="width:2.27em;" scope="col">3</th>
+			<th style="width:2.27em;" scope="col">4</th>
+			<th style="width:2.27em;" scope="col">5</th>
+			<th style="width:2.27em;" scope="col">6</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<th scope="row">1</th>
+			<td>D</td>
+			<td>C</td>
+			<td>B</td>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<th scope="row">2</th>
+			<td>E</td>
+			<td><span style="color:red;">├┤</span></td>
+			<td>A</td>
+			<td></td>
+			<td></td>
+			<td><span style="color:aqua;">◀▶</span></td>
+		</tr>
+		<tr>
+			<th scope="row">3</th>
+			<td>D</td>
+			<td>C</td>
+			<td>B</td>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+	</tbody>
+</table>
+```
+
+The best position would be `A` followed by two positions marked as `B` which are equally good etc etc.
+
+The same method would work for a different player position like top right:
+
+```console
+<table class="console_grid console_grid_3d">
+	<thead>
+		<tr>
+			<th style="border-top-color:var(--code-panel-background);border-left-color:var(--code-panel-background);width:2.27em;"></th>
+			<th style="width:2.27em;" scope="col">1</th>
+			<th style="width:2.27em;" scope="col">2</th>
+			<th style="width:2.27em;" scope="col">3</th>
+			<th style="width:2.27em;" scope="col">4</th>
+			<th style="width:2.27em;" scope="col">5</th>
+			<th style="width:2.27em;" scope="col">6</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<th scope="row">1</th>
+			<td>C</td>
+			<td>B</td>
+			<td>A</td>
+			<td></td>
+			<td></td>
+			<td><span style="color:aqua;">◀▶</span></td>
+		</tr>
+		<tr>
+			<th scope="row">2</th>
+			<td>D</td>
+			<td><span style="color:red;">├┤</span></td>
+			<td>B</td>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<th scope="row">3</th>
+			<td>E</td>
+			<td>D</td>
+			<td>C</td>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+	</tbody>
+</table>
+```
+
+To simplify our matrix and thinking we could ignore how far the player is away and assume they are is right next to us:
+
+```console
+<table class="console_grid console_grid_3d">
+	<thead>
+		<tr>
+			<th style="border-top-color:var(--code-panel-background);border-left-color:var(--code-panel-background);width:2.27em;"></th>
+			<th style="width:2.27em;" scope="col">1</th>
+			<th style="width:2.27em;" scope="col">2</th>
+			<th style="width:2.27em;" scope="col">3</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<th scope="row">1</th>
+			<td>D</td>
+			<td>C</td>
+			<td>B</td>
+		</tr>
+		<tr>
+			<th scope="row">2</th>
+			<td>E</td>
+			<td><span style="color:red;">├┤</span></td>
+			<td><span style="color:aqua;">◀▶</span></td>
+		</tr>
+		<tr>
+			<th scope="row">3</th>
+			<td>D</td>
+			<td>C</td>
+			<td>B</td>
+		</tr>
+	</tbody>
+</table>
+```
+
+Of course the position the player is in should be our first priority.
+The rest follows the same method as above.
+
+```console
+<table class="console_grid console_grid_3d">
+	<thead>
+		<tr>
+			<th style="border-top-color:var(--code-panel-background);border-left-color:var(--code-panel-background);width:2.27em;"></th>
+			<th style="width:2.27em;" scope="col">1</th>
+			<th style="width:2.27em;" scope="col">2</th>
+			<th style="width:2.27em;" scope="col">3</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<th scope="row">1</th>
+			<td>C</td>
+			<td>B</td>
+			<td><span style="color:aqua;">◀▶</span></td>
+		</tr>
+		<tr>
+			<th scope="row">2</th>
+			<td>D</td>
+			<td><span style="color:red;">├┤</span></td>
+			<td>B</td>
+		</tr>
+		<tr>
+			<th scope="row">3</th>
+			<td>E</td>
+			<td>D</td>
+			<td>C</td>
+		</tr>
+	</tbody>
+</table>
+```
+
+And we could draw the player in all 8 positions but you get the picture.
+We have, at maximum, 8 positions the beast could move into next and we want to prioritize each of them so that when we
+check on the board if these positions are legal moves, we first check the one that would get us to the player in a
+straight line.
+
+That was a lot of tables and numbers and words... let's get back into code.
+
+## From Paper To Compiler
+
+With all that in mind, we will have to look at the players position relative to the beasts and then match on the 8
+possible outcomes.
 
 ## Detecting The End Of A Level
 
