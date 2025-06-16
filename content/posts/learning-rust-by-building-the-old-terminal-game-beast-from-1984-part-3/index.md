@@ -21,13 +21,15 @@ header: assets/header.jpg
 
 ## Where We Left Of
 
-In [part 1 of this tutorial](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/), we set up our
-board and setup movements for our player.
+In [part 1](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/), of this tutorial, we set up our
+board and implemented movements for our player.
 
 In [part 2](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/), we the added our terrain,
-made blockchain puns and ended up with this code:
+made blockchain puns.
 
 ![A screen recording of the board with the player walking around pushing blocks as they go.](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/assets/pushing.svg)
+
+We ended up with this code:
 
 ```console
 .
@@ -41,6 +43,17 @@ made blockchain puns and ended up with this code:
     ├── player.rs
     └── raw_mode.rs
 ```
+
+```toml {data-file="Cargo.toml"}
+[package]
+name = "beast"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rand = "0.9.1"
+```
+
 
 Our main module contains some global types and the `main` function to pull everything together:
 
@@ -2126,7 +2139,7 @@ That's all we need to do and our games runs:
 ![A screen recording pf the game with three beasts walking one step to the left every second.](assets/beast_movement.svg)
 
 Look at our beasts!
-They walk, all to the left for now but they walk!
+They walk, only to the left for now but they walk!
 
 ## Finding Our Player
 
