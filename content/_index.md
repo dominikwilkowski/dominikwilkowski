@@ -1,6 +1,6 @@
 ---
 title: 'Home'
-description: "The personal Blog of Dominik Wilkowski. Often writing about rust, engineering management and being old"
+description: "The personal Blog of Dominik Wilkowski. Often writing about Rust, engineering management and being old"
 og_image: '/og-image-home.png'
 ---
 

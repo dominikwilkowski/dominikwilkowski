@@ -19,7 +19,7 @@ header: assets/placeholder.png
 
 ## Code Blocks
 
-Normal rust code:
+Normal Rust code:
 
 ```rust
 fn main() {

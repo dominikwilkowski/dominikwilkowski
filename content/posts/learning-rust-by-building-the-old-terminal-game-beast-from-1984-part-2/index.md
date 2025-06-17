@@ -727,7 +727,7 @@ impl Board {
 }
 ```
 
-Removing our player position before we collect our `all_coords` iterator into a vec also means rust can do some
+Removing our player position before we collect our `all_coords` iterator into a vec also means Rust can do some
 optimizations on the filter.
 
 OK now we have a complete set of coordinates, blocks could be placed on and we should start placing some blocks:

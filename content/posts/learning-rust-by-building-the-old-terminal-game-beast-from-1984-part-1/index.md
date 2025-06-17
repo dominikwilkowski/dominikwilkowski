@@ -24,7 +24,7 @@ header: assets/header.jpg
 
 I've been teaching Rust to a couple of friends and colleagues in lots of different ways.
 In my latest sessions, I've been using [this game I built](https://github.com/dominikwilkowski/beast), as a homage to
-[the original](https://en.wikipedia.org/wiki/Beast_(video_game)), to apply their newly learned rust skills to a project.
+[the original](https://en.wikipedia.org/wiki/Beast_(video_game)), to apply their newly learned Rust skills to a project.
 It seems to go over well with people because it's something real people can reason about, it's fun to work on as you can
 add your own spin to it and it happens to touch on a lot of the important aspects of the language.
 So I thought I'd write it up in a series of blog posts.

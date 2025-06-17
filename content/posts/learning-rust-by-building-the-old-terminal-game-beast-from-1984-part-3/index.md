@@ -478,7 +478,7 @@ its own position on the board and how it moves.
 In a way, this module will likley be pretty similar to our player module because it will do similar things.
 For this tutorial we will only build a single type of beast but the original game had three different types which all
 presented a different type of challege.
-Because this is a rust tutorial and I think it would be fun for you to build your own beast type on your own outside
+Because this is a Rust tutorial and I think it would be fun for you to build your own beast type on your own outside
 this tutorial, we should build our own beast [`trait`](https://doc.rust-lang.org/book/ch10-02-traits.html) to make that
 easier.
 
@@ -1326,7 +1326,7 @@ There are multiple ways you could do this:
 	and then in the `new` method accept a function argument for the `buffer`
 3. You could simply return a Tuple from the `new` method with `buffer` and `beasts`
 
-The most common (and fastest) way in rust is `3` so let's go with that.
+The most common (and fastest) way in Rust is `3` so let's go with that.
 
 ```rust {data-file="board.rs", data-fold="['9-30', '35-42', '50-62', '75-110']", hl_lines=[6, 32, 47, "64-73"]}
 use rand::seq::SliceRandom;
@@ -2425,6 +2425,498 @@ That was a lot of tables and numbers and words... let's get back into code.
 
 With all that in mind, we will have to look at the players position relative to the beasts and then match on the 8
 possible outcomes.
+Luckily Rust makes it easy for us to match on these 8 positions (It's actually 9 because the center is one too but we
+can safely ignore this one):
+
+```rust {data-file="beasts/common_beast.rs", data-fold="['3-9', '11-14']", hl_lines=[1, "20-33"]}
+use std::cmp::Ordering;
+
+use crate::{Coord, beasts::Beast, board::Board};
+
+#[derive(Debug)]
+pub struct CommonBeast {
+	pub position: Coord,
+}
+
+impl Beast for CommonBeast {
+	fn new(position: Coord) -> Self {
+		Self { position }
+	}
+
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord> {
+		match (
+			player_position.column.cmp(&self.position.column),
+			player_position.row.cmp(&self.position.row),
+		) {
+			(Ordering::Greater, Ordering::Greater) => { /* player: right-bottom */ },
+			(Ordering::Greater, Ordering::Less) => { /* player: right-top */ },
+			(Ordering::Greater, Ordering::Equal) => { /* player: right_middle */ },
+			(Ordering::Less, Ordering::Greater) => { /* player: left_bottom */ },
+			(Ordering::Less, Ordering::Less) => { /* player: left_top */ },
+			(Ordering::Less, Ordering::Equal) => { /* player: left_middle */ },
+			(Ordering::Equal, Ordering::Greater) => { /* player: middle_bottom */ },
+			(Ordering::Equal, Ordering::Less) => { /* player: middle_top */ },
+			(Ordering::Equal, Ordering::Equal) => { /* player: same position */ },
+		}
+
+		None
+	}
+}
+```
+
+We are using the [`cmp`](https://doc.rust-lang.org/std/primitive.usize.html#method.cmp) method to compare the usize
+position of the beasts own position and the `player_position`.
+The `cmp` method will return an enum called [`Ordering`](https://doc.rust-lang.org/std/cmp/enum.Ordering.html) which we
+then match against.
+
+It's a lot so let's just pick the top on and look at it.
+The first item in our tuple we match is the column and the second is the row.
+
+If column is `Greater` we know the player would have to be on the right of us.
+If the column is `Less`, the player would have to be on the left and if the column is `Equal` then the player would be
+either above or below us.
+
+The same thing happens with our row.
+If the row is `Greater` then the player is below us while `Less` means above us and `Equal` means on the same height.
+
+The last position is where the player is in the same position as the beast which we have to include because matches in
+Rust are [exhaustive](https://rustc-dev-guide.rust-lang.org/pat-exhaustive-checking.html).
+In reality that is a position our game engine should never allow to happen because that's when a player died and should
+be re-spawned.
+We will add the [unreachable](https://doc.rust-lang.org/std/macro.unreachable.html) macro into this arm to make that
+clear.
+
+Now that we have the match, let's remember that we want to create a collection of all possible moves before iterating
+over each one to find the return the best.
+
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-9', '11-14']", hl_lines=["20-59"]}
+use std::cmp::Ordering;
+
+use crate::{Coord, beasts::Beast, board::Board};
+
+#[derive(Debug)]
+pub struct CommonBeast {
+	pub position: Coord,
+}
+
+impl Beast for CommonBeast {
+	fn new(position: Coord) -> Self {
+		Self { position }
+	}
+
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord> {
+		match (
+			player_position.column.cmp(&self.position.column),
+			player_position.row.cmp(&self.position.row),
+		) {
+			(Ordering::Greater, Ordering::Greater) => {
+				/* player: right-bottom */
+				// check if position 1 is legal then push into possible_moves
+				// check if position 2 is legal then push into possible_moves
+				// check if position 3 is legal then push into possible_moves
+				// check if position 4 is legal then push into possible_moves
+				// check if position 5 is legal then push into possible_moves
+				// check if position 6 is legal then push into possible_moves
+				// check if position 7 is legal then push into possible_moves
+				// check if position 8 is legal then push into possible_moves
+			},
+			(Ordering::Greater, Ordering::Less) => {
+				/* player: right-top */
+				// check if position 1 is legal then push into possible_moves
+				// check if position 2 is legal then push into possible_moves
+				// check if position 3 is legal then push into possible_moves
+				// check if position 4 is legal then push into possible_moves
+				// check if position 5 is legal then push into possible_moves
+				// check if position 6 is legal then push into possible_moves
+				// check if position 7 is legal then push into possible_moves
+				// check if position 8 is legal then push into possible_moves
+			},
+			(Ordering::Greater, Ordering::Equal) => {
+				/* player: right_middle */
+				// check if position is legal then push into possible_moves
+				// ...
+			},
+			(Ordering::Less, Ordering::Greater) => { /* player: left_bottom */ },
+			(Ordering::Less, Ordering::Less) => { /* player: left_top */ },
+			(Ordering::Less, Ordering::Equal) => { /* player: left_middle */ },
+			(Ordering::Equal, Ordering::Greater) => { /* player: middle_bottom */ },
+			(Ordering::Equal, Ordering::Less) => { /* player: middle_top */ },
+			(Ordering::Equal, Ordering::Equal) => {
+				/* player: same position */
+				unreachable!();
+			},
+		}
+
+		None
+	}
+}
+```
+
+Inside each branch of our `match` we will have to check if each position is a legal move (is it inside the board, is it
+an `Empty` Tile?)
+We have to use a Vec here because at compile time we don't know how many items will be in our collection.
+That's because not all of our 8 positions might be possible because the beast might be standing next to the end of the
+board.
+It could even stand right in a corner of the board which would give us only 3 possible moves:
+
+```console
+<table class="console_grid console_grid_3d">
+	<thead>
+		<tr>
+			<th style="border-top-color:var(--code-panel-background);border-left-color:var(--code-panel-background);width:2.27em;"></th>
+			<th style="width:2.27em;" scope="col">1</th>
+			<th style="width:2.27em;" scope="col">2</th>
+			<th style="width:2.27em;" scope="col">3</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<th scope="row">1</th>
+			<td><span style="color:yellow">▛</span></td>
+			<td><span style="color:yellow">▀▀</span></td>
+			<td><span style="color:yellow">▀▀</span></td>
+		</tr>
+		<tr>
+			<th scope="row">2</th>
+			<td><span style="color:yellow">▌</span></td>
+			<td><span style="color:red;">├┤</span></td>
+			<td></td>
+		</tr>
+		<tr>
+			<th scope="row">3</th>
+			<td><span style="color:yellow">▌</span></td>
+			<td></td>
+			<td></td>
+		</tr>
+	</tbody>
+</table>
+```
+
+So before we can push into `possible_moves` Vec, we have to check if the position is valid.
+Since we would have to do that in each and every branch, we might as well prepare these positions outside the match so
+that inside each arm of our match we can just push them in.
+
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-9', '11-14', '94-115']", hl_lines=["20-93"]}
+use std::cmp::Ordering;
+
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, beasts::Beast, board::Board};
+
+#[derive(Debug)]
+pub struct CommonBeast {
+	pub position: Coord,
+}
+
+impl Beast for CommonBeast {
+	fn new(position: Coord) -> Self {
+		Self { position }
+	}
+
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord> {
+		// Top row
+		let left_top = if self.position.column > 0 && self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let middle_top = if self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let right_top = if self.position.row <= BOARD_WIDTH && self.position.row > 0
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+
+		// Middle row
+		let left_middle = if self.position.column > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+		// The middle middle position is an invalid position
+		let right_middle = if self.position.column <= BOARD_WIDTH {
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+
+		// Bottom row
+		let left_bottom =
+			if self.position.column > 0 && self.position.row <= BOARD_HEIGHT {
+				Some(Coord {
+					column: self.position.column - 1,
+					row: self.position.row + 1,
+				})
+			} else {
+				None
+			};
+		let middle_bottom = if self.position.row <= BOARD_HEIGHT {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+		let right_bottom = if self.position.column <= BOARD_WIDTH
+			&& self.position.row <= BOARD_HEIGHT
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+
+		match (
+			player_position.column.cmp(&self.position.column),
+			player_position.row.cmp(&self.position.row),
+		) {
+			(Ordering::Greater, Ordering::Greater) => { /* player: right-bottom */ },
+			(Ordering::Greater, Ordering::Less) => { /* player: right-top */ },
+			(Ordering::Greater, Ordering::Equal) => { /* player: right_middle */ },
+			(Ordering::Less, Ordering::Greater) => { /* player: left_bottom */ },
+			(Ordering::Less, Ordering::Less) => { /* player: left_top */ },
+			(Ordering::Less, Ordering::Equal) => { /* player: left_middle */ },
+			(Ordering::Equal, Ordering::Greater) => { /* player: middle_bottom */ },
+			(Ordering::Equal, Ordering::Less) => { /* player: middle_top */ },
+			(Ordering::Equal, Ordering::Equal) => {
+				/* player: same position */
+				unreachable!();
+			},
+		}
+
+		None
+	}
+}
+```
+
+That's a lot of code.
+Let's break it down:
+- We created 8 new variables
+- For each of the variable we check they are within the board
+- If we increment `column` or `row`, we check if the usize is less then or equal to `BOARD_WIDTH` or `BOARD_HIGHT`
+respectively
+- If we subtract from `column` or `row`, we make sure the usize is larger than `0`
+
+This is what each variable corresponds to:
+
+```console
+<table class="console_grid console_grid_3d">
+	<thead>
+		<tr>
+			<th style="border-top-color:var(--code-panel-background);border-left-color:var(--code-panel-background);width:2.27em;"></th>
+			<th style="width:2.27em;" scope="col">1</th>
+			<th style="width:2.27em;" scope="col">2</th>
+			<th style="width:2.27em;" scope="col">3</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<th scope="row">1</th>
+			<td>left_top</td>
+			<td>middle_top</td>
+			<td>right_top</td>
+		</tr>
+		<tr>
+			<th scope="row">2</th>
+			<td>left_middle</td>
+			<td><span style="color:red;">├┤</span></td>
+			<td>right_middle</td>
+		</tr>
+		<tr>
+			<th scope="row">3</th>
+			<td>left_bottom</td>
+			<td>middle_bottom</td>
+			<td>right_bottom</td>
+		</tr>
+	</tbody>
+</table>
+```
+
+Now we can curate each match arm:
+
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-19', '22-95']", hl_lines=[20, "101-120"]}
+use std::cmp::Ordering;
+
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, beasts::Beast, board::Board};
+
+#[derive(Debug)]
+pub struct CommonBeast {
+	pub position: Coord,
+}
+
+impl Beast for CommonBeast {
+	fn new(position: Coord) -> Self {
+		Self { position }
+	}
+
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord> {
+		let mut possible_moves: Vec<Coord> = Vec::with_capacity(8);
+
+		// Top row
+		let left_top = if self.position.column > 0 && self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let middle_top = if self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let right_top = if self.position.row <= BOARD_WIDTH && self.position.row > 0
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+
+		// Middle row
+		let left_middle = if self.position.column > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+		// The middle middle position is an invalid position
+		let right_middle = if self.position.column <= BOARD_WIDTH {
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+
+		// Bottom row
+		let left_bottom =
+			if self.position.column > 0 && self.position.row <= BOARD_HEIGHT {
+				Some(Coord {
+					column: self.position.column - 1,
+					row: self.position.row + 1,
+				})
+			} else {
+				None
+			};
+		let middle_bottom = if self.position.row <= BOARD_HEIGHT {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+		let right_bottom = if self.position.column <= BOARD_WIDTH
+			&& self.position.row <= BOARD_HEIGHT
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+
+		match (
+			player_position.column.cmp(&self.position.column),
+			player_position.row.cmp(&self.position.row),
+		) {
+			(Ordering::Greater, Ordering::Greater) => {
+				/* player: right-bottom */
+				// 8 7  5
+				// 6 ├┤ 3
+				// 4 2  1
+				possible_moves.extend(
+					[
+						right_bottom,
+						middle_bottom,
+						right_middle,
+						left_bottom,
+						right_top,
+						left_middle,
+						middle_top,
+						left_top,
+					]
+					.iter()
+					.flatten(),
+				);
+			},
+			(Ordering::Greater, Ordering::Less) => { /* player: right-top */ },
+			(Ordering::Greater, Ordering::Equal) => { /* player: right_middle */ },
+			(Ordering::Less, Ordering::Greater) => { /* player: left_bottom */ },
+			(Ordering::Less, Ordering::Less) => { /* player: left_top */ },
+			(Ordering::Less, Ordering::Equal) => { /* player: left_middle */ },
+			(Ordering::Equal, Ordering::Greater) => { /* player: middle_bottom */ },
+			(Ordering::Equal, Ordering::Less) => { /* player: middle_top */ },
+			(Ordering::Equal, Ordering::Equal) => {
+				/* player: same position */
+				unreachable!();
+			},
+		}
+
+		None
+	}
+}
+```
+
+First we create a new mutable Vec with
+[capacity](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity) of 8 because the vec can never be
+larger than 8 items.
+Then, using [`extend`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend-1), we create an array in memory
+(stack allocated) and [`flatten`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.flatten) that (through
+the iterator) into our `possible_moves` Vec, omitting any out-of-bounds options (`None`).
+The `extend` call knows the Vec has capacity and just pushes into it.
+`flatten` on Option is a zero-cost abstraction since it's specialized by the compiler to check the discriminant without
+virtual dispatch or no heap allocations.
+
+Now we just have to do that 7 more times:
 
 ## Detecting The End Of A Level
 
