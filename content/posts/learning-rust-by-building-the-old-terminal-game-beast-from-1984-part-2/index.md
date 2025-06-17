@@ -1,6 +1,6 @@
 ---
 title: 'Learning Rust By Building The Old Terminal Game Beast From 1984, Part 2'
-date: '2025-06-06T22:11:29+10:00'
+date: '2025-06-06T20:03:35+10:00'
 draft: false
 visibility: false
 summary: >
@@ -3303,7 +3303,8 @@ That's it!
 We did it.
 Part two is done.
 
-In part three we will add beasts and pathfinding and finally a real game loop.
+In [part three](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-3/) we will add beasts and
+pathfinding and finally a real game loop.
 
 <br><br><br>
 ![A vintage-style roadside billboard features a sleazy-looking man with slicked-back hair and a smug expression,

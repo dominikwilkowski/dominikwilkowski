@@ -1,6 +1,6 @@
 ---
 title: 'Learning Rust By Building The Old Terminal Game Beast From 1984, Part 3'
-date: '2025-05-21T22:11:29+10:00'
+date: '2025-06-17T14:38:49+10:00'
 draft: false
 visibility: false
 summary: >
@@ -1922,7 +1922,7 @@ impl Game {
 				last_tick = Instant::now();
 				for beast in self.beasts.iter_mut() {
 					if let Some(new_position) =
-						beast.advance(&mut self.board, &self.player.position)
+						beast.advance(&self.board, &self.player.position)
 					{
 						match self.board[&new_position] {
 							Tile::Empty => {
@@ -1991,7 +1991,7 @@ cargo run
 <span style="font-weight:bold;color:red;">error[E0599]</span><span style="font-weight:bold;">: no method named `advance` found for mutable reference `&amp;mut common_beast::CommonBeast` in the current scope</span>
   <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/game.rs:79:13
    <span style="font-weight:bold;color:#3333FF;">|</span>
-<span style="font-weight:bold;color:#3333FF;">79</span> <span style="font-weight:bold;color:#3333FF;">|</span>                         beast.advance(&amp;mut self.board, &amp;self.player.position)
+<span style="font-weight:bold;color:#3333FF;">79</span> <span style="font-weight:bold;color:#3333FF;">|</span>                         beast.advance(&amp;self.board, &amp;self.player.position)
    <span style="font-weight:bold;color:#3333FF;">|</span>                               <span style="font-weight:bold;color:red;">^^^^^^^</span> <span style="font-weight:bold;color:red;">method not found in `&amp;mut CommonBeast`</span>
    <span style="font-weight:bold;color:#3333FF;">|</span>
    <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">help</span>: items from traits can only be used if the trait is in scope
@@ -2087,7 +2087,7 @@ impl Game {
 				last_tick = Instant::now();
 				for beast in self.beasts.iter_mut() {
 					if let Some(new_position) =
-						beast.advance(&mut self.board, &self.player.position)
+						beast.advance(&self.board, &self.player.position)
 					{
 						match self.board[&new_position] {
 							Tile::Empty => {
@@ -2136,7 +2136,7 @@ impl Game {
 
 That's all we need to do and our games runs:
 
-![A screen recording pf the game with three beasts walking one step to the left every second.](assets/beast_movement.svg)
+![A screen recording of the game with three beasts walking one step to the left every second.](assets/beast_movement.svg)
 
 Look at our beasts!
 They move, only to the left for now but they move!
@@ -2767,7 +2767,7 @@ This is what each variable corresponds to:
 
 Now we can curate each match arm:
 
-```rust {data-file="beasts/common_beast.rs", data-fold="['1-19', '22-95']", hl_lines=[20, "101-120"]}
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-94']", hl_lines=[95, "99-114", "127-129"]}
 use std::cmp::Ordering;
 
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, beasts::Beast, board::Board};
@@ -2787,8 +2787,6 @@ impl Beast for CommonBeast {
 		board: &Board,
 		player_position: &Coord,
 	) -> Option<Coord> {
-		let mut possible_moves: Vec<Coord> = Vec::with_capacity(8);
-
 		// Top row
 		let left_top = if self.position.column > 0 && self.position.row > 0 {
 			Some(Coord {
@@ -2864,7 +2862,7 @@ impl Beast for CommonBeast {
 			None
 		};
 
-		match (
+		let possible_moves = match (
 			player_position.column.cmp(&self.position.column),
 			player_position.row.cmp(&self.position.row),
 		) {
@@ -2873,20 +2871,16 @@ impl Beast for CommonBeast {
 				// 8 7  5
 				// 6 ├┤ 3
 				// 4 2  1
-				possible_moves.extend(
-					[
-						right_bottom,
-						middle_bottom,
-						right_middle,
-						left_bottom,
-						right_top,
-						left_middle,
-						middle_top,
-						left_top,
-					]
-					.iter()
-					.flatten(),
-				);
+				[
+					right_bottom,
+					middle_bottom,
+					right_middle,
+					left_bottom,
+					right_top,
+					left_middle,
+					middle_top,
+					left_top,
+				]
 			},
 			(Ordering::Greater, Ordering::Less) => { /* player: right-top */ },
 			(Ordering::Greater, Ordering::Equal) => { /* player: right_middle */ },
@@ -2900,33 +2894,821 @@ impl Beast for CommonBeast {
 				unreachable!();
 			},
 		}
+		.into_iter()
+		.flatten()
+		.collect::<Vec<Coord>>();
 
 		None
 	}
 }
 ```
 
-First we create a new mutable Vec with
-[capacity](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity) of 8 because the vec can never be
-larger than 8 items.
-Then, using [`extend`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend-1), we create an array in memory
-(stack allocated) and [`flatten`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.flatten) that (through
-the iterator) into our `possible_moves` Vec, omitting any out-of-bounds options (`None`).
-The `extend` call knows the Vec has capacity and just pushes into it.
-`flatten` on Option is a zero-cost abstraction since it's specialized by the compiler to check the discriminant without
-virtual dispatch or no heap allocations.
+Because in Rust everything is an expression, we use the `match` to return an array (stack allocated) of `Option<Coord>`.
+Then we [`flatten`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.flatten) that array and collect it
+into our `possible_moves` Vec, omitting any out-of-bounds options (`None`).
+We have to use a Vec because the we can't know the size of this collection at compile time.
+Also `flatten` on `Option` is a zero-cost abstraction since it's specialized by the compiler to check the discriminant
+without virtual dispatch or any heap allocations.
 
 Now we just have to do that 7 more times:
 
-## Detecting The End Of A Level
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-94']", hl_lines=["115-226"]}
+use std::cmp::Ordering;
 
-Adding lives
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, beasts::Beast, board::Board};
 
-## Coming Back To Life
+#[derive(Debug)]
+pub struct CommonBeast {
+	pub position: Coord,
+}
 
-Re-spawning
+impl Beast for CommonBeast {
+	fn new(position: Coord) -> Self {
+		Self { position }
+	}
 
-## A Help
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord> {
+		// Top row
+		let left_top = if self.position.column > 0 && self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let middle_top = if self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let right_top = if self.position.row <= BOARD_WIDTH && self.position.row > 0
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+
+		// Middle row
+		let left_middle = if self.position.column > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+		// The middle middle position is an invalid position
+		let right_middle = if self.position.column <= BOARD_WIDTH {
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+
+		// Bottom row
+		let left_bottom =
+			if self.position.column > 0 && self.position.row <= BOARD_HEIGHT {
+				Some(Coord {
+					column: self.position.column - 1,
+					row: self.position.row + 1,
+				})
+			} else {
+				None
+			};
+		let middle_bottom = if self.position.row <= BOARD_HEIGHT {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+		let right_bottom = if self.position.column <= BOARD_WIDTH
+			&& self.position.row <= BOARD_HEIGHT
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+
+		let possible_moves = match (
+			player_position.column.cmp(&self.position.column),
+			player_position.row.cmp(&self.position.row),
+		) {
+			(Ordering::Greater, Ordering::Greater) => {
+				/* player: right-bottom */
+				// 8 7  5
+				// 6 ├┤ 3
+				// 4 2  1
+				[
+					right_bottom,
+					middle_bottom,
+					right_middle,
+					left_bottom,
+					right_top,
+					left_middle,
+					middle_top,
+					left_top,
+				]
+			},
+			(Ordering::Greater, Ordering::Less) => {
+				/* player: right-top */
+				// 4 2  1
+				// 6 ├┤ 3
+				// 8 7  5
+				[
+					right_top,
+					middle_top,
+					right_middle,
+					left_top,
+					right_bottom,
+					left_middle,
+					middle_bottom,
+					left_bottom,
+				]
+			},
+			(Ordering::Greater, Ordering::Equal) => {
+				/* player: right_middle */
+				// 6 4  2
+				// 8 ├┤ 1
+				// 7 5  3
+				[
+					right_middle,
+					right_top,
+					right_bottom,
+					middle_top,
+					middle_bottom,
+					left_top,
+					left_bottom,
+					left_middle,
+				]
+			},
+			(Ordering::Less, Ordering::Greater) => {
+				/* player: left_bottom */
+				// 4 6  8
+				// 2 ├┤ 7
+				// 1  3 5
+				[
+					left_bottom,
+					left_middle,
+					middle_bottom,
+					left_top,
+					right_bottom,
+					right_middle,
+					middle_top,
+					right_top,
+				]
+			},
+			(Ordering::Less, Ordering::Less) => {
+				/* player: left_top */
+				// 1  3 5
+				// 2 ├┤ 7
+				// 4 6  8
+				[
+					left_top,
+					left_middle,
+					middle_top,
+					left_bottom,
+					right_top,
+					middle_bottom,
+					right_middle,
+					right_bottom,
+				]
+			},
+			(Ordering::Less, Ordering::Equal) => {
+				/* player: left_middle */
+				// 2 4  6
+				// 1 ├┤ 8
+				// 3 5  7
+				[
+					left_middle,
+					left_top,
+					left_bottom,
+					middle_top,
+					middle_bottom,
+					right_top,
+					right_bottom,
+					right_middle,
+				]
+			},
+			(Ordering::Equal, Ordering::Greater) => {
+				/* player: middle_bottom */
+				// 6 8  7
+				// 4 ├┤ 5
+				// 2 1  3
+				[
+					middle_bottom,
+					left_bottom,
+					right_bottom,
+					left_middle,
+					right_middle,
+					left_top,
+					right_top,
+					middle_top,
+				]
+			},
+			(Ordering::Equal, Ordering::Less) => {
+				/* player: middle_top */
+				// 2 1  3
+				// 4 ├┤ 5
+				// 6 8  7
+				[
+					middle_top,
+					left_top,
+					right_top,
+					left_middle,
+					right_middle,
+					left_bottom,
+					right_bottom,
+					middle_bottom,
+				]
+			},
+			(Ordering::Equal, Ordering::Equal) => {
+				/* player: same position */
+				unreachable!();
+			},
+		}
+		.into_iter()
+		.flatten()
+		.collect::<Vec<Coord>>();
+
+		None
+	}
+}
+```
+
+Now we have a `possible_moves` Vec with prioritized moves respective to the players position.
+All we need to do now is iterate over those moves and return the first `Coord` that contains an `Empty` Tile on the
+board:
+
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-236']", hl_lines=["238-242"]}
+use std::cmp::Ordering;
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Coord, Tile, beasts::Beast, board::Board,
+};
+
+#[derive(Debug)]
+pub struct CommonBeast {
+	pub position: Coord,
+}
+
+impl Beast for CommonBeast {
+	fn new(position: Coord) -> Self {
+		Self { position }
+	}
+
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord> {
+		// Top row
+		let left_top = if self.position.column > 0 && self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let middle_top = if self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let right_top = if self.position.row <= BOARD_WIDTH && self.position.row > 0
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+
+		// Middle row
+		let left_middle = if self.position.column > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+		// The middle middle position is an invalid position
+		let right_middle = if self.position.column <= BOARD_WIDTH {
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+
+		// Bottom row
+		let left_bottom =
+			if self.position.column > 0 && self.position.row <= BOARD_HEIGHT {
+				Some(Coord {
+					column: self.position.column - 1,
+					row: self.position.row + 1,
+				})
+			} else {
+				None
+			};
+		let middle_bottom = if self.position.row <= BOARD_HEIGHT {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+		let right_bottom = if self.position.column <= BOARD_WIDTH
+			&& self.position.row <= BOARD_HEIGHT
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+
+		let possible_moves = match (
+			player_position.column.cmp(&self.position.column),
+			player_position.row.cmp(&self.position.row),
+		) {
+			(Ordering::Greater, Ordering::Greater) => {
+				/* player: right-bottom */
+				// 8 7  5
+				// 6 ├┤ 3
+				// 4 2  1
+				[
+					right_bottom,
+					middle_bottom,
+					right_middle,
+					left_bottom,
+					right_top,
+					left_middle,
+					middle_top,
+					left_top,
+				]
+			},
+			(Ordering::Greater, Ordering::Less) => {
+				/* player: right-top */
+				// 4 2  1
+				// 6 ├┤ 3
+				// 8 7  5
+				[
+					right_top,
+					middle_top,
+					right_middle,
+					left_top,
+					right_bottom,
+					left_middle,
+					middle_bottom,
+					left_bottom,
+				]
+			},
+			(Ordering::Greater, Ordering::Equal) => {
+				/* player: right_middle */
+				// 6 4  2
+				// 8 ├┤ 1
+				// 7 5  3
+				[
+					right_middle,
+					right_top,
+					right_bottom,
+					middle_top,
+					middle_bottom,
+					left_top,
+					left_bottom,
+					left_middle,
+				]
+			},
+			(Ordering::Less, Ordering::Greater) => {
+				/* player: left_bottom */
+				// 4 6  8
+				// 2 ├┤ 7
+				// 1  3 5
+				[
+					left_bottom,
+					left_middle,
+					middle_bottom,
+					left_top,
+					right_bottom,
+					right_middle,
+					middle_top,
+					right_top,
+				]
+			},
+			(Ordering::Less, Ordering::Less) => {
+				/* player: left_top */
+				// 1  3 5
+				// 2 ├┤ 7
+				// 4 6  8
+				[
+					left_top,
+					left_middle,
+					middle_top,
+					left_bottom,
+					right_top,
+					middle_bottom,
+					right_middle,
+					right_bottom,
+				]
+			},
+			(Ordering::Less, Ordering::Equal) => {
+				/* player: left_middle */
+				// 2 4  6
+				// 1 ├┤ 8
+				// 3 5  7
+				[
+					left_middle,
+					left_top,
+					left_bottom,
+					middle_top,
+					middle_bottom,
+					right_top,
+					right_bottom,
+					right_middle,
+				]
+			},
+			(Ordering::Equal, Ordering::Greater) => {
+				/* player: middle_bottom */
+				// 6 8  7
+				// 4 ├┤ 5
+				// 2 1  3
+				[
+					middle_bottom,
+					left_bottom,
+					right_bottom,
+					left_middle,
+					right_middle,
+					left_top,
+					right_top,
+					middle_top,
+				]
+			},
+			(Ordering::Equal, Ordering::Less) => {
+				/* player: middle_top */
+				// 2 1  3
+				// 4 ├┤ 5
+				// 6 8  7
+				[
+					middle_top,
+					left_top,
+					right_top,
+					left_middle,
+					right_middle,
+					left_bottom,
+					right_bottom,
+					middle_bottom,
+				]
+			},
+			(Ordering::Equal, Ordering::Equal) => {
+				/* player: same position */
+				unreachable!();
+			},
+		}
+		.into_iter()
+		.flatten()
+		.collect::<Vec<Coord>>();
+
+		for next_move in possible_moves {
+			if board[&next_move] == Tile::Empty {
+				return Some(next_move);
+			}
+		}
+
+		None
+	}
+}
+```
+
+Ok beasts are moving now.
+One last thing though: let's use `clippy`!
+[Clippy](https://doc.rust-lang.org/stable/clippy/index.html) is a tool that ships with cargo and is super helpful,
+especially when starting out with Rust.
+Let's run it now:
+
+```console
+cargo clippy
+<span style="font-weight:bold;color:lime;">   Checking</span> beast v0.1.0 (/Users/code/beast)
+<span style="font-weight:bold;color:yellow;">warning</span>: variants `Two` and `Three` are never constructed
+<span style="font-weight:bold;color:#3333FF;">  --&gt;</span> src/level.rs:10:2
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">8  |</span> pub enum Level {
+<span style="font-weight:bold;color:#3333FF;">   |          ----- variants in this enum</span>
+<span style="font-weight:bold;color:#3333FF;">9  |</span>     One,
+<span style="font-weight:bold;color:#3333FF;">10 |</span>     Two,
+<span style="font-weight:bold;color:#3333FF;">   |</span>     <span style="font-weight:bold;color:yellow;">^^^</span>
+<span style="font-weight:bold;color:#3333FF;">11 |</span>     Three,
+<span style="font-weight:bold;color:#3333FF;">   |</span>     <span style="font-weight:bold;color:yellow;">^^^^^</span>
+<span style="font-weight:bold;color:#3333FF;">   |</span>
+   = note: `Level` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` on by default
+
+<span style="font-weight:bold;color:yellow;">warning</span>: manual implementation of `Iterator::find`
+<span style="font-weight:bold;color:#3333FF;">   --&gt;</span> src/beasts/common_beast.rs:238:3
+<span style="font-weight:bold;color:#3333FF;">    |</span>
+<span style="font-weight:bold;color:#3333FF;">238 |</span> <span style="font-weight:bold;color:yellow;">/</span>         for next_move in possible_moves {
+<span style="font-weight:bold;color:#3333FF;">239 |</span> <span style="font-weight:bold;color:yellow;">|</span>             if board[&amp;next_move] == Tile::Empty {
+<span style="font-weight:bold;color:#3333FF;">240 |</span> <span style="font-weight:bold;color:yellow;">|</span>                 return Some(next_move);
+<span style="font-weight:bold;color:#3333FF;">...  </span> <span style="font-weight:bold;color:yellow;">|</span>
+<span style="font-weight:bold;color:#3333FF;">244 |</span> <span style="font-weight:bold;color:yellow;">|</span>         None
+<span style="font-weight:bold;color:#3333FF;">    |</span> <span style="font-weight:bold;color:yellow;">|____________^ help: replace with an iterator: `possible_moves.into_iter().find(|&amp;next_move| board[&amp;next_move] == Tile::Empty)`</span>
+<span style="font-weight:bold;color:#3333FF;">    |</span>
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_find
+    = note: `#[warn(clippy::manual_find)]` on by default
+
+<span style="font-weight:bold;color:yellow;">warning</span>: `beast` (bin &quot;beast&quot;) generated 2 warnings (run `cargo clippy --fix --bin &quot;beast&quot;` to apply 1 suggestion)
+    <span style="font-weight:bold;color:lime;">Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.09s
+```
+
+The first warning we have seen a lot and can ignore for now.
+It just means we haven't implemented the other levels yet.
+We will get there soon.
+
+But the other warning is interesting!
+Clippy suggests that instead of doing our `for` loop and then our return of `None`, we could express it more concisely:
+
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-236']", hl_lines=["238-240"]}
+use std::cmp::Ordering;
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Coord, Tile, beasts::Beast, board::Board,
+};
+
+#[derive(Debug)]
+pub struct CommonBeast {
+	pub position: Coord,
+}
+
+impl Beast for CommonBeast {
+	fn new(position: Coord) -> Self {
+		Self { position }
+	}
+
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord> {
+		// Top row
+		let left_top = if self.position.column > 0 && self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let middle_top = if self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let right_top = if self.position.row <= BOARD_WIDTH && self.position.row > 0
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+
+		// Middle row
+		let left_middle = if self.position.column > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+		// The middle middle position is an invalid position
+		let right_middle = if self.position.column <= BOARD_WIDTH {
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+
+		// Bottom row
+		let left_bottom =
+			if self.position.column > 0 && self.position.row <= BOARD_HEIGHT {
+				Some(Coord {
+					column: self.position.column - 1,
+					row: self.position.row + 1,
+				})
+			} else {
+				None
+			};
+		let middle_bottom = if self.position.row <= BOARD_HEIGHT {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+		let right_bottom = if self.position.column <= BOARD_WIDTH
+			&& self.position.row <= BOARD_HEIGHT
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+
+		let possible_moves = match (
+			player_position.column.cmp(&self.position.column),
+			player_position.row.cmp(&self.position.row),
+		) {
+			(Ordering::Greater, Ordering::Greater) => {
+				/* player: right-bottom */
+				// 8 7  5
+				// 6 ├┤ 3
+				// 4 2  1
+				[
+					right_bottom,
+					middle_bottom,
+					right_middle,
+					left_bottom,
+					right_top,
+					left_middle,
+					middle_top,
+					left_top,
+				]
+			},
+			(Ordering::Greater, Ordering::Less) => {
+				/* player: right-top */
+				// 4 2  1
+				// 6 ├┤ 3
+				// 8 7  5
+				[
+					right_top,
+					middle_top,
+					right_middle,
+					left_top,
+					right_bottom,
+					left_middle,
+					middle_bottom,
+					left_bottom,
+				]
+			},
+			(Ordering::Greater, Ordering::Equal) => {
+				/* player: right_middle */
+				// 6 4  2
+				// 8 ├┤ 1
+				// 7 5  3
+				[
+					right_middle,
+					right_top,
+					right_bottom,
+					middle_top,
+					middle_bottom,
+					left_top,
+					left_bottom,
+					left_middle,
+				]
+			},
+			(Ordering::Less, Ordering::Greater) => {
+				/* player: left_bottom */
+				// 4 6  8
+				// 2 ├┤ 7
+				// 1  3 5
+				[
+					left_bottom,
+					left_middle,
+					middle_bottom,
+					left_top,
+					right_bottom,
+					right_middle,
+					middle_top,
+					right_top,
+				]
+			},
+			(Ordering::Less, Ordering::Less) => {
+				/* player: left_top */
+				// 1  3 5
+				// 2 ├┤ 7
+				// 4 6  8
+				[
+					left_top,
+					left_middle,
+					middle_top,
+					left_bottom,
+					right_top,
+					middle_bottom,
+					right_middle,
+					right_bottom,
+				]
+			},
+			(Ordering::Less, Ordering::Equal) => {
+				/* player: left_middle */
+				// 2 4  6
+				// 1 ├┤ 8
+				// 3 5  7
+				[
+					left_middle,
+					left_top,
+					left_bottom,
+					middle_top,
+					middle_bottom,
+					right_top,
+					right_bottom,
+					right_middle,
+				]
+			},
+			(Ordering::Equal, Ordering::Greater) => {
+				/* player: middle_bottom */
+				// 6 8  7
+				// 4 ├┤ 5
+				// 2 1  3
+				[
+					middle_bottom,
+					left_bottom,
+					right_bottom,
+					left_middle,
+					right_middle,
+					left_top,
+					right_top,
+					middle_top,
+				]
+			},
+			(Ordering::Equal, Ordering::Less) => {
+				/* player: middle_top */
+				// 2 1  3
+				// 4 ├┤ 5
+				// 6 8  7
+				[
+					middle_top,
+					left_top,
+					right_top,
+					left_middle,
+					right_middle,
+					left_bottom,
+					right_bottom,
+					middle_bottom,
+				]
+			},
+			(Ordering::Equal, Ordering::Equal) => {
+				/* player: same position */
+				unreachable!();
+			},
+		}
+		.into_iter()
+		.flatten()
+		.collect::<Vec<Coord>>();
+
+		possible_moves
+			.into_iter()
+			.find(|&next_move| board[&next_move] == Tile::Empty)
+	}
+}
+```
+
+That IS much better and more idiomatic to Rust.
+Great suggestion as almost always Clippy!
+
+Our beast now move toward us with the simplest pathfinding algorithm I could come up with.
+And to my surprise, the result is pretty decent as beasts rarely get stuck:
+
+![A screen recording of the game with three beasts chasing the player every second getting closer. The beasts react to the direction the player is going.](assets/beast_pathfinding.svg)
+
+Well done us!
+In [the last part](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-4/) of this tutorial series
+we will give our player lives, the ability to re-spawn and a help screen.
 
 <br><br><br>
 ![Illustration of a terminal window styled like the Rust borrow checker, displaying the message: "TRANSFER OWNERSHIP, SHARE THIS POST" on a pink background](assets/share.png)

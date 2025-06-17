@@ -3022,7 +3022,8 @@ This is it.
 We did it!
 The first part of this tutorial is done and we got a board we can walk around on with a couple tiles hardcoded.
 
-In the next part we will generate a terrain, implement pushing blocks around and look into adding beasts.
+In [the next part](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/) we will generate a
+terrain, implement pushing blocks around and look into adding beasts.
 
 <br><br><br>
 ![A blue rectangular sign reading ‘PLEASE SHARE THIS POST’ mounted on a rustic wooden fence post, with a backdrop of
