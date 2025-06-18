@@ -19,13 +19,13 @@ header: assets/header.jpg
 
 <div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg" title="I'm perfectly able to add my own em dashes, thank you very much!" width="120px" height="120px"></div>
 
-## Where We Left Of
+## Where We Left Off
 
-In [part 1](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/), of this tutorial, we set up our
+In [part 1](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/) of this tutorial, we set up our
 board and implemented movements for our player.
 
-In [part 2](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/), we the added our terrain,
-made blockchain puns.
+In [part 2](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/), we added our terrain and made
+blockchain puns:
 
 ![A screen recording of the board with the player walking around pushing blocks as they go.](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/assets/pushing.svg)
 
@@ -110,7 +110,7 @@ The game module contains our `Game` struct with it's own `render` method and the
 use std::io::{Read, stdin};
 
 use crate::{
-	BOARD_HEIGHT, BOARD_WIDTH, Direction, board::Board, level::Level,
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, board::Board, level::Level,
 	player::Player,
 };
 
@@ -163,7 +163,6 @@ impl Game {
 
 	fn render(&self, reset: bool) -> String {
 		const BORDER_SIZE: usize = 1;
-		const TILE_SIZE: usize = 2;
 		const FOOTER_SIZE: usize = 1;
 
 		let mut board = if reset {
@@ -466,18 +465,18 @@ impl Drop for RawMode {
 }
 ```
 
-OK so how should we add our enemies?
+OK, so how should we add our enemies?
 
 ## Adding Our Enemies
 
-The goal is to add a different amount of enemies per level.
+The goal is to add a different number of enemies per level.
 While level 1 adds 3, later levels will increase the number of beasts to make the challenge harder as you play through
 the game.
 We will have to create a single beast module that we can instantiate multiple times per level which will take care of
 its own position on the board and how it moves.
-In a way, this module will likley be pretty similar to our player module because it will do similar things.
+In a way, this module will likely be pretty similar to our player module because it will do similar things.
 For this tutorial we will only build a single type of beast but the original game had three different types which all
-presented a different type of challege.
+presented a different type of challenge.
 Because this is a Rust tutorial and I think it would be fun for you to build your own beast type on your own outside
 this tutorial, we should build our own beast [`trait`](https://doc.rust-lang.org/book/ch10-02-traits.html) to make that
 easier.
@@ -486,9 +485,9 @@ easier.
 
 We've used a couple traits from the standard library in the past parts like `Copy` and `Debug`.
 It's time now to build our very own.
-To start off let's create a folder which will contain our beasts, aptly named `beasts` and a module file called
+To start off, let's create a folder which will contain our beasts, aptly named `beasts` and a module file called
 `beasts.rs`.
-Inside the beast folder we add a file file called `beast_trait.rs`.
+Inside the beast folder we add a file called `beast_trait.rs`.
 
 ```console
 .
@@ -567,7 +566,7 @@ fn main() {
 The idea is to contain all types for beasts in the beasts folder and re-export them from within the `beasts.rs` file.
 You might end up with your own enemies later and that folder is where you'd drop them in.
 
-OK let's now look at the `beasts/beast_trait.rs` file.
+OK, let's now look at the `beasts/beast_trait.rs` file.
 What do we need for a beast to slot into our game?
 We need to be able to create a new beast and we need to move/advance the beast:
 
@@ -595,7 +594,7 @@ That kind of logic should be contained in the `Game` module as it will effect ch
 end the game.
 
 Now that we have our trait definition done, let's add our first beast.
-In the original came the simplest beasts that appeared in the first view levels were called `Common Beast` so let's roll
+In the original game, the simplest beasts that appeared in the first few levels were called `Common Beast` so let's roll
 with that:
 
 ```console
@@ -1155,8 +1154,7 @@ impl Player {
 We had to add our new `Tile` option to two places.
 First we added it to the blockchain seeker (I just came up with this term) and we're saying in the code:
 
-> When you hit a `Block` when moving, look into the direction of the movement until you find anything other than
-> `Block`.
+> When you hit a `Block` moving, look into the direction of the movement until you find anything other than `Block`.
 > At the end if you find an `Empty`, move there.
 > If you find anything else, like `StaticBlock` or... `CommonBeast` then stop the search because the player is trying to
 > push a bunch of blocks against those things and you can't push a beast much less a `StaticBlock`.
@@ -1168,7 +1166,7 @@ be best to stay explicit in our code for now.
 The second place we added the new `Tile` option was in the first match which just checks what `Tile` you're about to
 move into.
 If that happens to be a beast then, by all means, you should perish and re-spawn if you got enough lives left.
-We shall implement that later so for now we use the `todo` macro.
+We shall implement that later, so for now we use the `todo` macro.
 
 So everything compiles again and all is good in the (computer) world again.
 Now we need to add our beasts onto our board.
@@ -1229,12 +1227,12 @@ impl Level {
 
 We will want to keep all beasts on the `Game` struct in order to move them each second:
 
-```rust {data-file="game.rs", data-fold="['15-80']", hl_lines=[4, 13]}
+```rust {data-file="game.rs", data-fold="['15-79']", hl_lines=[4, 13]}
 use std::io::{Read, stdin};
 
 use crate::{
-	BOARD_HEIGHT, BOARD_WIDTH, Direction, beasts::CommonBeast, board::Board,
-	level::Level, player::Player,
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, beasts::CommonBeast,
+	board::Board, level::Level, player::Player,
 };
 
 #[derive(Debug)]
@@ -1287,7 +1285,6 @@ impl Game {
 
 	fn render(&self, reset: bool) -> String {
 		const BORDER_SIZE: usize = 1;
-		const TILE_SIZE: usize = 2;
 		const FOOTER_SIZE: usize = 1;
 
 		let mut board = if reset {
@@ -1443,12 +1440,12 @@ impl Board {
 
 Now we just need to fix up our `new` method in the `Game` struct:
 
-```rust {data-file="game.rs", data-fold="['1-15', '26-82']", hl_lines=[18, 20, 23]}
+```rust {data-file="game.rs", data-fold="['1-15', '26-81']", hl_lines=[18, 20, 23]}
 use std::io::{Read, stdin};
 
 use crate::{
-	BOARD_HEIGHT, BOARD_WIDTH, Direction, beasts::CommonBeast, board::Board,
-	level::Level, player::Player,
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, beasts::CommonBeast,
+	board::Board, level::Level, player::Player,
 };
 
 #[derive(Debug)]
@@ -1503,7 +1500,6 @@ impl Game {
 
 	fn render(&self, reset: bool) -> String {
 		const BORDER_SIZE: usize = 1;
-		const TILE_SIZE: usize = 2;
 		const FOOTER_SIZE: usize = 1;
 
 		let mut board = if reset {
@@ -1601,12 +1597,12 @@ But how do we call the `advance` method periodically?
 How do we make the beasts move every second while also allowing the player to move freely?
 Right now, this is what our `play` method looks like:
 
-```rust {data-file="game.rs", data-fold="['1-26', '57-82']", hl_lines=[]}
+```rust {data-file="game.rs", data-fold="['1-26', '57-81']", hl_lines=[]}
 use std::io::{Read, stdin};
 
 use crate::{
-	BOARD_HEIGHT, BOARD_WIDTH, Direction, beasts::CommonBeast, board::Board,
-	level::Level, player::Player,
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, beasts::CommonBeast,
+	board::Board, level::Level, player::Player,
 };
 
 #[derive(Debug)]
@@ -1661,7 +1657,6 @@ impl Game {
 
 	fn render(&self, reset: bool) -> String {
 		const BORDER_SIZE: usize = 1;
-		const TILE_SIZE: usize = 2;
 		const FOOTER_SIZE: usize = 1;
 
 		let mut board = if reset {
@@ -1693,7 +1688,7 @@ We will have to create a game loop that runs in the background and calls our `ad
 every second.
 
 But we also have another problem: our call to `read_exact` is blocking which means within our game loop the code will
-wait for it to be `Ok` before continuing which means our beasts would only move when keypresses are sent to `sdtin`.
+wait for it to be `Ok` before continuing which means our beasts would only move when keypresses are sent to `stdin`.
 Also later we might want to listen to `stdin` but react to different keys that are pressed like in a help screen for
 scrolling through pages.
 
@@ -1703,7 +1698,7 @@ For all the above reasons and more (_this is a tutorial after all_), let's throw
 [`thread`](https://doc.rust-lang.org/std/thread/) and listen to it via a
 [`channel`](https://doc.rust-lang.org/std/sync/mpsc/fn.channel.html).
 
-```rust {data-file="game.rs", data-fold="['6-11', '53-69', '76-99']", hl_lines=["3-4", 18, "24-34", 41, "48-50", 72]}
+```rust {data-file="game.rs", data-fold="['6-11', '53-69', '76-98']", hl_lines=["3-4", 18, "24-34", 41, "48-50", 72]}
 use std::{
 	io::{Read, stdin},
 	sync::mpsc,
@@ -1711,8 +1706,8 @@ use std::{
 };
 
 use crate::{
-	BOARD_HEIGHT, BOARD_WIDTH, Direction, beasts::CommonBeast, board::Board,
-	level::Level, player::Player,
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, beasts::CommonBeast,
+	board::Board, level::Level, player::Player,
 };
 
 #[derive(Debug)]
@@ -1780,7 +1775,6 @@ impl Game {
 
 	fn render(&self, reset: bool) -> String {
 		const BORDER_SIZE: usize = 1;
-		const TILE_SIZE: usize = 2;
 		const FOOTER_SIZE: usize = 1;
 
 		let mut board = if reset {
@@ -1805,7 +1799,7 @@ impl Game {
 }
 ```
 
-Within our `new` method we first create a channel for `u8`.
+Within our `new` method, we first create a channel for a `u8` integer.
 This channel constructor will return two things: a sender and a receiver.
 Those will be our way to communicate between threads or more accurately, our way to send data from our `stdin` thread to
 our main thread with our game.
@@ -1843,7 +1837,7 @@ Everything still runs like before but we now have a separate thread dedicated ju
 
 Now we can add the game loop, we talked about earlier:
 
-```rust {data-file="game.rs", data-fold="['13-44', '51-74', '96-123']", hl_lines=[5, 9, 47, "75-95"]}
+```rust {data-file="game.rs", data-fold="['13-44', '51-74', '96-122']", hl_lines=[5, 9, 47, "75-95"]}
 use std::{
 	io::{Read, stdin},
 	sync::mpsc,
@@ -1852,7 +1846,7 @@ use std::{
 };
 
 use crate::{
-	BOARD_HEIGHT, BOARD_WIDTH, Direction, Tile, beasts::CommonBeast,
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, beasts::CommonBeast,
 	board::Board, level::Level, player::Player,
 };
 
@@ -1944,7 +1938,6 @@ impl Game {
 
 	fn render(&self, reset: bool) -> String {
 		const BORDER_SIZE: usize = 1;
-		const TILE_SIZE: usize = 2;
 		const FOOTER_SIZE: usize = 1;
 
 		let mut board = if reset {
@@ -1971,7 +1964,7 @@ impl Game {
 
 We've added a [`tick`](https://en.wikipedia.org/wiki/Timekeeping_in_games#Ticks) to our game.
 Every second we reset our `last_tick` variable to make sure our beasts don't move too fast.
-Within our tick we iterate over each beast in our board and call the `advance` method.
+Within our tick, we iterate over each beast in our board and call the `advance` method.
 Then we check if the result of the method is a `Some` and match against the `Tile` on the board the beast wants to go
 to.
 This way our beast modules are responsible for movements while our our game engine is responsible for checking the
@@ -1983,7 +1976,7 @@ and we will have to implement the logic for the beast to kill us.
 Lastly we ignore all other Tile types the beast might want to move into because those would be illegal moves and render
 the board after all beasts position have been set.
 
-But when we run our game we get this:
+But when we run our game, we get this:
 
 ```console
 cargo run
@@ -2005,7 +1998,7 @@ Apparently the `advance` method of our `CommonBeast` isn't public but since we'r
 of making that method just `pub` (which would give is a "Syntax Error: Unnecessary visibility qualifier" error) we need
 to import the trait into the game module just like the compiler tells us to.
 
-```rust {data-file="game.rs", data-fold="['1-7', '15-126']", hl_lines=[10]}
+```rust {data-file="game.rs", data-fold="['1-7', '15-125']", hl_lines=[10]}
 use std::{
 	io::{Read, stdin},
 	sync::mpsc,
@@ -2014,7 +2007,7 @@ use std::{
 };
 
 use crate::{
-	BOARD_HEIGHT, BOARD_WIDTH, Direction, Tile,
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
 	beasts::{Beast, CommonBeast},
 	board::Board,
 	level::Level,
@@ -2109,7 +2102,6 @@ impl Game {
 
 	fn render(&self, reset: bool) -> String {
 		const BORDER_SIZE: usize = 1;
-		const TILE_SIZE: usize = 2;
 		const FOOTER_SIZE: usize = 1;
 
 		let mut board = if reset {
@@ -2141,9 +2133,9 @@ That's all we need to do and our games runs:
 Look at our beasts!
 They move, only to the left for now but they move!
 
-## Moving In The Right Direction
+## It Follows
 
-OK, now that we have our beasts walk, how do we make sure they walk towards the player?
+OK, now that we have our beasts walk, how do we make sure they move in the right direction?
 Especially for the common beast because that beast is meant to be less smart.
 For the game play the first beasts we have to fight with are easier because they may get stuck behind blocks.
 Later beasts, you're supposed to add yourself outside this tutorial, should be smarter and gradually get more difficult
@@ -2425,7 +2417,7 @@ That was a lot of tables and numbers and words... let's get back into code.
 
 With all that in mind, we will have to look at the players position relative to the beasts and then match on the 8
 possible outcomes.
-Luckily Rust makes it easy for us to match on these 8 positions (It's actually 9 because the center is one too but we
+Luckily Rust makes it easy for us to match on these 8 positions (It's actually 9, because the center is one too but we
 can safely ignore this one):
 
 ```rust {data-file="beasts/common_beast.rs", data-fold="['3-9', '11-14']", hl_lines=[1, "20-33"]}
@@ -2604,7 +2596,7 @@ So before we can push into `possible_moves` Vec, we have to check if the positio
 Since we would have to do that in each and every branch, we might as well prepare these positions outside the match so
 that inside each arm of our match we can just push them in.
 
-```rust {data-file="beasts/common_beast.rs", data-fold="['1-9', '11-14', '94-115']", hl_lines=["20-93"]}
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-9', '11-14', '95-115']", hl_lines=["20-93"]}
 use std::cmp::Ordering;
 
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, beasts::Beast, board::Board};
@@ -2641,15 +2633,15 @@ impl Beast for CommonBeast {
 		} else {
 			None
 		};
-		let right_top = if self.position.row <= BOARD_WIDTH && self.position.row > 0
-		{
-			Some(Coord {
-				column: self.position.column + 1,
-				row: self.position.row - 1,
-			})
-		} else {
-			None
-		};
+		let right_top =
+			if self.position.column < BOARD_WIDTH - 1 && self.position.row > 0 {
+				Some(Coord {
+					column: self.position.column + 1,
+					row: self.position.row - 1,
+				})
+			} else {
+				None
+			};
 
 		// Middle row
 		let left_middle = if self.position.column > 0 {
@@ -2661,7 +2653,7 @@ impl Beast for CommonBeast {
 			None
 		};
 		// The middle middle position is an invalid position
-		let right_middle = if self.position.column <= BOARD_WIDTH {
+		let right_middle = if self.position.column < BOARD_WIDTH - 1 {
 			Some(Coord {
 				column: self.position.column + 1,
 				row: self.position.row,
@@ -2672,7 +2664,7 @@ impl Beast for CommonBeast {
 
 		// Bottom row
 		let left_bottom =
-			if self.position.column > 0 && self.position.row <= BOARD_HEIGHT {
+			if self.position.column > 0 && self.position.row < BOARD_HEIGHT - 1 {
 				Some(Coord {
 					column: self.position.column - 1,
 					row: self.position.row + 1,
@@ -2680,7 +2672,7 @@ impl Beast for CommonBeast {
 			} else {
 				None
 			};
-		let middle_bottom = if self.position.row <= BOARD_HEIGHT {
+		let middle_bottom = if self.position.row < BOARD_HEIGHT - 1 {
 			Some(Coord {
 				column: self.position.column,
 				row: self.position.row + 1,
@@ -2688,8 +2680,8 @@ impl Beast for CommonBeast {
 		} else {
 			None
 		};
-		let right_bottom = if self.position.column <= BOARD_WIDTH
-			&& self.position.row <= BOARD_HEIGHT
+		let right_bottom = if self.position.column < BOARD_WIDTH - 1
+			&& self.position.row < BOARD_HEIGHT - 1
 		{
 			Some(Coord {
 				column: self.position.column + 1,
@@ -2725,7 +2717,7 @@ impl Beast for CommonBeast {
 That's a lot of code.
 Let's break it down:
 - We created 8 new variables
-- For each of the variable we check they are within the board
+- For each of the variables, we check that they are within the board
 - If we increment `column` or `row`, we check if the usize is less then or equal to `BOARD_WIDTH` or `BOARD_HIGHT`
 respectively
 - If we subtract from `column` or `row`, we make sure the usize is larger than `0`
@@ -2804,15 +2796,15 @@ impl Beast for CommonBeast {
 		} else {
 			None
 		};
-		let right_top = if self.position.row <= BOARD_WIDTH && self.position.row > 0
-		{
-			Some(Coord {
-				column: self.position.column + 1,
-				row: self.position.row - 1,
-			})
-		} else {
-			None
-		};
+		let right_top =
+			if self.position.column < BOARD_WIDTH - 1 && self.position.row > 0 {
+				Some(Coord {
+					column: self.position.column + 1,
+					row: self.position.row - 1,
+				})
+			} else {
+				None
+			};
 
 		// Middle row
 		let left_middle = if self.position.column > 0 {
@@ -2824,7 +2816,7 @@ impl Beast for CommonBeast {
 			None
 		};
 		// The middle middle position is an invalid position
-		let right_middle = if self.position.column <= BOARD_WIDTH {
+		let right_middle = if self.position.column < BOARD_WIDTH - 1 {
 			Some(Coord {
 				column: self.position.column + 1,
 				row: self.position.row,
@@ -2835,7 +2827,7 @@ impl Beast for CommonBeast {
 
 		// Bottom row
 		let left_bottom =
-			if self.position.column > 0 && self.position.row <= BOARD_HEIGHT {
+			if self.position.column > 0 && self.position.row < BOARD_HEIGHT - 1 {
 				Some(Coord {
 					column: self.position.column - 1,
 					row: self.position.row + 1,
@@ -2843,7 +2835,7 @@ impl Beast for CommonBeast {
 			} else {
 				None
 			};
-		let middle_bottom = if self.position.row <= BOARD_HEIGHT {
+		let middle_bottom = if self.position.row < BOARD_HEIGHT - 1 {
 			Some(Coord {
 				column: self.position.column,
 				row: self.position.row + 1,
@@ -2851,8 +2843,8 @@ impl Beast for CommonBeast {
 		} else {
 			None
 		};
-		let right_bottom = if self.position.column <= BOARD_WIDTH
-			&& self.position.row <= BOARD_HEIGHT
+		let right_bottom = if self.position.column < BOARD_WIDTH - 1
+			&& self.position.row < BOARD_HEIGHT - 1
 		{
 			Some(Coord {
 				column: self.position.column + 1,
@@ -2906,13 +2898,13 @@ impl Beast for CommonBeast {
 Because in Rust everything is an expression, we use the `match` to return an array (stack allocated) of `Option<Coord>`.
 Then we [`flatten`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.flatten) that array and collect it
 into our `possible_moves` Vec, omitting any out-of-bounds options (`None`).
-We have to use a Vec because the we can't know the size of this collection at compile time.
+We have to use a Vec because we can't know the size of this collection at compile time.
 Also `flatten` on `Option` is a zero-cost abstraction since it's specialized by the compiler to check the discriminant
 without virtual dispatch or any heap allocations.
 
 Now we just have to do that 7 more times:
 
-```rust {data-file="beasts/common_beast.rs", data-fold="['1-94']", hl_lines=["115-226"]}
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-95']", hl_lines=["115-226"]}
 use std::cmp::Ordering;
 
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, beasts::Beast, board::Board};
@@ -2949,15 +2941,15 @@ impl Beast for CommonBeast {
 		} else {
 			None
 		};
-		let right_top = if self.position.row <= BOARD_WIDTH && self.position.row > 0
-		{
-			Some(Coord {
-				column: self.position.column + 1,
-				row: self.position.row - 1,
-			})
-		} else {
-			None
-		};
+		let right_top =
+			if self.position.column < BOARD_WIDTH - 1 && self.position.row > 0 {
+				Some(Coord {
+					column: self.position.column + 1,
+					row: self.position.row - 1,
+				})
+			} else {
+				None
+			};
 
 		// Middle row
 		let left_middle = if self.position.column > 0 {
@@ -2969,7 +2961,7 @@ impl Beast for CommonBeast {
 			None
 		};
 		// The middle middle position is an invalid position
-		let right_middle = if self.position.column <= BOARD_WIDTH {
+		let right_middle = if self.position.column < BOARD_WIDTH - 1 {
 			Some(Coord {
 				column: self.position.column + 1,
 				row: self.position.row,
@@ -2980,7 +2972,7 @@ impl Beast for CommonBeast {
 
 		// Bottom row
 		let left_bottom =
-			if self.position.column > 0 && self.position.row <= BOARD_HEIGHT {
+			if self.position.column > 0 && self.position.row < BOARD_HEIGHT - 1 {
 				Some(Coord {
 					column: self.position.column - 1,
 					row: self.position.row + 1,
@@ -2988,7 +2980,7 @@ impl Beast for CommonBeast {
 			} else {
 				None
 			};
-		let middle_bottom = if self.position.row <= BOARD_HEIGHT {
+		let middle_bottom = if self.position.row < BOARD_HEIGHT - 1 {
 			Some(Coord {
 				column: self.position.column,
 				row: self.position.row + 1,
@@ -2996,8 +2988,8 @@ impl Beast for CommonBeast {
 		} else {
 			None
 		};
-		let right_bottom = if self.position.column <= BOARD_WIDTH
-			&& self.position.row <= BOARD_HEIGHT
+		let right_bottom = if self.position.column < BOARD_WIDTH - 1
+			&& self.position.row < BOARD_HEIGHT - 1
 		{
 			Some(Coord {
 				column: self.position.column + 1,
@@ -3157,7 +3149,7 @@ Now we have a `possible_moves` Vec with prioritized moves respective to the play
 All we need to do now is iterate over those moves and return the first `Coord` that contains an `Empty` Tile on the
 board:
 
-```rust {data-file="beasts/common_beast.rs", data-fold="['1-236']", hl_lines=["238-242"]}
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-237']", hl_lines=["238-242"]}
 use std::cmp::Ordering;
 
 use crate::{
@@ -3196,15 +3188,15 @@ impl Beast for CommonBeast {
 		} else {
 			None
 		};
-		let right_top = if self.position.row <= BOARD_WIDTH && self.position.row > 0
-		{
-			Some(Coord {
-				column: self.position.column + 1,
-				row: self.position.row - 1,
-			})
-		} else {
-			None
-		};
+		let right_top =
+			if self.position.column < BOARD_WIDTH - 1 && self.position.row > 0 {
+				Some(Coord {
+					column: self.position.column + 1,
+					row: self.position.row - 1,
+				})
+			} else {
+				None
+			};
 
 		// Middle row
 		let left_middle = if self.position.column > 0 {
@@ -3216,7 +3208,7 @@ impl Beast for CommonBeast {
 			None
 		};
 		// The middle middle position is an invalid position
-		let right_middle = if self.position.column <= BOARD_WIDTH {
+		let right_middle = if self.position.column < BOARD_WIDTH - 1 {
 			Some(Coord {
 				column: self.position.column + 1,
 				row: self.position.row,
@@ -3227,7 +3219,7 @@ impl Beast for CommonBeast {
 
 		// Bottom row
 		let left_bottom =
-			if self.position.column > 0 && self.position.row <= BOARD_HEIGHT {
+			if self.position.column > 0 && self.position.row < BOARD_HEIGHT - 1 {
 				Some(Coord {
 					column: self.position.column - 1,
 					row: self.position.row + 1,
@@ -3235,7 +3227,7 @@ impl Beast for CommonBeast {
 			} else {
 				None
 			};
-		let middle_bottom = if self.position.row <= BOARD_HEIGHT {
+		let middle_bottom = if self.position.row < BOARD_HEIGHT - 1 {
 			Some(Coord {
 				column: self.position.column,
 				row: self.position.row + 1,
@@ -3243,8 +3235,8 @@ impl Beast for CommonBeast {
 		} else {
 			None
 		};
-		let right_bottom = if self.position.column <= BOARD_WIDTH
-			&& self.position.row <= BOARD_HEIGHT
+		let right_bottom = if self.position.column < BOARD_WIDTH - 1
+			&& self.position.row < BOARD_HEIGHT - 1
 		{
 			Some(Coord {
 				column: self.position.column + 1,
@@ -3406,7 +3398,7 @@ impl Beast for CommonBeast {
 }
 ```
 
-Ok beasts are moving now.
+Ok, beasts are moving now.
 One last thing though: let's use `clippy`!
 [Clippy](https://doc.rust-lang.org/stable/clippy/index.html) is a tool that ships with cargo and is super helpful,
 especially when starting out with Rust.
@@ -3453,7 +3445,7 @@ We will get there soon.
 But the other warning is interesting!
 Clippy suggests that instead of doing our `for` loop and then our return of `None`, we could express it more concisely:
 
-```rust {data-file="beasts/common_beast.rs", data-fold="['1-236']", hl_lines=["238-240"]}
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-237']", hl_lines=["238-240"]}
 use std::cmp::Ordering;
 
 use crate::{
@@ -3492,15 +3484,15 @@ impl Beast for CommonBeast {
 		} else {
 			None
 		};
-		let right_top = if self.position.row <= BOARD_WIDTH && self.position.row > 0
-		{
-			Some(Coord {
-				column: self.position.column + 1,
-				row: self.position.row - 1,
-			})
-		} else {
-			None
-		};
+		let right_top =
+			if self.position.column < BOARD_WIDTH - 1 && self.position.row > 0 {
+				Some(Coord {
+					column: self.position.column + 1,
+					row: self.position.row - 1,
+				})
+			} else {
+				None
+			};
 
 		// Middle row
 		let left_middle = if self.position.column > 0 {
@@ -3512,7 +3504,7 @@ impl Beast for CommonBeast {
 			None
 		};
 		// The middle middle position is an invalid position
-		let right_middle = if self.position.column <= BOARD_WIDTH {
+		let right_middle = if self.position.column < BOARD_WIDTH - 1 {
 			Some(Coord {
 				column: self.position.column + 1,
 				row: self.position.row,
@@ -3523,7 +3515,7 @@ impl Beast for CommonBeast {
 
 		// Bottom row
 		let left_bottom =
-			if self.position.column > 0 && self.position.row <= BOARD_HEIGHT {
+			if self.position.column > 0 && self.position.row < BOARD_HEIGHT - 1 {
 				Some(Coord {
 					column: self.position.column - 1,
 					row: self.position.row + 1,
@@ -3531,7 +3523,7 @@ impl Beast for CommonBeast {
 			} else {
 				None
 			};
-		let middle_bottom = if self.position.row <= BOARD_HEIGHT {
+		let middle_bottom = if self.position.row < BOARD_HEIGHT - 1 {
 			Some(Coord {
 				column: self.position.column,
 				row: self.position.row + 1,
@@ -3539,8 +3531,8 @@ impl Beast for CommonBeast {
 		} else {
 			None
 		};
-		let right_bottom = if self.position.column <= BOARD_WIDTH
-			&& self.position.row <= BOARD_HEIGHT
+		let right_bottom = if self.position.column < BOARD_WIDTH - 1
+			&& self.position.row < BOARD_HEIGHT - 1
 		{
 			Some(Coord {
 				column: self.position.column + 1,
@@ -3699,7 +3691,7 @@ impl Beast for CommonBeast {
 ```
 
 That IS much better and more idiomatic to Rust.
-Great suggestion as almost always Clippy!
+Great suggestion, as _almost_ always, Clippy!
 
 Our beast now move toward us with the simplest pathfinding algorithm I could come up with.
 And to my surprise, the result is pretty decent as beasts rarely get stuck:
@@ -3708,7 +3700,7 @@ And to my surprise, the result is pretty decent as beasts rarely get stuck:
 
 Well done us!
 In [the last part](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-4/) of this tutorial series
-we will give our player lives, the ability to re-spawn and a help screen.
+we will give our player lives, the ability to re-spawn and implement a help screen.
 
 <br><br><br>
 ![Illustration of a terminal window styled like the Rust borrow checker, displaying the message: "TRANSFER OWNERSHIP, SHARE THIS POST" on a pink background](assets/share.png)

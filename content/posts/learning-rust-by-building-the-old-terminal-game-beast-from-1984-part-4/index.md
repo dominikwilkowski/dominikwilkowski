@@ -19,7 +19,7 @@ header: assets/header.jpg # TODO
 
 <div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg" title="I'm perfectly able to add my own em dashes, thank you very much!" width="120px" height="120px"></div>
 
-## Where We Left Of
+## Where We Left Off
 
 In [part 1](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/), of this tutorial, we set up our
 board and implemented movements for our player.

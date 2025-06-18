@@ -2049,13 +2049,13 @@ impl RawMode {
 }
 ```
 
-We implemented a new method on our struct called `enter` which creates a new instance of `Command`, adds two arguments
-to it and calls [`spawn`](https://doc.rust-lang.org/std/process/struct.Command.html#method.spawn) to create a new child
+We implemented a method on our struct called `enter` which creates a new instance of `Command`, adds two arguments to it
+and calls [`spawn`](https://doc.rust-lang.org/std/process/struct.Command.html#method.spawn) to create a new child
 process to execute this command in.
 Then we use [`and_then`](https://doc.rust-lang.org/std/result/enum.Result.html#method.and_then) to unwrap the `Result`
 which is returned from `spawn` and call `wait` on the child handle inside of it to make sure we return from our function
 only after the command was executed.
-We use `let _ =` to ignore the actual instance created by the struct because we don't need it.
+We use `let _ =` to ignore the `Result` returned by the command execution because we don't need it.
 `_` is a catch all convention in Rust that allows us to tell the compiler to ignore whatever is returned here.
 
 Calling `RawMode::enter()` will now execute our command telling our terminal to enter `raw mode`.

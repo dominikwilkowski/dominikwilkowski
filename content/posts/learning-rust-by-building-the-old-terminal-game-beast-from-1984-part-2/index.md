@@ -136,7 +136,7 @@ fn main() {
 }
 ```
 
-Our `board.rs` file contains the `Board` struct with a few hardcoded obsticals and a method to render it all:
+Our `board.rs` file contains the `Board` struct with a few hardcoded obstacles and a method to render it all:
 
 ```rust {data-file="board.rs"}
 use crate::{
@@ -484,7 +484,7 @@ higher the chances of collisions like that.
 Instead of that, let's just collect every possible coordinate on the board into a collection type like a `Vec` and then
 shuffle the vector and [`pop`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop) the last one out, one by one
 to place each block.
-That way we guarantee that each pick only exists once and is empty on the board.
+That way we guarantee that each pick only exists once and is `Empty` on the board.
 
 ```rust {data-file="board.rs", data-fold="['1-11', '21-53']", hl_lines=["15-17"]}
 use crate::{
@@ -2079,11 +2079,11 @@ How did we come up with the `width`, you may ask?
 We could leave this illustration as a comment in our code... or we could just *not* use magic numbers and stick them
 into named variables:
 
-```rust {data-file="game.rs", data-fold="['1-54']", hl_lines=["56-58", 66]}
+```rust {data-file="game.rs", data-fold="['7-54']", hl_lines=[4, "56-57", 65]}
 use std::io::{Read, stdin};
 
 use crate::{
-	BOARD_HEIGHT, BOARD_WIDTH, Direction, board::Board, level::Level,
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, board::Board, level::Level,
 	player::Player,
 };
 
@@ -2136,7 +2136,6 @@ impl Game {
 
 	fn render(&self) -> String {
 		const BORDER_SIZE: usize = 1;
-		const TILE_SIZE: usize = 2;
 		const FOOTER_SIZE: usize = 1;
 
 		let mut board = String::new();
@@ -2210,11 +2209,11 @@ We're printing our sequence right now in our `play` function and now we would ne
 output but we just named all of those numbers nicely within our `render` function.
 So let's move this reset into our `render` function and clean it up:
 
-```rust {data-file="game.rs", data-fold="['1-23', '30-49']", hl_lines=[28, 51, "60-67"]}
+```rust {data-file="game.rs", data-fold="['1-23', '30-49']", hl_lines=[28, 51, "59-66"]}
 use std::io::{Read, stdin};
 
 use crate::{
-	BOARD_HEIGHT, BOARD_WIDTH, Direction, board::Board, level::Level,
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, board::Board, level::Level,
 	player::Player,
 };
 
@@ -2267,7 +2266,6 @@ impl Game {
 
 	fn render(&self, reset: bool) -> String {
 		const BORDER_SIZE: usize = 1;
-		const TILE_SIZE: usize = 2;
 		const FOOTER_SIZE: usize = 1;
 
 		let mut board = if reset {
@@ -2605,8 +2603,8 @@ Now we can look into pushing a bunch of blocks, a "*chain*" of blocks, if you wi
 
 _(My favorite pun in this entire tutorial series)_
 
-What do we actually need to execute a blockchain move?
-Your first instinct might be to take each block in the chain and move them, one by one.
+What do we actually need to execute a "blockchain move"?
+Your first instinct might be to take each block in the chain and move it, one by one.
 
 Consider this scenario:
 
@@ -2996,11 +2994,11 @@ impl Player {
 
 Now just fix our `advance` calls in our game module:
 
-```rust {data-file="game.rs", data-fold="['1-30', '48-79']", hl_lines=[33, 36, 39, 42]}
+```rust {data-file="game.rs", data-fold="['1-30', '48-78']", hl_lines=[33, 36, 39, 42]}
 use std::io::{Read, stdin};
 
 use crate::{
-	BOARD_HEIGHT, BOARD_WIDTH, Direction, board::Board, level::Level,
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, board::Board, level::Level,
 	player::Player,
 };
 
@@ -3053,7 +3051,6 @@ impl Game {
 
 	fn render(&self, reset: bool) -> String {
 		const BORDER_SIZE: usize = 1;
-		const TILE_SIZE: usize = 2;
 		const FOOTER_SIZE: usize = 1;
 
 		let mut board = if reset {
