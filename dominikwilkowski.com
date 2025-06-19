@@ -85,6 +85,7 @@ server {
 	ssl_stapling_verify  on;
 
 	# GZip
+	#
 	gzip on;
 	gzip_vary on;
 	gzip_min_length 1024;
@@ -118,11 +119,41 @@ server {
 	gzip_disable "msie6";
 	gzip_proxied any;
 
+	# Error pages
+	#
+	error_page 403 = @error403;
+	error_page 404 = @error404;
+	error_page 500 = @error500;
+	error_page 502 = @error502;
+	error_page 503 = @error503;
+	error_page 504 = @error504;
+
+	# Return absolute URLs with fragments
+	location @error403 {
+		return 302 https://dominik-wilkowski.com/error.html#403;
+	}
+	location @error404 {
+		return 302 https://dominik-wilkowski.com/error.html#404;
+	}
+	location @error500 {
+		return 302 https://dominik-wilkowski.com/error.html#500;
+	}
+	location @error502 {
+		return 302 https://dominik-wilkowski.com/error.html#502;
+	}
+	location @error503 {
+		return 302 https://dominik-wilkowski.com/error.html#503;
+	}
+	location @error504 {
+		return 302 https://dominik-wilkowski.com/error.html#504;
+	}
+
 	# root server
 	#
 	location / {
 		root   /var/www/html/dominikwilkowski;
 		index  index.html index.htm;
+		try_files $uri $uri/ =404;
 	}
 
 

@@ -1,0 +1,66 @@
+{{- define "main" -}}
+
+<div id="403" class="error">
+	<div>
+		<h1 class="error-code">403</h1>
+		<h2 class="error-title">Access Forbidden</h2>
+		<p class="error-message">Sorry, you don't have permission to access this resource.</p>
+		<a href="/" class="home-link">Go Home</a>
+	</div>
+</div>
+
+<div id="404" class="error">
+	<div>
+		<h1 class="error-code">404</h1>
+		<h2 class="error-title">Page Not Found</h2>
+		<p class="error-message">The page you're looking for doesn't exist or has been moved.</p>
+		<a href="/" class="home-link">Go Home</a>
+	</div>
+</div>
+
+<div id="500" class="error">
+	<div>
+		<h1 class="error-code">500</h1>
+		<h2 class="error-title">Internal Server Error</h2>
+		<p class="error-message">Something went wrong on our end. Maybe trying again works?</p>
+		<a href="/" class="home-link">Go Home</a>
+	</div>
+</div>
+
+<div id="502" class="error">
+	<div>
+		<h1 class="error-code">502</h1>
+		<h2 class="error-title">Bad Gateway</h2>
+		<p class="error-message">We're having trouble connecting to our servers. Please try again in a moment.</p>
+		<a href="/" class="home-link">Go Home</a>
+	</div>
+</div>
+
+<div id="503" class="error">
+	<div>
+		<h1 class="error-code">503</h1>
+		<h2 class="error-title">Service Unavailable</h2>
+		<p class="error-message">Our service is temporarily unavailable. We'll be back soon!</p>
+		<a href="/" class="home-link">Go Home</a>
+	</div>
+</div>
+
+<div id="504" class="error">
+	<div>
+		<h1 class="error-code">504</h1>
+		<h2 class="error-title">Gateway Timeout</h2>
+		<p class="error-message">The server took too long to respond. Maybe trying again works?</p>
+		<a href="/" class="home-link">Go Home</a>
+	</div>
+</div>
+
+<div class="error error-default">
+	<div>
+		<h1 class="error-code error-code-words">Error</h1>
+		<h2 class="error-title">Something went wrong</h2>
+		<p class="error-message">An unexpected error occurred. Maybe trying again works?</p>
+		<a href="/" class="home-link">Go Home</a>
+	</div>
+</div>
+
+{{- end -}}
