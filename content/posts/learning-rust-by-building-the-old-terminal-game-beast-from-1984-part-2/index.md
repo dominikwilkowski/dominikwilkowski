@@ -21,11 +21,13 @@ header: assets/header.jpg
 
 ## Where We Left Off
 
-In [part 1 of this tutorial](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/), we ended up
-with a couple of modules that got us to this:
+In [part 1 of this tutorial](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/), we scafolded
+our project, added a board and rendering and a way to listen to user input that got us to this:
 
 ![A screen recording of the board with the player walking around randomly including over Blocks and StaticBlocks and
 erasing them as they walk over the tiles.](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/assets/moving.svg)
+
+We ended the last part with this code:
 
 ```console
 .
@@ -37,6 +39,9 @@ erasing them as they walk over the tiles.](../learning-rust-by-building-the-old-
     ├── player.rs
     └── raw_mode.rs
 ```
+
+<details class="where_we_left_off">
+<summary>Show all files</summary>
 
 ```toml {data-file="Cargo.toml"}
 [package]
@@ -273,9 +278,11 @@ impl Drop for RawMode {
 }
 ```
 
+</details>
+
 ## Let's Do Some Cleaning
 
-While we're looking at this, I feel like we should move our `Game` struct into its own module and only keep shared
+While we're looking at our code, I feel like we should move our `Game` struct into its own module and only keep shared
 types in our `main.rs` file.
 It's probably more of a personal preference but I like to keep the `main.rs` file as clean as possible since it's the
 entry point to our binary and is responsible for orchestrating everything together rather than implementing logic.

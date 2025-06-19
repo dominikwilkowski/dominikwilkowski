@@ -29,7 +29,7 @@ blockchain puns:
 
 ![A screen recording of the board with the player walking around pushing blocks as they go.](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/assets/pushing.svg)
 
-We ended up with this code:
+We ended the last part with this code:
 
 ```console
 .
@@ -44,6 +44,9 @@ We ended up with this code:
     └── raw_mode.rs
 ```
 
+<details class="where_we_left_off">
+<summary>Show all files</summary>
+
 ```toml {data-file="Cargo.toml"}
 [package]
 name = "beast"
@@ -53,7 +56,6 @@ edition = "2024"
 [dependencies]
 rand = "0.9.1"
 ```
-
 
 Our main module contains some global types and the `main` function to pull everything together:
 
@@ -464,6 +466,8 @@ impl Drop for RawMode {
 	}
 }
 ```
+
+</details>
 
 OK, so how should we add our enemies?
 
