@@ -43,7 +43,7 @@ server {
 	ssl_session_timeout        1d;
 	ssl_session_cache          shared:SSL:50m;
 	ssl_session_tickets        off;
-	ssl_protocols              TLSv1 TLSv1.1 TLSv1.2;
+	ssl_protocols              TLSv1.2 TLSv1.3;
 	ssl_prefer_server_ciphers  on;
 	ssl_dhparam                /etc/nginx/ssl/dhparam.pem;
 	ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256';  #generate here: https://mozilla.github.io/server-side-tls/ssl-config-generator/
@@ -121,31 +121,15 @@ server {
 
 	# Error pages
 	#
-	error_page 403 = @error403;
-	error_page 404 = @error404;
-	error_page 500 = @error500;
-	error_page 502 = @error502;
-	error_page 503 = @error503;
-	error_page 504 = @error504;
+	error_page 403 /403.html;
+	error_page 404 /404.html;
+	error_page 500 /500.html;
+	error_page 502 /502.html;
+	error_page 503 /503.html;
+	error_page 504 /504.html;
 
-	# Return absolute URLs with fragments
-	location @error403 {
-		return 302 https://dominik-wilkowski.com/error.html#403;
-	}
-	location @error404 {
-		return 302 https://dominik-wilkowski.com/error.html#404;
-	}
-	location @error500 {
-		return 302 https://dominik-wilkowski.com/error.html#500;
-	}
-	location @error502 {
-		return 302 https://dominik-wilkowski.com/error.html#502;
-	}
-	location @error503 {
-		return 302 https://dominik-wilkowski.com/error.html#503;
-	}
-	location @error504 {
-		return 302 https://dominik-wilkowski.com/error.html#504;
+	location ~ ^/(403|404|500|502|503|504)\.html$ {
+		internal;
 	}
 
 	# root server

@@ -1132,19 +1132,10 @@ figcaption {
 /* error page */
 
 .error {
-	display: none;
+	display: flex;
 	align-items: center;
 	justify-content: center;
 	padding-bottom: 5rem;
-
-	&:target,
-	&.error-default {
-		display: flex;
-	}
-
-	&:target ~ .error-default {
-		display: none;
-	}
 
 	div {
 		text-align: center;
