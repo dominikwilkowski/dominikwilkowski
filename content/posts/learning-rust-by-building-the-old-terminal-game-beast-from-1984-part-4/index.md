@@ -821,11 +821,13 @@ impl Drop for RawMode {
 </details>
 
 ## TODO
-- Kill player
-- Re-spawning
+- kill player
+- re-spawning
 - kill beasts
-- Detecting The End Of A Level
-- Adding a help
+- single responsibility concept on player
+- scroing
+- detecting The End Of A Level
+- adding a help
 
 <br><br><br>
 ![A cheerful cartoon crab, representing the Rust mascot Ferris, holding a sign that reads ‘Don’t be shellfish! Share
