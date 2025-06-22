@@ -820,14 +820,699 @@ impl Drop for RawMode {
 
 </details>
 
+When we play our game as we have built it so far, we notice that the beasts will follow us just as they're suppoed to
+but when they get close they never actually move in for the kill.
+Even though we check in our game engine method if we walk into a tile with `Player`:
+
+```rust {data-file="game.rs", data-fold="['1-89', '93-125']", hl_lines=[]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				match byte as char {
+					'w' => {
+						self.player.advance(&mut self.board, &Direction::Up);
+					},
+					'd' => {
+						self.player.advance(&mut self.board, &Direction::Right);
+					},
+					's' => {
+						self.player.advance(&mut self.board, &Direction::Down);
+					},
+					'a' => {
+						self.player.advance(&mut self.board, &Direction::Left);
+					},
+					'q' => {
+						println!("Good bye");
+						break;
+					},
+					_ => {},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								todo!("The beast just killed our player");
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			width = BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_SIZE,
+		));
+
+		board
+	}
+}
+```
+
+So the game should panic with a message that tells us the this codepath hasn't been implemented yet.
+
+It seems our game engine `play` method never gets a `Coord` for the player so let's look at our `advance` method of our
+common beast:
+
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-237']", hl_lines=[]}
+use std::cmp::Ordering;
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Coord, Tile, beasts::Beast, board::Board,
+};
+
+#[derive(Debug)]
+pub struct CommonBeast {
+	pub position: Coord,
+}
+
+impl Beast for CommonBeast {
+	fn new(position: Coord) -> Self {
+		Self { position }
+	}
+
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord> {
+		// Top row
+		let left_top = if self.position.column > 0 && self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let middle_top = if self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let right_top =
+			if self.position.column < BOARD_WIDTH - 1 && self.position.row > 0 {
+				Some(Coord {
+					column: self.position.column + 1,
+					row: self.position.row - 1,
+				})
+			} else {
+				None
+			};
+
+		// Middle row
+		let left_middle = if self.position.column > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+		// The middle middle position is an invalid position
+		let right_middle = if self.position.column < BOARD_WIDTH - 1 {
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+
+		// Bottom row
+		let left_bottom =
+			if self.position.column > 0 && self.position.row < BOARD_HEIGHT - 1 {
+				Some(Coord {
+					column: self.position.column - 1,
+					row: self.position.row + 1,
+				})
+			} else {
+				None
+			};
+		let middle_bottom = if self.position.row < BOARD_HEIGHT - 1 {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+		let right_bottom = if self.position.column < BOARD_WIDTH - 1
+			&& self.position.row < BOARD_HEIGHT - 1
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+
+		let possible_moves = match (
+			player_position.column.cmp(&self.position.column),
+			player_position.row.cmp(&self.position.row),
+		) {
+			(Ordering::Greater, Ordering::Greater) => {
+				/* player: right-bottom */
+				// 8 7  5
+				// 6 ├┤ 3
+				// 4 2  1
+				[
+					right_bottom,
+					middle_bottom,
+					right_middle,
+					left_bottom,
+					right_top,
+					left_middle,
+					middle_top,
+					left_top,
+				]
+			},
+			(Ordering::Greater, Ordering::Less) => {
+				/* player: right-top */
+				// 4 2  1
+				// 6 ├┤ 3
+				// 8 7  5
+				[
+					right_top,
+					middle_top,
+					right_middle,
+					left_top,
+					right_bottom,
+					left_middle,
+					middle_bottom,
+					left_bottom,
+				]
+			},
+			(Ordering::Greater, Ordering::Equal) => {
+				/* player: right_middle */
+				// 6 4  2
+				// 8 ├┤ 1
+				// 7 5  3
+				[
+					right_middle,
+					right_top,
+					right_bottom,
+					middle_top,
+					middle_bottom,
+					left_top,
+					left_bottom,
+					left_middle,
+				]
+			},
+			(Ordering::Less, Ordering::Greater) => {
+				/* player: left_bottom */
+				// 4 6  8
+				// 2 ├┤ 7
+				// 1  3 5
+				[
+					left_bottom,
+					left_middle,
+					middle_bottom,
+					left_top,
+					right_bottom,
+					right_middle,
+					middle_top,
+					right_top,
+				]
+			},
+			(Ordering::Less, Ordering::Less) => {
+				/* player: left_top */
+				// 1  3 5
+				// 2 ├┤ 7
+				// 4 6  8
+				[
+					left_top,
+					left_middle,
+					middle_top,
+					left_bottom,
+					right_top,
+					middle_bottom,
+					right_middle,
+					right_bottom,
+				]
+			},
+			(Ordering::Less, Ordering::Equal) => {
+				/* player: left_middle */
+				// 2 4  6
+				// 1 ├┤ 8
+				// 3 5  7
+				[
+					left_middle,
+					left_top,
+					left_bottom,
+					middle_top,
+					middle_bottom,
+					right_top,
+					right_bottom,
+					right_middle,
+				]
+			},
+			(Ordering::Equal, Ordering::Greater) => {
+				/* player: middle_bottom */
+				// 6 8  7
+				// 4 ├┤ 5
+				// 2 1  3
+				[
+					middle_bottom,
+					left_bottom,
+					right_bottom,
+					left_middle,
+					right_middle,
+					left_top,
+					right_top,
+					middle_top,
+				]
+			},
+			(Ordering::Equal, Ordering::Less) => {
+				/* player: middle_top */
+				// 2 1  3
+				// 4 ├┤ 5
+				// 6 8  7
+				[
+					middle_top,
+					left_top,
+					right_top,
+					left_middle,
+					right_middle,
+					left_bottom,
+					right_bottom,
+					middle_bottom,
+				]
+			},
+			(Ordering::Equal, Ordering::Equal) => {
+				/* player: same position */
+				unreachable!();
+			},
+		}
+		.into_iter()
+		.flatten()
+		.collect::<Vec<Coord>>();
+
+		possible_moves
+			.into_iter()
+			.find(|&next_move| board[&next_move] == Tile::Empty)
+	}
+}
+```
+
+And indeed, we're removing all coordinates from our `possible_move` Vec that don't contain an `Empty` tile on our board.
+Let's fix that and check for two tile types we should allow the beast to move into:
+
+```rust {data-file="beasts/common_beast.rs", data-fold="['1-237']", hl_lines=["238-240"]}
+use std::cmp::Ordering;
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Coord, Tile, beasts::Beast, board::Board,
+};
+
+#[derive(Debug)]
+pub struct CommonBeast {
+	pub position: Coord,
+}
+
+impl Beast for CommonBeast {
+	fn new(position: Coord) -> Self {
+		Self { position }
+	}
+
+	fn advance(
+		&mut self,
+		board: &Board,
+		player_position: &Coord,
+	) -> Option<Coord> {
+		// Top row
+		let left_top = if self.position.column > 0 && self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let middle_top = if self.position.row > 0 {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row - 1,
+			})
+		} else {
+			None
+		};
+		let right_top =
+			if self.position.column < BOARD_WIDTH - 1 && self.position.row > 0 {
+				Some(Coord {
+					column: self.position.column + 1,
+					row: self.position.row - 1,
+				})
+			} else {
+				None
+			};
+
+		// Middle row
+		let left_middle = if self.position.column > 0 {
+			Some(Coord {
+				column: self.position.column - 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+		// The middle middle position is an invalid position
+		let right_middle = if self.position.column < BOARD_WIDTH - 1 {
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row,
+			})
+		} else {
+			None
+		};
+
+		// Bottom row
+		let left_bottom =
+			if self.position.column > 0 && self.position.row < BOARD_HEIGHT - 1 {
+				Some(Coord {
+					column: self.position.column - 1,
+					row: self.position.row + 1,
+				})
+			} else {
+				None
+			};
+		let middle_bottom = if self.position.row < BOARD_HEIGHT - 1 {
+			Some(Coord {
+				column: self.position.column,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+		let right_bottom = if self.position.column < BOARD_WIDTH - 1
+			&& self.position.row < BOARD_HEIGHT - 1
+		{
+			Some(Coord {
+				column: self.position.column + 1,
+				row: self.position.row + 1,
+			})
+		} else {
+			None
+		};
+
+		let possible_moves = match (
+			player_position.column.cmp(&self.position.column),
+			player_position.row.cmp(&self.position.row),
+		) {
+			(Ordering::Greater, Ordering::Greater) => {
+				/* player: right-bottom */
+				// 8 7  5
+				// 6 ├┤ 3
+				// 4 2  1
+				[
+					right_bottom,
+					middle_bottom,
+					right_middle,
+					left_bottom,
+					right_top,
+					left_middle,
+					middle_top,
+					left_top,
+				]
+			},
+			(Ordering::Greater, Ordering::Less) => {
+				/* player: right-top */
+				// 4 2  1
+				// 6 ├┤ 3
+				// 8 7  5
+				[
+					right_top,
+					middle_top,
+					right_middle,
+					left_top,
+					right_bottom,
+					left_middle,
+					middle_bottom,
+					left_bottom,
+				]
+			},
+			(Ordering::Greater, Ordering::Equal) => {
+				/* player: right_middle */
+				// 6 4  2
+				// 8 ├┤ 1
+				// 7 5  3
+				[
+					right_middle,
+					right_top,
+					right_bottom,
+					middle_top,
+					middle_bottom,
+					left_top,
+					left_bottom,
+					left_middle,
+				]
+			},
+			(Ordering::Less, Ordering::Greater) => {
+				/* player: left_bottom */
+				// 4 6  8
+				// 2 ├┤ 7
+				// 1  3 5
+				[
+					left_bottom,
+					left_middle,
+					middle_bottom,
+					left_top,
+					right_bottom,
+					right_middle,
+					middle_top,
+					right_top,
+				]
+			},
+			(Ordering::Less, Ordering::Less) => {
+				/* player: left_top */
+				// 1  3 5
+				// 2 ├┤ 7
+				// 4 6  8
+				[
+					left_top,
+					left_middle,
+					middle_top,
+					left_bottom,
+					right_top,
+					middle_bottom,
+					right_middle,
+					right_bottom,
+				]
+			},
+			(Ordering::Less, Ordering::Equal) => {
+				/* player: left_middle */
+				// 2 4  6
+				// 1 ├┤ 8
+				// 3 5  7
+				[
+					left_middle,
+					left_top,
+					left_bottom,
+					middle_top,
+					middle_bottom,
+					right_top,
+					right_bottom,
+					right_middle,
+				]
+			},
+			(Ordering::Equal, Ordering::Greater) => {
+				/* player: middle_bottom */
+				// 6 8  7
+				// 4 ├┤ 5
+				// 2 1  3
+				[
+					middle_bottom,
+					left_bottom,
+					right_bottom,
+					left_middle,
+					right_middle,
+					left_top,
+					right_top,
+					middle_top,
+				]
+			},
+			(Ordering::Equal, Ordering::Less) => {
+				/* player: middle_top */
+				// 2 1  3
+				// 4 ├┤ 5
+				// 6 8  7
+				[
+					middle_top,
+					left_top,
+					right_top,
+					left_middle,
+					right_middle,
+					left_bottom,
+					right_bottom,
+					middle_bottom,
+				]
+			},
+			(Ordering::Equal, Ordering::Equal) => {
+				/* player: same position */
+				unreachable!();
+			},
+		}
+		.into_iter()
+		.flatten()
+		.collect::<Vec<Coord>>();
+
+		possible_moves.into_iter().find(|&next_move| {
+			matches!(board[&next_move], Tile::Empty | Tile::Player)
+		})
+	}
+}
+```
+
+We use the [`matches`](https://doc.rust-lang.org/std/macro.matches.html) macro to allow both `Empty` and `Player`.
+Now when we run the game and aloow the beasts to catch the player we get this:
+
+```console
+cargo run
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">: variants `Two` and `Three` are never constructed</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/level.rs:10:2
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">8</span>  <span style="font-weight:bold;color:#3333FF;">|</span> pub enum Level {
+   <span style="font-weight:bold;color:#3333FF;">|</span>          <span style="font-weight:bold;color:#3333FF;">-----</span> <span style="font-weight:bold;color:#3333FF;">variants in this enum</span>
+<span style="font-weight:bold;color:#3333FF;">9</span>  <span style="font-weight:bold;color:#3333FF;">|</span>     One,
+<span style="font-weight:bold;color:#3333FF;">10</span> <span style="font-weight:bold;color:#3333FF;">|</span>     Two,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:yellow;">^^^</span>
+<span style="font-weight:bold;color:#3333FF;">11</span> <span style="font-weight:bold;color:#3333FF;">|</span>     Three,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:yellow;">^^^^^</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `Level` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `#[warn(dead_code)]` on by default
+
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">:</span> `beast` (bin &quot;beast&quot;) generated 1 warning
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span>                  <span style="color:yellow;">▓▓</span>    <span style="color:aqua;">◀▶</span><span style="color:red;">├┤</span>                                <span style="color:lime;">░░</span>                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>                      <span style="color:lime;">░░</span>              <span style="color:lime;">░░</span>            <span style="color:lime;">░░</span>                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                        <span style="color:lime;">░░</span>          <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                          <span style="color:yellow;">▓▓</span>                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>            <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                                <span style="color:lime;">░░</span>          <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                    <span style="color:yellow;">▓▓</span>                  <span style="color:lime;">░░</span>    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                    <span style="color:lime;">░░</span>                                          <span style="color:red;">├┤</span>            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                <span style="color:lime;">░░</span>                  <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                    <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>                                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                  <span style="color:yellow;">▓▓</span>                                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>                  <span style="color:lime;">░░</span>                                    <span style="color:lime;">░░</span>                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>    <span style="color:lime;">░░</span>      <span style="color:yellow;">▓▓</span>                                                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:lime;">░░</span>                              <span style="color:lime;">░░</span>                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                            <span style="color:red;">├┤</span>                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>    <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                                                <span style="color:lime;">░░</span>              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+                                                                        Level: 1
+
+thread 'main' panicked at src/game.rs:91:33:
+not yet implemented: The beast just killed our player
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+
+We will get to that warning soon but for now the code path for our beast killing the player actually gets called.
+
+## Feeding The Beast
+
 ## TODO
-- kill player
-- re-spawning
-- kill beasts
-- single responsibility concept on player
-- scroing
-- detecting The End Of A Level
-- adding a help
+- [x] kill player
+- [ ] re-spawning
+- [ ] kill beasts
+- [ ] single responsibility concept on player
+- [ ] scroing
+- [ ] detecting The End Of A Level
+- [ ] adding a help
 
 <br><br><br>
 ![A cheerful cartoon crab, representing the Rust mascot Ferris, holding a sign that reads ‘Don’t be shellfish! Share

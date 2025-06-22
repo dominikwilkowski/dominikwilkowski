@@ -149,7 +149,7 @@ li {
 	& > input[type="checkbox"] {
 		width: var(--li-checkbox-size);
 		height: var(--li-checkbox-size);
-		margin: 0 0.2em 0.15em -1.25em;
+		margin: 0 0.2em 0.15em -0.25em;
 		vertical-align: middle;
 	}
 }
