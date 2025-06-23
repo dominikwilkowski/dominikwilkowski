@@ -452,6 +452,7 @@ p code {
 	border-radius: 3px;
 	vertical-align: baseline;
 	white-space: nowrap;
+	margin-right: 0.2em;
 }
 
 .code-folding-summary-code {

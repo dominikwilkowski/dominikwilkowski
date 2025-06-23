@@ -1473,7 +1473,7 @@ cargo run
 <span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
 <span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
 <span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
-<span style="color:yellow;">▌</span>                  <span style="color:yellow;">▓▓</span>    <span style="color:aqua;">◀▶</span><span style="color:red;">├┤</span>                                <span style="color:lime;">░░</span>                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:yellow;">▓▓</span>      <span style="color:red;">├┤</span>                                <span style="color:lime;">░░</span>                <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▌</span><span style="color:lime;">░░</span>                      <span style="color:lime;">░░</span>              <span style="color:lime;">░░</span>            <span style="color:lime;">░░</span>                      <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▌</span>                        <span style="color:lime;">░░</span>          <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>                          <span style="color:yellow;">▐</span>
 <span style="color:yellow;">▌</span>                                                          <span style="color:yellow;">▓▓</span>                  <span style="color:yellow;">▐</span>
@@ -1501,7 +1501,303 @@ not yet implemented: The beast just killed our player
 note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```
 
-We will get to that warning soon but for now the code path for our beast killing the player actually gets called.
+We will get to that warning soon but for now the code path for our beast killing the player actually gets called and
+results in a panic.
+
+## Staying Alive
+
+Before the player can be killed by the beast we have to define what death is.
+Or more accurately: we have to give our player lives so it can come back from the dead until the game is over.
+To that end let's add a `lives` item to our `Player` struct:
+
+```rust {data-file="player.rs", data-fold="['16-99']", hl_lines=[6, 13]}
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	pub position: Coord,
+	pub lives: usize,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+			lives: 3,
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: &Direction) {
+		if let Some(first_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&first_position] {
+				Tile::Empty => {
+					board[&self.position] = Tile::Empty;
+					self.position = first_position;
+					board[&first_position] = Tile::Player;
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = first_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									board[&self.position] = Tile::Empty;
+									self.position = first_position;
+									board[&first_position] = Tile::Player;
+									board[&current_position] = Tile::Block;
+								},
+								Tile::StaticBlock | Tile::Player | Tile::CommonBeast => break,
+							}
+						} else {
+							break;
+						}
+					}
+				},
+				Tile::Player | Tile::StaticBlock => {},
+				Tile::CommonBeast => {
+					todo!("The player ran into a beast and died");
+				},
+			}
+		}
+	}
+}
+```
+
+Let's start the game of with 3 lives for now.
+Then we should probably add the lives to our footer so that we know how many lives the player has left before the game
+ends:
+
+```rust {data-file="game.rs", data-fold="['1-101']", hl_lines=[105, 117, "121-123"]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				match byte as char {
+					'w' => {
+						self.player.advance(&mut self.board, &Direction::Up);
+					},
+					'd' => {
+						self.player.advance(&mut self.board, &Direction::Right);
+					},
+					's' => {
+						self.player.advance(&mut self.board, &Direction::Down);
+					},
+					'a' => {
+						self.player.advance(&mut self.board, &Direction::Left);
+					},
+					'q' => {
+						println!("Good bye");
+						break;
+					},
+					_ => {},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								todo!("The beast just killed our player");
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
+We previously used `FOOTER_SIZE` to calculate the width of the left padding but that's not actually quite right.
+So let's add a new const called `FOOTER_LENGTH` that holds the size of anything that will come after the word `Level: `
+so that we can pad the left space with the right amount of spaces.
+
+This gives us a nicely right-aligned footer:
+
+```console
+cargo run
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">: variants `Two` and `Three` are never constructed</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/level.rs:10:2
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">8</span>  <span style="font-weight:bold;color:#3333FF;">|</span> pub enum Level {
+   <span style="font-weight:bold;color:#3333FF;">|</span>          <span style="font-weight:bold;color:#3333FF;">-----</span> <span style="font-weight:bold;color:#3333FF;">variants in this enum</span>
+<span style="font-weight:bold;color:#3333FF;">9</span>  <span style="font-weight:bold;color:#3333FF;">|</span>     One,
+<span style="font-weight:bold;color:#3333FF;">10</span> <span style="font-weight:bold;color:#3333FF;">|</span>     Two,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:yellow;">^^^</span>
+<span style="font-weight:bold;color:#3333FF;">11</span> <span style="font-weight:bold;color:#3333FF;">|</span>     Three,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:yellow;">^^^^^</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `Level` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `#[warn(dead_code)]` on by default
+
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">:</span> `beast` (bin &quot;beast&quot;) generated 2 warnings
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span><span style="color:aqua;">◀▶</span>          <span style="color:lime;">░░</span>                                                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                              <span style="color:lime;">░░</span>            <span style="color:lime;">░░</span>                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>      <span style="color:lime;">░░</span>                            <span style="color:lime;">░░</span>        <span style="color:lime;">░░</span>                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                    <span style="color:yellow;">▓▓</span>      <span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                              <span style="color:lime;">░░</span>                          <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                              <span style="color:yellow;">▓▓</span>                    <span style="color:lime;">░░</span>        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                        <span style="color:lime;">░░</span>                                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                      <span style="color:lime;">░░</span>                            <span style="color:lime;">░░</span>                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>                                              <span style="color:lime;">░░</span>                    <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                      <span style="color:lime;">░░</span>                      <span style="color:yellow;">▓▓</span>                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span>                                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:red;">├┤</span>                                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                  <span style="color:lime;">░░</span>                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>      <span style="color:lime;">░░</span>                                                                  <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                  <span style="color:lime;">░░</span>                                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>            <span style="color:lime;">░░</span>          <span style="color:red;">├┤</span>    <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                      <span style="color:lime;">░░</span>                  <span style="color:yellow;">▓▓</span>                            <span style="color:red;">├┤</span><span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>      <span style="color:yellow;">▓▓</span>                                                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                          <span style="color:lime;">░░</span>                              <span style="color:lime;">░░</span>                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+                                                              Level: 1  Lives: 3
+```
+
+Now we can enable the the beast to properly kill the player.
 
 ## Feeding The Beast
 
@@ -1510,7 +1806,7 @@ We will get to that warning soon but for now the code path for our beast killing
 - [ ] re-spawning
 - [ ] kill beasts
 - [ ] single responsibility concept on player
-- [ ] scroing
+- [ ] scoring
 - [ ] detecting The End Of A Level
 - [ ] adding a help
 
