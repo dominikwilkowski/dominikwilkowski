@@ -1801,6 +1801,442 @@ Now we can enable the the beast to properly kill the player.
 
 ## Feeding The Beast
 
+Within our game after each beast move we need to check if the tile a beast moved into was of type `Player` and if it
+was, make sure we deduct a life from our player.
+We also need to check if the player has reached the end and kill the game.
+
+```rust {data-file="game.rs", data-fold="['1-83', '102-135']", hl_lines=["91-98"]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				match byte as char {
+					'w' => {
+						self.player.advance(&mut self.board, &Direction::Up);
+					},
+					'd' => {
+						self.player.advance(&mut self.board, &Direction::Right);
+					},
+					's' => {
+						self.player.advance(&mut self.board, &Direction::Down);
+					},
+					'a' => {
+						self.player.advance(&mut self.board, &Direction::Left);
+					},
+					'q' => {
+						println!("Good bye");
+						break;
+					},
+					_ => {},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+								self.player.lives -= 1;
+								if self.player.lives == 0 {
+									println!("Game Over");
+									break;
+								}
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
+But wait... what does our `break` here do?
+We are inside a nested loop:
+
+```rust {data-file="game.rs", data-fold="['1-52', '54-79', '81-89', '100-102', '104-105', '107-135']", hl_lines=[]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				match byte as char {
+					'w' => {
+						self.player.advance(&mut self.board, &Direction::Up);
+					},
+					'd' => {
+						self.player.advance(&mut self.board, &Direction::Right);
+					},
+					's' => {
+						self.player.advance(&mut self.board, &Direction::Down);
+					},
+					'a' => {
+						self.player.advance(&mut self.board, &Direction::Left);
+					},
+					'q' => {
+						println!("Good bye");
+						break;
+					},
+					_ => {},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+								self.player.lives -= 1;
+								if self.player.lives == 0 {
+									println!("Game Over");
+									break;
+								}
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
+So our `break` would just break the first `for` loop but not our game `loop`.
+Luckily Rust has us covered with
+[`named loops`](https://doc.rust-lang.org/1.87.0/book/ch03-05-control-flow.html#loop-labels-to-disambiguate-between-multiple-loops).
+
+```rust {data-file="game.rs", data-fold="['1-52', '54-79', '81-89', '100-102', '104-105', '107-135']", hl_lines=[53, 97]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		'game_loop: loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				match byte as char {
+					'w' => {
+						self.player.advance(&mut self.board, &Direction::Up);
+					},
+					'd' => {
+						self.player.advance(&mut self.board, &Direction::Right);
+					},
+					's' => {
+						self.player.advance(&mut self.board, &Direction::Down);
+					},
+					'a' => {
+						self.player.advance(&mut self.board, &Direction::Left);
+					},
+					'q' => {
+						println!("Good bye");
+						break;
+					},
+					_ => {},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+								self.player.lives -= 1;
+								if self.player.lives == 0 {
+									println!("Game Over");
+									break 'game_loop;
+								}
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
+Now when the player has been killed a third time, the game loop stops and the game finishes with a good bye message.
+Or does it?
+Well the game actually panics right when one move after a beast has killed the player.
+That's because once the player was killed, we don't move it which means the player and the beast are on the same tile
+and that's the ONE thing we promised the beast module would never happen.
+Because the beast module believed the game engine, it added an `unreachable!();` call which now panics.
+But also, that's not what should happen anyway.
+Once the player gets killed, it should re-spawn to a new location as long as it has enough lives left.
+
+## Re-Spawning The Player
+
 ## TODO
 - [x] kill player
 - [ ] re-spawning
