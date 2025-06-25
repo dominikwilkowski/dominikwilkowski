@@ -2231,16 +2231,347 @@ Or does it?
 Well the game actually panics right when one move after a beast has killed the player.
 That's because once the player was killed, we don't move it which means the player and the beast are on the same tile
 and that's the ONE thing we promised the beast module would never happen.
-Because the beast module believed the game engine, it added an `unreachable!();` call which now panics.
+Because the beast module believed the game engine, it added an `unreachable!()` call which now panics.
 But also, that's not what should happen anyway.
 Once the player gets killed, it should re-spawn to a new location as long as it has enough lives left.
 
 ## Re-Spawning The Player
 
+Let's write a `respawn` method and implement it on our `Player` struct.
+We could write something like this:
+
+```rust
+pub fn respawn(&mut self, board: &mut Board) {
+	let empty_positions = board
+		.buffer
+		.iter()
+		.enumerate()
+		.flat_map(|(row_id, row)| {
+			row.iter().enumerate().filter_map(move |(column_id, tile)| {
+				if *tile == Tile::Empty {
+					Some(Coord {
+						column: column_id,
+						row: row_id,
+					})
+				} else {
+					None
+				}
+			})
+		})
+		.collect::<Vec<Coord>>();
+
+	if !empty_positions.is_empty() {
+		let mut rng = rand::rng();
+		let index = rng.random_range(0..empty_positions.len());
+		let new_position = empty_positions[index];
+
+		self.position = new_position;
+		board[&new_position] = Tile::Player;
+	} else {
+		panic!("No empty positions found to respawn the player");
+	}
+}
+```
+
+We go over each tile of the board and collect all coordinates that contain an `Empty` tile.
+Then we randomly pick one item of that collection and place the player there.
+But unlike in part 2, where we
+[generate our terrain](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/#giving-it-a-shuffle),
+we only need a single empty space on the board to respawn into.
+This operation would be `O(BOARD_WIDTH × BOARD_HEIGHT)` which is unnecessarily complex.
+We're scanning (`39 * 20`) `780` positions each and every time.
+We're also allocating a Vec on the heap.
+
+So maybe this time around we try random sampling to find an empty position:
+
+```rust {data-file="player.rs", data-fold="['3-100']", hl_lines=[1, "102-115"]}
+use rand::Rng;
+
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	pub position: Coord,
+	pub lives: usize,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+			lives: 3,
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: &Direction) {
+		if let Some(first_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&first_position] {
+				Tile::Empty => {
+					board[&self.position] = Tile::Empty;
+					self.position = first_position;
+					board[&first_position] = Tile::Player;
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = first_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									board[&self.position] = Tile::Empty;
+									self.position = first_position;
+									board[&first_position] = Tile::Player;
+									board[&current_position] = Tile::Block;
+								},
+								Tile::StaticBlock | Tile::Player | Tile::CommonBeast => break,
+							}
+						} else {
+							break;
+						}
+					}
+				},
+				Tile::Player | Tile::StaticBlock => {},
+				Tile::CommonBeast => {
+					todo!("The player ran into a beast and died");
+				},
+			}
+		}
+	}
+
+	pub fn respawn(&mut self, board: &mut Board) {
+		let mut new_position = self.position;
+
+		let mut rng = rand::rng();
+		while board[&new_position] != Tile::Empty {
+			new_position = Coord {
+				column: rng.random_range(0..BOARD_WIDTH),
+				row: rng.random_range(0..BOARD_HEIGHT),
+			};
+		}
+
+		self.position = new_position;
+		board[&new_position] = Tile::Player;
+	}
+}
+```
+
+We start our loop with the position where the player is right now because we know it's not `Empty`
+(it's indeed `Player`).
+Then we start a loop in which we randomly generate coordinates until we find an empty tile.
+We're guaranteeing that there are `Empty` tiles in the board or the loop will never finish.
+Because we're controlling the board with our `Level` config, this is something we can opt into now.
+
+Comparing our first version to this just to make sure we actually improved things:
+
+The first version scanned `780` tiles each time while this version assumes we never have more than about 40 non-`Empty`
+tiles on the board which means we have about `740` empty tiles to find which gives us a (`740/780 ≈`) `94.9%`
+probability for finding an empty tile randomly which would take about (`1/0.949 ≈`) `1.05` attempts on average.
+
+In short, this means on average, our second version of the respawn method is about 700-800x faster for our use-case.
+
+> [!TIP]
+> For a fully product-ready game you would include an upper bound to the random sampling to make sure the game doesn't
+> fall into an infinite loop.
+> You would likely stop the loop after a few hundred attempts and fall back to something like in our first version.
+>
+> You'd also add tests to your level config to ensure you never place more tiles than is sensible to make sure our
+> assumptions about probability hold.
+
+Ok with that `respawn` method now done, let's make sure we call it:
+
+```rust {data-file="game.rs", data-fold="['1-89', '102-137']", hl_lines=["98-99"]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::Player,
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		'game_loop: loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				match byte as char {
+					'w' => {
+						self.player.advance(&mut self.board, &Direction::Up);
+					},
+					'd' => {
+						self.player.advance(&mut self.board, &Direction::Right);
+					},
+					's' => {
+						self.player.advance(&mut self.board, &Direction::Down);
+					},
+					'a' => {
+						self.player.advance(&mut self.board, &Direction::Left);
+					},
+					'q' => {
+						println!("Good bye");
+						break;
+					},
+					_ => {},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+								self.player.lives -= 1;
+								if self.player.lives == 0 {
+									println!("Game Over");
+									break 'game_loop;
+								} else {
+									self.player.respawn(&mut self.board);
+								}
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
 ## TODO
 - [x] kill player
-- [ ] re-spawning
+- [x] re-spawning
 - [ ] kill beasts
+- [ ] off by one
 - [ ] single responsibility concept on player
 - [ ] scoring
 - [ ] detecting The End Of A Level
