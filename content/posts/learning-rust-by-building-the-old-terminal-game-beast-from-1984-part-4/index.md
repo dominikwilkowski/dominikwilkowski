@@ -2567,11 +2567,190 @@ impl Game {
 }
 ```
 
+Now when the player gets killed by a beast, the player respawns are a random spot on the board as long as there are
+enough lives left.
+
+One thing that notably isn't addressed yet though is when the player walks into the beast.
+We still get a panic when that happens:
+
+```console
+cargo run
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">: variants `Two` and `Three` are never constructed</span>
+  <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/level.rs:10:2
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">8</span>  <span style="font-weight:bold;color:#3333FF;">|</span> pub enum Level {
+   <span style="font-weight:bold;color:#3333FF;">|</span>          <span style="font-weight:bold;color:#3333FF;">-----</span> <span style="font-weight:bold;color:#3333FF;">variants in this enum</span>
+<span style="font-weight:bold;color:#3333FF;">9</span>  <span style="font-weight:bold;color:#3333FF;">|</span>     One,
+<span style="font-weight:bold;color:#3333FF;">10</span> <span style="font-weight:bold;color:#3333FF;">|</span>     Two,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:yellow;">^^^</span>
+<span style="font-weight:bold;color:#3333FF;">11</span> <span style="font-weight:bold;color:#3333FF;">|</span>     Three,
+   <span style="font-weight:bold;color:#3333FF;">|</span>     <span style="font-weight:bold;color:yellow;">^^^^^</span>
+   <span style="font-weight:bold;color:#3333FF;">|</span>
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `Level` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `#[warn(dead_code)]` on by default
+
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">:</span> `beast` (bin &quot;beast&quot;) generated 1 warning
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span>    <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>                                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>  <span style="color:lime;">░░</span>              <span style="color:yellow;">▓▓</span>                                              <span style="color:lime;">░░</span><span style="color:yellow;">▓▓</span>        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                            <span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                      <span style="color:lime;">░░</span>                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:yellow;">▓▓</span>                                                  <span style="color:lime;">░░</span>      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                <span style="color:lime;">░░</span>            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>                                                                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                          <span style="color:lime;">░░</span>                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:aqua;">◀▶</span><span style="color:lime;">░░</span>                                              <span style="color:lime;">░░</span>              <span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:red;">├┤</span>                                          <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>      <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>              <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>          <span style="color:lime;">░░</span><span style="color:lime;">░░</span>                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>                                            <span style="color:yellow;">▓▓</span>                          <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                      <span style="color:lime;">░░</span>                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>            <span style="color:red;">├┤</span>                                                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                        <span style="color:red;">├┤</span>          <span style="color:lime;">░░</span>            <span style="color:lime;">░░</span>                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                            <span style="color:lime;">░░</span>          <span style="color:lime;">░░</span>                                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                      <span style="color:yellow;">▓▓</span>                                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>              <span style="color:lime;">░░</span>                                                          <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+                                                              Level: 1  Lives: 3
+
+thread 'main' panicked at src/player.rs:96:21:
+not yet implemented: The player ran into a beast and died
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+
+## A Step Too Far
+
+So we need to make sure our player dies when it walks into a beast.
+Right now we left a `todo!()` macro in that code path:
+
+```rust {data-file="player.rs", data-fold="['1-94', '98-116']", hl_lines=[]}
+use rand::Rng;
+
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+#[derive(Debug)]
+pub struct Player {
+	pub position: Coord,
+	pub lives: usize,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+			lives: 3,
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: &Direction) {
+		if let Some(first_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&first_position] {
+				Tile::Empty => {
+					board[&self.position] = Tile::Empty;
+					self.position = first_position;
+					board[&first_position] = Tile::Player;
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = first_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									board[&self.position] = Tile::Empty;
+									self.position = first_position;
+									board[&first_position] = Tile::Player;
+									board[&current_position] = Tile::Block;
+								},
+								Tile::StaticBlock | Tile::Player | Tile::CommonBeast => break,
+							}
+						} else {
+							break;
+						}
+					}
+				},
+				Tile::Player | Tile::StaticBlock => {},
+				Tile::CommonBeast => {
+					todo!("The player ran into a beast and died");
+				},
+			}
+		}
+	}
+
+	pub fn respawn(&mut self, board: &mut Board) {
+		let mut new_position = self.position;
+
+		let mut rng = rand::rng();
+		while board[&new_position] != Tile::Empty {
+			new_position = Coord {
+				column: rng.random_range(0..BOARD_WIDTH),
+				row: rng.random_range(0..BOARD_HEIGHT),
+			};
+		}
+
+		self.position = new_position;
+		board[&new_position] = Tile::Player;
+	}
+}
+```
+
 ## TODO
 - [x] kill player
 - [x] re-spawning
+- [ ] player walk into beast
 - [ ] kill beasts
-- [ ] off by one
+- [ ] off by one on rendering
 - [ ] single responsibility concept on player
 - [ ] scoring
 - [ ] detecting The End Of A Level
