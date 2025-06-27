@@ -2745,13 +2745,25 @@ impl Player {
 }
 ```
 
+In this code block we would have to subtract from our `self.lives` and call the `respawn` method:
+
+```
+...
+```
+
+But thinking about this presents a new challenge: what is responsible for what?
+After we subtracted from `lives`, do we check if the player has enough lives left to continue?
+If not, how do we stop the loop in the `Game` struct?
+Would be return something to make it clear to the `play` method that the player is now dead and the game loop should
+stop?
+
 ## TODO
 - [x] kill player
 - [x] re-spawning
 - [ ] player walk into beast
+- [ ] single responsibility concept on player
 - [ ] kill beasts
 - [ ] off by one on rendering
-- [ ] single responsibility concept on player
 - [ ] scoring
 - [ ] detecting The End Of A Level
 - [ ] adding a help
