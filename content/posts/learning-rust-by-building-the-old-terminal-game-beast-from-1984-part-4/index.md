@@ -2428,7 +2428,7 @@ In short, this means on average, our second version of the respawn method is abo
 > You would likely stop the loop after a few hundred attempts and fall back to something like in our first version.
 >
 > You'd also add tests to your level config to ensure you never place more tiles than is sensible to make sure our
-> assumptions about probability hold.
+> assumptions about probability holds.
 
 Ok with that `respawn` method now done, let's make sure we call it:
 
@@ -2786,6 +2786,13 @@ The later model sounds more reasonable because it divides responsibilities clean
 
 So the `Player` struct responsibility _SHOULD_ just be figuring out where the player moved to and where the end of a
 possible blockchain is that the player ended up pushing with the move.
+
+> [!Tip]
+> My personal rule of thumb for this is that in Rust, methods on structs should at most only mutate `self` but not
+> mutate any other method arguments.
+>
+> And like any other rule, this can be broken where appropriate but starting your system design like this at least gives
+> you a fighting chance to build something that lasts.
 
 Let's fix this.
 We need the `advance` method of the `Player` module not to make any changes to the board but instead return to us what
@@ -3526,11 +3533,10 @@ a beast and die.
 - [x] re-spawning
 - [x] single responsibility concept on player
 - [ ] player walk into beast
-- [ ] kill beasts
 - [ ] off by one on rendering
+- [ ] kill beasts
 - [ ] scoring
 - [ ] detecting The End Of A Level
-- [ ] adding a help
 
 <br><br><br>
 ![A cheerful cartoon crab, representing the Rust mascot Ferris, holding a sign that reads ‘Don’t be shellfish! Share
