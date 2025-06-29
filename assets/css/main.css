@@ -95,7 +95,6 @@ kbd {
 	border-left: solid 0.2em #bbb;
 	font-family: var(--font-mono);
 	-webkit-touch-callout: none;
-	user-select: none;
 	white-space: nowrap;
 }
 

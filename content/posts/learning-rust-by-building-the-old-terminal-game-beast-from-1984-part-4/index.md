@@ -1507,8 +1507,13 @@ results in a panic.
 ## Staying Alive
 
 Before the player can be killed by the beast we have to define what death is.
-Or more accurately: we have to give our player lives so it can come back from the dead until the game is over.
-To that end let's add a `lives` item to our `Player` struct:
+Or more specifically: we have to give our player lives so it can come back from the dead until the game is over.
+
+> Does this make every video game player a zombie?
+> 
+> I don't know but someone should go and find out!
+
+To that end, let's add a `lives` item to our `Player` struct:
 
 ```rust {data-file="player.rs", data-fold="['16-99']", hl_lines=[6, 13]}
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
@@ -2743,23 +2748,784 @@ impl Player {
 }
 ```
 
-In this code block we would have to subtract from our `self.lives` and call the `respawn` method:
-
-```
-...
-```
-
+In this code block we would have to subtract from our `self.lives` and call the `respawn` method.
 But thinking about this presents a new challenge: what is responsible for what?
 After we subtracted from `lives`, do we check if the player has enough lives left to continue?
 If not, how do we stop the loop in the `Game` struct?
-Would be return something to make it clear to the `play` method that the player is now dead and the game loop should
+Maybe we return something to make it clear to the `play` method that the player is now dead and the game loop should
 stop?
+
+## Taking Responsibility
+
+Let's zoom out and take stock of all the interconnected bits we have created so far.
+We have:
+- a `Board` module that keeps a buffer of our game state and handles rendering it
+- a `Player` struct that handles player movements and right now implements the changes to the player on our `Board`
+buffer
+- a `Beast` struct that deals with pathfinding and returns a `Coord` telling the game where the beast would like to go
+- and last but not least a `Game` struct that implements the game engine, orchestrating all the above bits together
+
+When I write software, I like make it clear what entity is responsible for what and then, crucially, stick with that and
+be consistent.
+Inconsistencies in those rules lead very quickly to bugs, technical debt and someone loosing a lot of their hair.
+
+Looking at the above rough outline, we can see quickly that we're inconsistent with where the buffer gets manipulated
+and who is responsible for the correctness of those changes.
+We're now also running into the problem of calling side effects but not being in the right scope for it to do so easily.
+This is a great red flag you should always notice and make you pause.
+
+- The `Player` struct takes a mutable reference of the `Board` and changes it in place after it figured out where the
+player wants to go.
+- The `Beast` struct just takes responsibility of figuring out where to go and returns the `Coord` back to the play method
+of the `Game` struct, leaving it to make sure the move is legal and to execute it in the buffer and ensure side effects
+are controlled.
+
+The later model sounds more reasonable because it divides responsibilities cleanly:
+- `Beast` struct responsibility: where to go
+- `Game` struct responsibility: orchestrate the game and decide on side effects
+
+So the `Player` struct responsibility _SHOULD_ just be figuring out where the player moved to and where the end of a
+possible blockchain is that the player ended up pushing with the move.
+
+Let's fix this.
+We need the `advance` method of the `Player` module not to make any changes to the board but instead return to us what
+the effect of the move would be.
+The player either doesn't move, moves into an empty tile or pushes a blockchain with the move:
+
+```rust {data-file="player.rs", data-fold="['1-4', '10-122']", hl_lines=["5-9"]}
+use rand::Rng;
+
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+pub enum AdvanceEffect {
+	Stay,
+	MoveIntoTile(Coord),
+	MoveAndPushBlock { player_to: Coord, block_to: Coord },
+}
+
+#[derive(Debug)]
+pub struct Player {
+	pub position: Coord,
+	pub lives: usize,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+			lives: 3,
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(&mut self, board: &mut Board, direction: &Direction) {
+		if let Some(first_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&first_position] {
+				Tile::Empty => {
+					board[&self.position] = Tile::Empty;
+					self.position = first_position;
+					board[&first_position] = Tile::Player;
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = first_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									board[&self.position] = Tile::Empty;
+									self.position = first_position;
+									board[&first_position] = Tile::Player;
+									board[&current_position] = Tile::Block;
+								},
+								Tile::StaticBlock | Tile::Player | Tile::CommonBeast => break,
+							}
+						} else {
+							break;
+						}
+					}
+				},
+				Tile::Player | Tile::StaticBlock => {},
+				Tile::CommonBeast => {
+					todo!("The player ran into a beast and died");
+				},
+			}
+		}
+	}
+
+	pub fn respawn(&mut self, board: &mut Board) {
+		let mut new_position = self.position;
+
+		let mut rng = rand::rng();
+		while board[&new_position] != Tile::Empty {
+			new_position = Coord {
+				column: rng.random_range(0..BOARD_WIDTH),
+				row: rng.random_range(0..BOARD_HEIGHT),
+			};
+		}
+
+		self.position = new_position;
+		board[&new_position] = Tile::Player;
+	}
+}
+```
+
+Now we just need to actually return that struct from our `advance` method:
+
+```rust {data-file="player.rs", data-fold="['1-63', '114-129']", hl_lines=[66, 68, "73-74", "90-93", "95-97", 100, "103-104", "106-107", "110-111"]}
+use rand::Rng;
+
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+pub enum AdvanceEffect {
+	Stay,
+	MoveIntoTile(Coord),
+	MoveAndPushBlock { player_to: Coord, block_to: Coord },
+}
+
+#[derive(Debug)]
+pub struct Player {
+	pub position: Coord,
+	pub lives: usize,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+			lives: 3,
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(
+		&mut self,
+		board: &Board,
+		direction: &Direction,
+	) -> AdvanceEffect {
+		if let Some(first_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&first_position] {
+				Tile::Empty | Tile::CommonBeast => {
+					return AdvanceEffect::MoveIntoTile(first_position);
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = first_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									return AdvanceEffect::MoveAndPushBlock {
+										player_to: first_position,
+										block_to: current_position,
+									};
+								},
+								Tile::StaticBlock | Tile::Player | Tile::CommonBeast => {
+									return AdvanceEffect::Stay;
+								},
+							}
+						} else {
+							return AdvanceEffect::Stay;
+						}
+					}
+
+					return AdvanceEffect::Stay;
+				},
+				Tile::Player | Tile::StaticBlock => {
+					return AdvanceEffect::Stay;
+				},
+			}
+		} else {
+			return AdvanceEffect::Stay;
+		}
+	}
+
+	pub fn respawn(&mut self, board: &mut Board) {
+		let mut new_position = self.position;
+
+		let mut rng = rand::rng();
+		while board[&new_position] != Tile::Empty {
+			new_position = Coord {
+				column: rng.random_range(0..BOARD_WIDTH),
+				row: rng.random_range(0..BOARD_HEIGHT),
+			};
+		}
+
+		self.position = new_position;
+		board[&new_position] = Tile::Player;
+	}
+}
+```
+
+The `Game` struct now takes responsibility for checking if the tile, the player moves into, contains a beast and deal
+with the consequences.
+We were also able to collapse the match arm for `Empty` and `CommonBeast` because they now do the same thing.
+Now we just pass `&Board` instead of `&mut Beast` and rust is here to make sure we don't go beyond that scope.
+
+Now let's go into our engine and implement the things we used to do in the `Player` struct.
+
+```rust {data-file="game.rs", data-fold="['1-7', '15-48', '90-150']", hl_lines=[13, "55-59", 62, "64-85"]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::{AdvanceEffect, Player},
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		'game_loop: loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				let advance_effect = match byte as char {
+					'w' => self.player.advance(&mut self.board, &Direction::Up),
+					'd' => self.player.advance(&mut self.board, &Direction::Right),
+					's' => self.player.advance(&mut self.board, &Direction::Down),
+					'a' => self.player.advance(&mut self.board, &Direction::Left),
+					'q' => {
+						println!("Good bye");
+						return;
+					},
+					_ => AdvanceEffect::Stay,
+				};
+
+				match advance_effect {
+					AdvanceEffect::Stay => {},
+					AdvanceEffect::MoveIntoTile(player_position) => {
+						if self.board[&player_position] == Tile::CommonBeast {
+							todo!("The player ran into a beast and died");
+						}
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_position;
+						self.board[&self.player.position] = Tile::Player;
+					},
+					AdvanceEffect::MoveAndPushBlock {
+						player_to,
+						block_to,
+					} => {
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_to;
+						self.board[&self.player.position] = Tile::Player;
+						self.board[&block_to] = Tile::Block;
+					},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+								self.player.lives -= 1;
+								if self.player.lives == 0 {
+									println!("Game Over");
+									break 'game_loop;
+								} else {
+									self.player.respawn(&mut self.board);
+								}
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
+We now use the `match` as an expression and return from it into a new variable called `advance_effect`.
+We have to be careful with how we handle quitting now so we just return from the `play` method all together when the
+user hits the <kbd>q</kbd> key.
+The we `match` against the value of `advance_effect` and do nothing on `Stay`, move into a tile on `MoveIntoTile` and
+execute a blockchain move on `MoveAndPushBlock`.
+If we were to create a game engine for other developers to use, this is where we would now make sure the returned
+actions are legal actions according to the game rules.
+
+This is a good time to look through the rest of the code and find other inconsistencies where we might be adding side
+effects and spreading responsibility all over the place.
+A quick search for `&mut Board` will yield that we also make changes to the board in the `respawn` method we wrote
+earlier.
+Let's fix that one up too:
+
+```rust {data-file="player.rs", data-fold="['1-114']", hl_lines=[115, 126]}
+use rand::Rng;
+
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+pub enum AdvanceEffect {
+	Stay,
+	MoveIntoTile(Coord),
+	MoveAndPushBlock { player_to: Coord, block_to: Coord },
+}
+
+#[derive(Debug)]
+pub struct Player {
+	pub position: Coord,
+	pub lives: usize,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+			lives: 3,
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(
+		&mut self,
+		board: &Board,
+		direction: &Direction,
+	) -> AdvanceEffect {
+		if let Some(first_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&first_position] {
+				Tile::Empty | Tile::CommonBeast => {
+					return AdvanceEffect::MoveIntoTile(first_position);
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = first_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									return AdvanceEffect::MoveAndPushBlock {
+										player_to: first_position,
+										block_to: current_position,
+									};
+								},
+								Tile::StaticBlock | Tile::Player | Tile::CommonBeast => {
+									return AdvanceEffect::Stay;
+								},
+							}
+						} else {
+							return AdvanceEffect::Stay;
+						}
+					}
+
+					return AdvanceEffect::Stay;
+				},
+				Tile::Player | Tile::StaticBlock => {
+					return AdvanceEffect::Stay;
+				},
+			}
+		} else {
+			return AdvanceEffect::Stay;
+		}
+	}
+
+	pub fn respawn(&mut self, board: &Board) -> Coord {
+		let mut new_position = self.position;
+
+		let mut rng = rand::rng();
+		while board[&new_position] != Tile::Empty {
+			new_position = Coord {
+				column: rng.random_range(0..BOARD_WIDTH),
+				row: rng.random_range(0..BOARD_HEIGHT),
+			};
+		}
+
+		new_position
+	}
+}
+```
+
+And move the logic into the games engine:
+
+```rust {data-file="game.rs", data-fold="['1-102', '117-152']", hl_lines=["112-114"]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::{AdvanceEffect, Player},
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		'game_loop: loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				let advance_effect = match byte as char {
+					'w' => self.player.advance(&mut self.board, &Direction::Up),
+					'd' => self.player.advance(&mut self.board, &Direction::Right),
+					's' => self.player.advance(&mut self.board, &Direction::Down),
+					'a' => self.player.advance(&mut self.board, &Direction::Left),
+					'q' => {
+						println!("Good bye");
+						return;
+					},
+					_ => AdvanceEffect::Stay,
+				};
+
+				match advance_effect {
+					AdvanceEffect::Stay => {},
+					AdvanceEffect::MoveIntoTile(player_position) => {
+						if self.board[&player_position] == Tile::CommonBeast {
+							todo!("The player ran into a beast and died");
+						}
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_position;
+						self.board[&self.player.position] = Tile::Player;
+					},
+					AdvanceEffect::MoveAndPushBlock {
+						player_to,
+						block_to,
+					} => {
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_to;
+						self.board[&self.player.position] = Tile::Player;
+						self.board[&block_to] = Tile::Block;
+					},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+								self.player.lives -= 1;
+								if self.player.lives == 0 {
+									println!("Game Over");
+									break 'game_loop;
+								} else {
+									let new_position = self.player.respawn(&self.board);
+									self.player.position = new_position;
+									self.board[&self.player.position] = Tile::Player;
+								}
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
+Now we got it all working again and we feel well accomplished and
+[like a person who knows where their towel is](https://hitchhikers.fandom.com/wiki/Towel).
+
+After a short break during which we marveled at the how far we've already come, let's now allow the player to walk into
+a beast and die.
+
+## A Step Too Far
 
 ## TODO
 - [x] kill player
 - [x] re-spawning
+- [x] single responsibility concept on player
 - [ ] player walk into beast
-- [ ] single responsibility concept on player
 - [ ] kill beasts
 - [ ] off by one on rendering
 - [ ] scoring
