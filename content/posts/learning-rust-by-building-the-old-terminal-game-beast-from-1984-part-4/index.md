@@ -2621,8 +2621,6 @@ not yet implemented: The player ran into a beast and died
 note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```
 
-## A Step Too Far
-
 So we need to make sure our player dies when it walks into a beast.
 Right now we left a `todo!()` macro in that code path:
 
