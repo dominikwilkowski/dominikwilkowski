@@ -1470,7 +1470,7 @@ cargo run
    <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `#[warn(dead_code)]` on by default
 
 <span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">:</span> `beast` (bin &quot;beast&quot;) generated 1 warning
-<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.10s
 <span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
 <span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
 <span style="color:yellow;">▌</span>                  <span style="color:yellow;">▓▓</span>      <span style="color:red;">├┤</span>                                <span style="color:lime;">░░</span>                <span style="color:yellow;">▐</span>
@@ -1775,7 +1775,7 @@ cargo run
    <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `#[warn(dead_code)]` on by default
 
 <span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">:</span> `beast` (bin &quot;beast&quot;) generated 2 warnings
-<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.21s
 <span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
 <span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
 <span style="color:yellow;">▌</span><span style="color:aqua;">◀▶</span>          <span style="color:lime;">░░</span>                                                                <span style="color:yellow;">▐</span>
@@ -2595,7 +2595,7 @@ cargo run
    <span style="font-weight:bold;color:#3333FF;">= </span><span style="font-weight:bold;">note</span>: `#[warn(dead_code)]` on by default
 
 <span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">:</span> `beast` (bin &quot;beast&quot;) generated 1 warning
-<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.13s
 <span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
 <span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
 <span style="color:yellow;">▌</span>    <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>                                                                  <span style="color:yellow;">▐</span>
@@ -3699,12 +3699,454 @@ When the player moves into a tile with a `CommonBeast` in it, we respawn a new `
 store the new position from `respawn` in the player instance and set the tile on the board for that `Coord` to `Player`.
 We also subtract from lives and check if we have enough lives left.
 
+This all works and we can now freely walk into beasts and eventually end the game.
+
+```console
+cargo run
+<span style="font-style:italic;color:yellow;">   [...some warnings removed]</span>
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.17s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span>                                                          <span style="color:lime;">░░</span>                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span>                              <span style="color:lime;">░░</span>                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                    <span style="color:yellow;">▓▓</span>                                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>              <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                          <span style="color:lime;">░░</span>                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>        <span style="color:lime;">░░</span>        <span style="color:lime;">░░</span>                  <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>      <span style="color:lime;">░░</span>        <span style="color:lime;">░░</span>                    <span style="color:lime;">░░</span>                  <span style="color:lime;">░░</span>                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                            <span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                    <span style="color:lime;">░░</span>            <span style="color:yellow;">▓▓</span>          <span style="color:lime;">░░</span>                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                            <span style="color:lime;">░░</span>                                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>                    <span style="color:lime;">░░</span><span style="color:yellow;">▓▓</span>                    <span style="color:lime;">░░</span>                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:lime;">░░</span>                  <span style="color:aqua;">◀▶</span><span style="color:red;">├┤</span>                  <span style="color:red;">├┤</span>                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                  <span style="color:lime;">░░</span>              <span style="color:yellow;">▓▓</span>                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>                                      <span style="color:lime;">░░</span>                                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:red;">├┤</span>                                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>      <span style="color:yellow;">▓▓</span>                                                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                    <span style="color:lime;">░░</span>                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                        <span style="color:lime;">░░</span>                <span style="color:lime;">░░</span>                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                <span style="color:lime;">░░</span>                    <span style="color:lime;">░░</span>                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+                                                              Level: 1  Lives: 1
+Game Over
+```
+
+This is what the end looks like.
+The player is next to the best, one frame before the fetal last step and the lives in the footer show `1`.
+Let's fix that.
+
+We're currently check if we have enough lives left in two places: the movement of the player and the movement of beasts.
+Perhaps we move that check to the end of the game loop:
+
+```rust {data-file="game.rs", data-fold="['1-66', '82-107', '130-157']", hl_lines=[75, "113-115", "124-127"]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::{AdvanceEffect, Player},
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		'game_loop: loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				let advance_effect = match byte as char {
+					'w' => self.player.advance(&mut self.board, &Direction::Up),
+					'd' => self.player.advance(&mut self.board, &Direction::Right),
+					's' => self.player.advance(&mut self.board, &Direction::Down),
+					'a' => self.player.advance(&mut self.board, &Direction::Left),
+					'q' => {
+						println!("Good bye");
+						return;
+					},
+					_ => AdvanceEffect::Stay,
+				};
+
+				match advance_effect {
+					AdvanceEffect::Stay => {},
+					AdvanceEffect::MoveIntoTile(player_position) => {
+						if self.board[&player_position] == Tile::CommonBeast {
+							let new_position = self.player.respawn(&self.board);
+							self.board[&self.player.position] = Tile::Empty;
+							self.player.position = new_position;
+							self.board[&self.player.position] = Tile::Player;
+							self.player.lives -= 1;
+						} else {
+							self.board[&self.player.position] = Tile::Empty;
+							self.player.position = player_position;
+							self.board[&self.player.position] = Tile::Player;
+						}
+					},
+					AdvanceEffect::MoveAndPushBlock {
+						player_to,
+						block_to,
+					} => {
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_to;
+						self.board[&self.player.position] = Tile::Player;
+						self.board[&block_to] = Tile::Block;
+					},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+								self.player.lives -= 1;
+								let new_position = self.player.respawn(&self.board);
+								self.player.position = new_position;
+								self.board[&self.player.position] = Tile::Player;
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+
+			if self.player.lives == 0 {
+				println!("Game Over");
+				break 'game_loop;
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
+Now when we die the counter in the footer looks right but the player also has already respawned which seems wrong too.
+
+```console
+cargo run
+<span style="font-style:italic;color:yellow;">   [...some warnings removed]</span>
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.16s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span>  <span style="color:red;">├┤</span>          <span style="color:lime;">░░</span>            <span style="color:lime;">░░</span>                              <span style="color:lime;">░░</span>    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>          <span style="color:lime;">░░</span>                                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                  <span style="color:lime;">░░</span>                                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>              <span style="color:lime;">░░</span>                    <span style="color:lime;">░░</span>        <span style="color:yellow;">▓▓</span>                <span style="color:lime;">░░</span>            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                <span style="color:lime;">░░</span>                                                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:lime;">░░</span>                                      <span style="color:red;">├┤</span>        <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>  <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                                                        <span style="color:lime;">░░</span><span style="color:lime;">░░</span>    <span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>              <span style="color:lime;">░░</span>                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                          <span style="color:lime;">░░</span>                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:lime;">░░</span>                          <span style="color:red;">├┤</span>                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>        <span style="color:yellow;">▓▓</span>  <span style="color:yellow;">▓▓</span>                                    <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                <span style="color:lime;">░░</span>                                                    <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>     <span style="color:aqua;">◀▶</span>         <span style="color:yellow;">▓▓</span>    <span style="color:yellow;">▓▓</span>                                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>        <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>                                                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                          <span style="color:lime;">░░</span>                                                <span style="color:lime;">░░</span><span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+                                                              Level: 1  Lives: 0
+Game Over
+```
+
+So we need to only respawn if there are more than 0 lives left:
+
+```rust {data-file="game.rs", data-fold="['1-66', '86-111', '130-164']", hl_lines=["71-79", "117-122"]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::{AdvanceEffect, Player},
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		'game_loop: loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				let advance_effect = match byte as char {
+					'w' => self.player.advance(&mut self.board, &Direction::Up),
+					'd' => self.player.advance(&mut self.board, &Direction::Right),
+					's' => self.player.advance(&mut self.board, &Direction::Down),
+					'a' => self.player.advance(&mut self.board, &Direction::Left),
+					'q' => {
+						println!("Good bye");
+						return;
+					},
+					_ => AdvanceEffect::Stay,
+				};
+
+				match advance_effect {
+					AdvanceEffect::Stay => {},
+					AdvanceEffect::MoveIntoTile(player_position) => {
+						if self.board[&player_position] == Tile::CommonBeast {
+							self.player.lives -= 1;
+							if self.player.lives > 0 {
+								let new_position = self.player.respawn(&self.board);
+								self.board[&self.player.position] = Tile::Empty;
+								self.player.position = new_position;
+								self.board[&self.player.position] = Tile::Player;
+							} else {
+								self.board[&self.player.position] = Tile::Empty;
+							}
+						} else {
+							self.board[&self.player.position] = Tile::Empty;
+							self.player.position = player_position;
+							self.board[&self.player.position] = Tile::Player;
+						}
+					},
+					AdvanceEffect::MoveAndPushBlock {
+						player_to,
+						block_to,
+					} => {
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_to;
+						self.board[&self.player.position] = Tile::Player;
+						self.board[&block_to] = Tile::Block;
+					},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+								self.player.lives -= 1;
+
+								if self.player.lives > 0 {
+									let new_position = self.player.respawn(&self.board);
+									self.player.position = new_position;
+									self.board[&self.player.position] = Tile::Player;
+								}
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+
+			if self.player.lives == 0 {
+				println!("Game Over");
+				break 'game_loop;
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
+In both movements, player and beast, we check if we have enough lives left before respawning.
+The only difference is in the player movement, we still have to remove our last position from the board even when we
+just walked into a beast.
+Now the end screen looks a little more like what really happened:
+
+```console
+cargo run
+<span style="font-style:italic;color:yellow;">   [...some warnings removed]</span>
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.32s
+<span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
+<span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
+<span style="color:yellow;">▌</span>                  <span style="color:yellow;">▓▓</span>                                                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                      <span style="color:lime;">░░</span>          <span style="color:yellow;">▓▓</span>                    <span style="color:lime;">░░</span>                    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                        <span style="color:lime;">░░</span>    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>                          <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                                        <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                    <span style="color:lime;">░░</span>            <span style="color:yellow;">▓▓</span>                                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                      <span style="color:lime;">░░</span>      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>      <span style="color:red;">├┤</span>                  <span style="color:lime;">░░</span>      <span style="color:lime;">░░</span>                              <span style="color:lime;">░░</span>          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                  <span style="color:red;">├┤</span>                                                          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                      <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>    <span style="color:lime;">░░</span>            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                          <span style="color:lime;">░░</span>                                                  <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>      <span style="color:lime;">░░</span>                                                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                            <span style="color:lime;">░░</span>                                    <span style="color:red;">├┤</span>          <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span><span style="color:lime;">░░</span>                  <span style="color:lime;">░░</span>                                <span style="color:lime;">░░</span>                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                                                              <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                  <span style="color:lime;">░░</span>  <span style="color:lime;">░░</span>                                      <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                  <span style="color:lime;">░░</span>        <span style="color:lime;">░░</span>                                <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>                                              <span style="color:lime;">░░</span>                    <span style="color:yellow;">▓▓</span>  <span style="color:lime;">░░</span>    <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▌</span>              <span style="color:lime;">░░</span>        <span style="color:yellow;">▓▓</span>  <span style="color:lime;">░░</span><span style="color:lime;">░░</span><span style="color:lime;">░░</span>                                            <span style="color:yellow;">▐</span>
+<span style="color:yellow;">▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟</span>
+                                                              Level: 1  Lives: 0
+Game Over
+```
+
+Now it's time to start squishing beasts to get to the next level.
+
+## Squish 'n Win
+
 ## TODO
 - [x] kill player
 - [x] re-spawning
 - [x] single responsibility concept on player
-- [ ] player walk into beast
-- [ ] off by one one rendering
+- [x] player walk into beast
+- [x] off by one one rendering
 - [ ] kill beasts
 - [ ] scoring
 - [ ] detecting The End Of A Level

@@ -1240,7 +1240,7 @@ This will give us a board that is pretty close to the original game:
 
 ```console
 cargo run
-<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.21s
 <span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
 <span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
 <span style="color:yellow;">▌</span><span style="color:aqua;">◀▶</span>                                                                            <span style="color:yellow;">▐</span>
@@ -2864,7 +2864,7 @@ a panic:
 
 ```console
 cargo run
-<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+<span style="font-weight:bold;color:lime;">    Finished</span> `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
 <span style="font-weight:bold;color:lime;">     Running</span> `target/debug/beast`
 <span style="color:yellow;">▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜</span>
 <span style="color:yellow;">▌</span><span style="color:aqua;">◀▶</span>                                                                            <span style="color:yellow;">▐</span>
