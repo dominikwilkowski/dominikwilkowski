@@ -4141,15 +4141,597 @@ Now it's time to start squishing beasts to get to the next level.
 
 ## Squish 'n Win
 
+Squishing a beast means a beast can be killed by the player pushing a block into the beast while behind the beast there
+is also a block.
+
+![The player moves a blue diamond character to push a wall block, crushing a red H-shaped beast between two blocks](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/assets/squish.gif)
+
+So we need to add another option to our `AdvanceEffect` enum to communicate to the game engine that the player would
+like to squish a beast:
+
+```rust {data-file="player.rs", data-fold="['1-4', '11-129']", hl_lines=[9]}
+use rand::Rng;
+
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+pub enum AdvanceEffect {
+	Stay,
+	MoveIntoTile(Coord),
+	MoveAndPushBlock { player_to: Coord, block_to: Coord },
+	SquishBeast { player_to: Coord, beast_at: Coord },
+}
+
+#[derive(Debug)]
+pub struct Player {
+	pub position: Coord,
+	pub lives: usize,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+			lives: 3,
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(
+		&mut self,
+		board: &Board,
+		direction: &Direction,
+	) -> AdvanceEffect {
+		if let Some(first_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&first_position] {
+				Tile::Empty | Tile::CommonBeast => {
+					return AdvanceEffect::MoveIntoTile(first_position);
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = first_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									return AdvanceEffect::MoveAndPushBlock {
+										player_to: first_position,
+										block_to: current_position,
+									};
+								},
+								Tile::StaticBlock | Tile::Player | Tile::CommonBeast => {
+									return AdvanceEffect::Stay;
+								},
+							}
+						} else {
+							return AdvanceEffect::Stay;
+						}
+					}
+
+					return AdvanceEffect::Stay;
+				},
+				Tile::Player | Tile::StaticBlock => {
+					return AdvanceEffect::Stay;
+				},
+			}
+		} else {
+			return AdvanceEffect::Stay;
+		}
+	}
+
+	pub fn respawn(&mut self, board: &Board) -> Coord {
+		let mut new_position = self.position;
+
+		let mut rng = rand::rng();
+		while board[&new_position] != Tile::Empty {
+			new_position = Coord {
+				column: rng.random_range(0..BOARD_WIDTH),
+				row: rng.random_range(0..BOARD_HEIGHT),
+			};
+		}
+
+		new_position
+	}
+}
+```
+
+We tell the engine where the player is moving to and where the beast was that we're about to squish.
+Let's now make sure we return this new option only if we find a block or the end of the board behind the best while
+looking through a blockchain:
+
+```rust {data-file="player.rs", data-fold="['1-87', '124-153']", hl_lines=["96-120"]}
+use rand::Rng;
+
+use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
+
+pub enum AdvanceEffect {
+	Stay,
+	MoveIntoTile(Coord),
+	MoveAndPushBlock { player_to: Coord, block_to: Coord },
+	SquishBeast { player_to: Coord, beast_at: Coord },
+}
+
+#[derive(Debug)]
+pub struct Player {
+	pub position: Coord,
+	pub lives: usize,
+}
+
+impl Player {
+	pub fn new() -> Self {
+		Self {
+			position: Coord { column: 0, row: 0 },
+			lives: 3,
+		}
+	}
+
+	fn get_next_position(
+		position: Coord,
+		direction: &Direction,
+	) -> Option<Coord> {
+		let mut next_position = position;
+		match direction {
+			Direction::Up => {
+				if next_position.row > 0 {
+					next_position.row -= 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Right => {
+				if next_position.column < BOARD_WIDTH - 1 {
+					next_position.column += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Down => {
+				if next_position.row < BOARD_HEIGHT - 1 {
+					next_position.row += 1
+				} else {
+					return None;
+				}
+			},
+			Direction::Left => {
+				if next_position.column > 0 {
+					next_position.column -= 1
+				} else {
+					return None;
+				}
+			},
+		}
+
+		Some(next_position)
+	}
+
+	pub fn advance(
+		&mut self,
+		board: &Board,
+		direction: &Direction,
+	) -> AdvanceEffect {
+		if let Some(first_position) =
+			Self::get_next_position(self.position, direction)
+		{
+			match board[&first_position] {
+				Tile::Empty | Tile::CommonBeast => {
+					return AdvanceEffect::MoveIntoTile(first_position);
+				},
+				Tile::Block => {
+					let mut current_tile = Tile::Block;
+					let mut current_position = first_position;
+
+					while current_tile == Tile::Block {
+						if let Some(next_position) =
+							Self::get_next_position(current_position, direction)
+						{
+							current_position = next_position;
+							current_tile = board[&current_position];
+
+							match current_tile {
+								Tile::Block => { /* continue looking */ },
+								Tile::Empty => {
+									return AdvanceEffect::MoveAndPushBlock {
+										player_to: first_position,
+										block_to: current_position,
+									};
+								},
+								Tile::CommonBeast => {
+									if let Some(behind_beast) =
+										Self::get_next_position(current_position, direction)
+									{
+										if matches!(
+											board[&behind_beast],
+											Tile::Block | Tile::StaticBlock
+										) {
+											// squishing the beast between two blocks (static or normal)
+											// ◀▶░░├┤░░
+											return AdvanceEffect::SquishBeast {
+												player_to: first_position,
+												beast_at: current_position,
+											};
+										}
+									} else {
+										// squishing the beast between a block and the edge of the board
+										// ◀▶░░├┤▐
+										return AdvanceEffect::SquishBeast {
+											player_to: first_position,
+											beast_at: current_position,
+										};
+									}
+								},
+								Tile::StaticBlock | Tile::Player => {
+									return AdvanceEffect::Stay;
+								},
+							}
+						} else {
+							return AdvanceEffect::Stay;
+						}
+					}
+
+					return AdvanceEffect::Stay;
+				},
+				Tile::Player | Tile::StaticBlock => {
+					return AdvanceEffect::Stay;
+				},
+			}
+		} else {
+			return AdvanceEffect::Stay;
+		}
+	}
+
+	pub fn respawn(&mut self, board: &Board) -> Coord {
+		let mut new_position = self.position;
+
+		let mut rng = rand::rng();
+		while board[&new_position] != Tile::Empty {
+			new_position = Coord {
+				column: rng.random_range(0..BOARD_WIDTH),
+				row: rng.random_range(0..BOARD_HEIGHT),
+			};
+		}
+
+		new_position
+	}
+}
+```
+
+So when we find a beast within the blockchain the player is trying to push, we check if behind the beast we find either
+a `Block`, a `StaticBlock` or the edge of the board.
+If we do find those, we know the player is allowed to squish the beast and we return the new enum option `SquishBeast`
+with the right values.
+
+Now we need to implement the logic in our game engine that actually squishes the beast and removes it from the board.
+
+```rust {data-file="game.rs", data-fold="['1-85', '105-174']", hl_lines=["95-104"]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::{AdvanceEffect, Player},
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new();
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		'game_loop: loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				let advance_effect = match byte as char {
+					'w' => self.player.advance(&mut self.board, &Direction::Up),
+					'd' => self.player.advance(&mut self.board, &Direction::Right),
+					's' => self.player.advance(&mut self.board, &Direction::Down),
+					'a' => self.player.advance(&mut self.board, &Direction::Left),
+					'q' => {
+						println!("Good bye");
+						return;
+					},
+					_ => AdvanceEffect::Stay,
+				};
+
+				match advance_effect {
+					AdvanceEffect::Stay => {},
+					AdvanceEffect::MoveIntoTile(player_position) => {
+						if self.board[&player_position] == Tile::CommonBeast {
+							self.player.lives -= 1;
+							if self.player.lives > 0 {
+								let new_position = self.player.respawn(&self.board);
+								self.board[&self.player.position] = Tile::Empty;
+								self.player.position = new_position;
+								self.board[&self.player.position] = Tile::Player;
+							} else {
+								self.board[&self.player.position] = Tile::Empty;
+							}
+						} else {
+							self.board[&self.player.position] = Tile::Empty;
+							self.player.position = player_position;
+							self.board[&self.player.position] = Tile::Player;
+						}
+					},
+					AdvanceEffect::MoveAndPushBlock {
+						player_to,
+						block_to,
+					} => {
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_to;
+						self.board[&self.player.position] = Tile::Player;
+						self.board[&block_to] = Tile::Block;
+					},
+					AdvanceEffect::SquishBeast {
+						player_to,
+						beast_at,
+					} => {
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_to;
+						self.board[&self.player.position] = Tile::Player;
+						self.beasts.retain_mut(|beast| beast.position != beast_at);
+						self.board[&beast_at] = Tile::Block;
+					},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+								self.player.lives -= 1;
+
+								if self.player.lives > 0 {
+									let new_position = self.player.respawn(&self.board);
+									self.player.position = new_position;
+									self.board[&self.player.position] = Tile::Player;
+								}
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+
+			if self.player.lives == 0 {
+				println!("Game Over");
+				break 'game_loop;
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
+We almost do the same thing we do when the player returns `MoveAndPushBlock` with one additional instruction: we remove
+the beast we found at this location from the beast vec on the `Game` struct.
+And our trusty compiler friend will let us know that `Coord`, as the custom data structure we built, doesn't know how to
+compare itself to another `Coord`.
+
+```console
+cargo run
+<span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/code/beast)
+<span style="font-weight:bold;color:red;">error[E0369]</span><span style="font-weight:bold;">: binary operation `!=` cannot be applied to type `Coord`</span>
+   <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/game.rs:102:53
+    <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">102</span> <span style="font-weight:bold;color:#3333FF;">|</span>      self.beasts.retain_mut(|beast| beast.position != beast_at);
+    <span style="font-weight:bold;color:#3333FF;">|</span>                                     <span style="font-weight:bold;color:#3333FF;">--------------</span> <span style="font-weight:bold;color:red;">^^</span> <span style="font-weight:bold;color:#3333FF;">--------</span> <span style="font-weight:bold;color:#3333FF;">Coord</span>
+    <span style="font-weight:bold;color:#3333FF;">|</span>                                                        <span style="font-weight:bold;color:#3333FF;">|</span>
+    <span style="font-weight:bold;color:#3333FF;">|</span>                                                        <span style="font-weight:bold;color:#3333FF;">Coord</span>
+    <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:lime;">note</span>: an implementation of `PartialEq` might be missing for `Coord`
+   <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:37:1
+    <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">37</span>  <span style="font-weight:bold;color:#3333FF;">|</span> pub struct Coord {
+    <span style="font-weight:bold;color:#3333FF;">|</span> <span style="font-weight:bold;color:lime;">^^^^^^^^^^^^^^^^</span> <span style="font-weight:bold;color:lime;">must implement `PartialEq`</span>
+<span style="font-weight:bold;color:aqua;">help</span>: consider annotating `Coord` with `#[derive(PartialEq)]`
+   <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:37:1
+    <span style="font-weight:bold;color:#3333FF;">|</span>
+<span style="font-weight:bold;color:#3333FF;">37</span>  <span style="color:lime;">+ #[derive(PartialEq)]</span>
+<span style="font-weight:bold;color:#3333FF;">38</span>  <span style="font-weight:bold;color:#3333FF;">| </span>pub struct Coord {
+    <span style="font-weight:bold;color:#3333FF;">|</span>
+
+<span style="font-weight:bold;">For more information about this error, try `rustc --explain E0369`.</span>
+<span style="font-weight:bold;color:red;">error</span><span style="font-weight:bold;">:</span> could not compile `beast` (bin &quot;beast&quot;) due to 1 previous error
+```
+
+This we can fix quickly by deriving the [`PartialEq`](https://doc.rust-lang.org/std/cmp/trait.PartialEq.html) trait for
+`Coord`:
+
+```rust {data-file="main.rs", data-fold="['1-35', '41-47']", hl_lines=[36]}
+mod beasts;
+mod board;
+mod game;
+mod level;
+mod player;
+mod raw_mode;
+
+use crate::{game::Game, raw_mode::RawMode};
+
+pub const BOARD_WIDTH: usize = 39;
+pub const BOARD_HEIGHT: usize = 20;
+pub const TILE_SIZE: usize = 2;
+
+pub const ANSI_YELLOW: &str = "\x1B[33m";
+pub const ANSI_GREEN: &str = "\x1B[32m";
+pub const ANSI_CYAN: &str = "\x1B[36m";
+pub const ANSI_RED: &str = "\x1b[31m";
+pub const ANSI_RESET: &str = "\x1B[39m";
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Tile {
+	Empty,
+	Player,
+	Block,
+	StaticBlock,
+	CommonBeast,
+}
+
+pub enum Direction {
+	Up,
+	Right,
+	Down,
+	Left,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Coord {
+	column: usize,
+	row: usize,
+}
+
+fn main() {
+	let _raw_mode = RawMode::enter();
+
+	let mut game = Game::new();
+	game.play();
+}
+```
+
+And everything compiles and we can start squishing beasts!
+If you're good enough, you'll quickly squish all three beasts we have setup in level one and notice nothing happens.
+So let's now check within our game loop if there are any beasts left and if there aren't, move to the next level.
+
+## Next Level
+
+
+
 ## TODO
 - [x] kill player
 - [x] re-spawning
 - [x] single responsibility concept on player
 - [x] player walk into beast
 - [x] off by one one rendering
-- [ ] kill beasts
-- [ ] scoring
+- [x] kill beasts
 - [ ] detecting The End Of A Level
+- [ ] ideas for where to next
+	- scoring
+	- help
+	- super beast
+	- hatched beasts
+	- limit on how many blocks can be pushed
 
 <br><br><br>
 ![A cheerful cartoon crab, representing the Rust mascot Ferris, holding a sign that reads ‘Don’t be shellfish! Share
