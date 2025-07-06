@@ -34,6 +34,17 @@ I love the language and continue to learn, so if you find anything fishy in thes
 [_turbofish_](https://turbo.fish/)), do let me know by submitting
 [a pull request or an issue](https://github.com/dominikwilkowski/dominikwilkowski).
 
+In this series I will deliberately try to bump into a couple Rust concepts.
+We will write and re-write our code as we discover together why we choose the path we choose.
+This means we sometimes will write sometimes that isn't "good design" or "best practice".
+The best way to know what good software design is, is to do it wrong once and then fix it which is what we will do here.
+At the earlier parts I will link out to documentation wherever sensible and make small edits, show results step by step
+to then increase the pace in later parts.
+We won't write tests even though writing test in Rust is a lot of fun.
+The main reason for that is that this game in particular isn't very testable and it would blow up the tutorial to write
+good tests for it.
+More on Rust tests in another tutorial in the future.
+
 ## What We Need
 
 I will assume you have some basic knowledge of Rust and won't go too deep into how language primitives works.
@@ -320,7 +331,8 @@ fn main() {
 }
 ```
 
-But once we save it all, rust-analyzer will be upset with us and if we try running `cargo run`, rustc will say this:
+But once we save it all, rust-analyzer will be upset with us and if we try running `cargo run` (or `cargo check`), rustc
+will say this:
 
 ```console
 cargo run

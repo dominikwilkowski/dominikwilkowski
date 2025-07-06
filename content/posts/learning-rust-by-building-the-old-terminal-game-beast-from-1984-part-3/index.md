@@ -3704,7 +3704,7 @@ And to my surprise, the result is pretty decent as beasts rarely get stuck:
 
 Well done us!
 In [the last part](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-4/) of this tutorial series
-we will give our player lives, the ability to re-spawn and implement a help screen.
+we will give our player lives, the ability to re-spawn and implement the squishing of beasts.
 
 <br><br><br>
 ![Illustration of a terminal window styled like the Rust borrow checker, displaying the message: "TRANSFER OWNERSHIP, SHARE THIS POST" on a pink background](assets/share.png)

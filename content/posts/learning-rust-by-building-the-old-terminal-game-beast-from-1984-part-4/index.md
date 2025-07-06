@@ -1,20 +1,20 @@
 ---
 title: 'Learning Rust By Building The Old Terminal Game Beast From 1984, Part 4'
-date: '2025-05-21T22:11:29+10:00' # TODO
+date: '2025-07-04T08:37:20+10:00'
 draft: false
 visibility: false
 summary: >
   In the last post we added path-finding to our beasts and a game loop.
-  In this post we will finish the game by moving through levels and add a help screen.
+  In this post we will finish the game by squishing beasts and moving through levels.
 description: >
   We are building the terminal game BEAST together to learn to apply Rust to a project.
-  This is the forth part in which we finish our game by adding new levels and a help screen.
+  This is the fourth part in which we finish our game by squishing beasts and finishing levels.
 toc: true
 readTime: true
 tags: ["rust", "terminal", "game development", "tutorial"]
 showTags: true
 hideBackToTop: false
-header: assets/header.jpg # TODO
+header: assets/header.jpg
 ---
 
 <div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg" title="I'm perfectly able to add my own em dashes, thank you very much!" width="120px" height="120px"></div>
@@ -24,7 +24,7 @@ header: assets/header.jpg # TODO
 In [part 1](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-1/), of this tutorial, we set up our
 board and implemented movements for our player.
 
-In [part 2](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/), we the added our terrain,
+In [part 2](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/), we added our terrain,
 made blockchain puns.
 
 In [part 3](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-3/), we added our beasts and added
@@ -820,7 +820,7 @@ impl Drop for RawMode {
 
 </details>
 
-When we play our game as we have built it so far, we notice that the beasts will follow us just as they're suppoed to
+When we play our game as we have built it so far, we notice that the beasts will follow us just as they're supposed to
 but when they get close they never actually move in for the kill.
 Even though we check in our game engine method if we walk into a tile with `Player`:
 
@@ -1451,7 +1451,7 @@ impl Beast for CommonBeast {
 ```
 
 We use the [`matches`](https://doc.rust-lang.org/std/macro.matches.html) macro to allow both `Empty` and `Player`.
-Now when we run the game and aloow the beasts to catch the player we get this:
+Now when we run the game and allow the beasts to catch the player we get this:
 
 ```console
 cargo run
@@ -1617,7 +1617,7 @@ impl Player {
 }
 ```
 
-Let's start the game of with 3 lives for now.
+Let's start the game off with 3 lives for now.
 Then we should probably add the lives to our footer so that we know how many lives the player has left before the game
 ends:
 
@@ -1802,7 +1802,7 @@ cargo run
                                                               Level: 1  Lives: 3
 ```
 
-Now we can enable the the beast to properly kill the player.
+Now we can enable the beast to properly kill the player.
 
 ## Feeding The Beast
 
@@ -2926,7 +2926,7 @@ impl Player {
 
 Now we just need to actually return that struct from our `advance` method:
 
-```rust {data-file="player.rs", data-fold="['1-63', '114-129']", hl_lines=[66, 68, "73-74", "90-93", "95-97", 100, "103-104", "106-107", "110-111"]}
+```rust {data-file="player.rs", data-fold="['1-63', '112-127']", hl_lines=[66, 68, "73-74", "90-93", "95-97", 100, 104, 106, 109]}
 use rand::Rng;
 
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
@@ -3000,7 +3000,7 @@ impl Player {
 		{
 			match board[&first_position] {
 				Tile::Empty | Tile::CommonBeast => {
-					return AdvanceEffect::MoveIntoTile(first_position);
+					AdvanceEffect::MoveIntoTile(first_position)
 				},
 				Tile::Block => {
 					let mut current_tile = Tile::Block;
@@ -3030,14 +3030,12 @@ impl Player {
 						}
 					}
 
-					return AdvanceEffect::Stay;
+					AdvanceEffect::Stay
 				},
-				Tile::Player | Tile::StaticBlock => {
-					return AdvanceEffect::Stay;
-				},
+				Tile::Player | Tile::StaticBlock => AdvanceEffect::Stay,
 			}
 		} else {
-			return AdvanceEffect::Stay;
+			AdvanceEffect::Stay
 		}
 	}
 
@@ -3061,7 +3059,7 @@ impl Player {
 The `Game` struct now takes responsibility for checking if the tile, the player moves into, contains a beast and deal
 with the consequences.
 We were also able to collapse the match arm for `Empty` and `CommonBeast` because they now do the same thing.
-Now we just pass `&Board` instead of `&mut Beast` and rust is here to make sure we don't go beyond that scope.
+Now we just pass `&Board` instead of `&mut Beast` and Rust is here to make sure we don't go beyond that scope.
 
 Now let's go into our engine and implement the things we used to do in the `Player` struct.
 
@@ -3121,10 +3119,10 @@ impl Game {
 		'game_loop: loop {
 			if let Ok(byte) = self.input_receiver.try_recv() {
 				let advance_effect = match byte as char {
-					'w' => self.player.advance(&mut self.board, &Direction::Up),
-					'd' => self.player.advance(&mut self.board, &Direction::Right),
-					's' => self.player.advance(&mut self.board, &Direction::Down),
-					'a' => self.player.advance(&mut self.board, &Direction::Left),
+					'w' => self.player.advance(&self.board, &Direction::Up),
+					'd' => self.player.advance(&self.board, &Direction::Right),
+					's' => self.player.advance(&self.board, &Direction::Down),
+					'a' => self.player.advance(&self.board, &Direction::Left),
 					'q' => {
 						println!("Good bye");
 						return;
@@ -3232,7 +3230,7 @@ A quick search for `&mut Board` will yield that we also make changes to the boar
 earlier.
 Let's fix that one up too:
 
-```rust {data-file="player.rs", data-fold="['1-114']", hl_lines=[115, 126]}
+```rust {data-file="player.rs", data-fold="['1-112']", hl_lines=[113, 124]}
 use rand::Rng;
 
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
@@ -3306,7 +3304,7 @@ impl Player {
 		{
 			match board[&first_position] {
 				Tile::Empty | Tile::CommonBeast => {
-					return AdvanceEffect::MoveIntoTile(first_position);
+					AdvanceEffect::MoveIntoTile(first_position)
 				},
 				Tile::Block => {
 					let mut current_tile = Tile::Block;
@@ -3336,14 +3334,12 @@ impl Player {
 						}
 					}
 
-					return AdvanceEffect::Stay;
+					AdvanceEffect::Stay
 				},
-				Tile::Player | Tile::StaticBlock => {
-					return AdvanceEffect::Stay;
-				},
+				Tile::Player | Tile::StaticBlock => AdvanceEffect::Stay,
 			}
 		} else {
-			return AdvanceEffect::Stay;
+			AdvanceEffect::Stay
 		}
 	}
 
@@ -3421,10 +3417,10 @@ impl Game {
 		'game_loop: loop {
 			if let Ok(byte) = self.input_receiver.try_recv() {
 				let advance_effect = match byte as char {
-					'w' => self.player.advance(&mut self.board, &Direction::Up),
-					'd' => self.player.advance(&mut self.board, &Direction::Right),
-					's' => self.player.advance(&mut self.board, &Direction::Down),
-					'a' => self.player.advance(&mut self.board, &Direction::Left),
+					'w' => self.player.advance(&self.board, &Direction::Up),
+					'd' => self.player.advance(&self.board, &Direction::Right),
+					's' => self.player.advance(&self.board, &Direction::Down),
+					'a' => self.player.advance(&self.board, &Direction::Left),
 					'q' => {
 						println!("Good bye");
 						return;
@@ -3523,8 +3519,8 @@ impl Game {
 Now we got it all working again and we feel well accomplished and
 [like a person who knows where their towel is](https://hitchhikers.fandom.com/wiki/Towel).
 
-After a short break during which we marveled at the how far we've already come, let's now allow the player to walk into
-a beast and die.
+After a short break during which we marveled at how far we've already come, let's now allow the player to walk into a
+beast and die.
 
 ## A Step Too Far
 
@@ -3586,10 +3582,10 @@ impl Game {
 		'game_loop: loop {
 			if let Ok(byte) = self.input_receiver.try_recv() {
 				let advance_effect = match byte as char {
-					'w' => self.player.advance(&mut self.board, &Direction::Up),
-					'd' => self.player.advance(&mut self.board, &Direction::Right),
-					's' => self.player.advance(&mut self.board, &Direction::Down),
-					'a' => self.player.advance(&mut self.board, &Direction::Left),
+					'w' => self.player.advance(&self.board, &Direction::Up),
+					'd' => self.player.advance(&self.board, &Direction::Right),
+					's' => self.player.advance(&self.board, &Direction::Down),
+					'a' => self.player.advance(&self.board, &Direction::Left),
 					'q' => {
 						println!("Good bye");
 						return;
@@ -3733,10 +3729,11 @@ Game Over
 ```
 
 This is what the end looks like.
-The player is next to the best, one frame before the fetal last step and the lives in the footer show `1`.
+The player is next to the beast, one frame before the fatal last step and the lives in the footer show `1`.
 Let's fix that.
 
-We're currently check if we have enough lives left in two places: the movement of the player and the movement of beasts.
+We're currently checking if we have enough lives left in two places: the movement of the player and the movement of
+beasts.
 Perhaps we move that check to the end of the game loop:
 
 ```rust {data-file="game.rs", data-fold="['1-66', '82-107', '130-157']", hl_lines=[75, "113-115", "124-127"]}
@@ -3795,10 +3792,10 @@ impl Game {
 		'game_loop: loop {
 			if let Ok(byte) = self.input_receiver.try_recv() {
 				let advance_effect = match byte as char {
-					'w' => self.player.advance(&mut self.board, &Direction::Up),
-					'd' => self.player.advance(&mut self.board, &Direction::Right),
-					's' => self.player.advance(&mut self.board, &Direction::Down),
-					'a' => self.player.advance(&mut self.board, &Direction::Left),
+					'w' => self.player.advance(&self.board, &Direction::Up),
+					'd' => self.player.advance(&self.board, &Direction::Right),
+					's' => self.player.advance(&self.board, &Direction::Down),
+					'a' => self.player.advance(&self.board, &Direction::Left),
 					'q' => {
 						println!("Good bye");
 						return;
@@ -3990,10 +3987,10 @@ impl Game {
 		'game_loop: loop {
 			if let Ok(byte) = self.input_receiver.try_recv() {
 				let advance_effect = match byte as char {
-					'w' => self.player.advance(&mut self.board, &Direction::Up),
-					'd' => self.player.advance(&mut self.board, &Direction::Right),
-					's' => self.player.advance(&mut self.board, &Direction::Down),
-					'a' => self.player.advance(&mut self.board, &Direction::Left),
+					'w' => self.player.advance(&self.board, &Direction::Up),
+					'd' => self.player.advance(&self.board, &Direction::Right),
+					's' => self.player.advance(&self.board, &Direction::Down),
+					'a' => self.player.advance(&self.board, &Direction::Left),
 					'q' => {
 						println!("Good bye");
 						return;
@@ -4149,7 +4146,7 @@ is also a block.
 So we need to add another option to our `AdvanceEffect` enum to communicate to the game engine that the player would
 like to squish a beast:
 
-```rust {data-file="player.rs", data-fold="['1-4', '11-129']", hl_lines=[9]}
+```rust {data-file="player.rs", data-fold="['1-4', '11-127']", hl_lines=[9]}
 use rand::Rng;
 
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
@@ -4224,7 +4221,7 @@ impl Player {
 		{
 			match board[&first_position] {
 				Tile::Empty | Tile::CommonBeast => {
-					return AdvanceEffect::MoveIntoTile(first_position);
+					AdvanceEffect::MoveIntoTile(first_position)
 				},
 				Tile::Block => {
 					let mut current_tile = Tile::Block;
@@ -4254,14 +4251,12 @@ impl Player {
 						}
 					}
 
-					return AdvanceEffect::Stay;
+					AdvanceEffect::Stay
 				},
-				Tile::Player | Tile::StaticBlock => {
-					return AdvanceEffect::Stay;
-				},
+				Tile::Player | Tile::StaticBlock => AdvanceEffect::Stay,
 			}
 		} else {
-			return AdvanceEffect::Stay;
+			AdvanceEffect::Stay
 		}
 	}
 
@@ -4282,10 +4277,10 @@ impl Player {
 ```
 
 We tell the engine where the player is moving to and where the beast was that we're about to squish.
-Let's now make sure we return this new option only if we find a block or the end of the board behind the best while
+Let's now make sure we return this new option only if we find a block or the end of the board behind the beast while
 looking through a blockchain:
 
-```rust {data-file="player.rs", data-fold="['1-87', '124-153']", hl_lines=["96-120"]}
+```rust {data-file="player.rs", data-fold="['1-87', '124-151']", hl_lines=["96-120"]}
 use rand::Rng;
 
 use crate::{BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, Tile, board::Board};
@@ -4360,7 +4355,7 @@ impl Player {
 		{
 			match board[&first_position] {
 				Tile::Empty | Tile::CommonBeast => {
-					return AdvanceEffect::MoveIntoTile(first_position);
+					AdvanceEffect::MoveIntoTile(first_position)
 				},
 				Tile::Block => {
 					let mut current_tile = Tile::Block;
@@ -4414,14 +4409,12 @@ impl Player {
 						}
 					}
 
-					return AdvanceEffect::Stay;
+					AdvanceEffect::Stay
 				},
-				Tile::Player | Tile::StaticBlock => {
-					return AdvanceEffect::Stay;
-				},
+				Tile::Player | Tile::StaticBlock => AdvanceEffect::Stay,
 			}
 		} else {
-			return AdvanceEffect::Stay;
+			AdvanceEffect::Stay
 		}
 	}
 
@@ -4504,10 +4497,10 @@ impl Game {
 		'game_loop: loop {
 			if let Ok(byte) = self.input_receiver.try_recv() {
 				let advance_effect = match byte as char {
-					'w' => self.player.advance(&mut self.board, &Direction::Up),
-					'd' => self.player.advance(&mut self.board, &Direction::Right),
-					's' => self.player.advance(&mut self.board, &Direction::Down),
-					'a' => self.player.advance(&mut self.board, &Direction::Left),
+					'w' => self.player.advance(&self.board, &Direction::Up),
+					'd' => self.player.advance(&self.board, &Direction::Right),
+					's' => self.player.advance(&self.board, &Direction::Down),
+					'a' => self.player.advance(&self.board, &Direction::Left),
 					'q' => {
 						println!("Good bye");
 						return;
@@ -4716,22 +4709,711 @@ So let's now check within our game loop if there are any beasts left and if ther
 
 ## Next Level
 
+To move to the next level we need to think about how we
+[generate our terrain](../learning-rust-by-building-the-old-terminal-game-beast-from-1984-part-2/#giving-it-a-shuffle)
+again.
+Right now we have the `Level::One` hardcoded in our `new` method on `Board`:
 
+```rust {data-file="board.rs", data-fold="['1-31', '33-42', '50-71', '75-110']", hl_lines=[]}
+use rand::seq::SliceRandom;
 
-## TODO
-- [x] kill player
-- [x] re-spawning
-- [x] single responsibility concept on player
-- [x] player walk into beast
-- [x] off by one one rendering
-- [x] kill beasts
-- [ ] detecting The End Of A Level
-- [ ] ideas for where to next
-	- scoring
-	- help
-	- super beast
-	- hatched beasts
-	- limit on how many blocks can be pushed
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RED, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT,
+	BOARD_WIDTH, Coord, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	level::{Level, LevelConfig},
+};
+
+use std::ops::{Index, IndexMut};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Index<&Coord> for Board {
+	type Output = Tile;
+
+	fn index(&self, coord: &Coord) -> &Self::Output {
+		&self.buffer[coord.row][coord.column]
+	}
+}
+
+impl IndexMut<&Coord> for Board {
+	fn index_mut(&mut self, coord: &Coord) -> &mut Self::Output {
+		&mut self.buffer[coord.row][coord.column]
+	}
+}
+
+impl Board {
+	pub fn new() -> (Self, Vec<CommonBeast>) {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| Coord { column, row }))
+			.filter(|coord| !(coord.column == 0 && coord.row == 0))
+			.collect::<Vec<Coord>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		buffer[0][0] = Tile::Player;
+
+		let LevelConfig {
+			block_count,
+			static_block_count,
+			common_beast_count,
+		} = Level::One.get_level_config();
+
+		for _ in 0..block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::Block;
+		}
+
+		for _ in 0..static_block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::StaticBlock;
+		}
+
+		let mut beasts = Vec::with_capacity(common_beast_count);
+		for _ in 0..common_beast_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more common beasts than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::CommonBeast;
+			beasts.push(CommonBeast::new(coord));
+		}
+
+		(Self { buffer }, beasts)
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+					Tile::CommonBeast => {
+						output.push_str(&format!("{ANSI_RED}├┤{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+That was good for the creation of the game but now we want to re-use this function when moving to the next level.
+So let's pass in a reference to the level we want to generate the terrain for:
+
+```rust {data-file="board.rs", data-fold="['1-31', '33-42', '50-71', '75-110']", hl_lines=[32, 48]}
+use rand::seq::SliceRandom;
+
+use crate::{
+	ANSI_CYAN, ANSI_GREEN, ANSI_RED, ANSI_RESET, ANSI_YELLOW, BOARD_HEIGHT,
+	BOARD_WIDTH, Coord, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	level::{Level, LevelConfig},
+};
+
+use std::ops::{Index, IndexMut};
+
+#[derive(Debug)]
+pub struct Board {
+	pub buffer: [[Tile; BOARD_WIDTH]; BOARD_HEIGHT],
+}
+
+impl Index<&Coord> for Board {
+	type Output = Tile;
+
+	fn index(&self, coord: &Coord) -> &Self::Output {
+		&self.buffer[coord.row][coord.column]
+	}
+}
+
+impl IndexMut<&Coord> for Board {
+	fn index_mut(&mut self, coord: &Coord) -> &mut Self::Output {
+		&mut self.buffer[coord.row][coord.column]
+	}
+}
+
+impl Board {
+	pub fn new(level: &Level) -> (Self, Vec<CommonBeast>) {
+		let mut buffer = [[Tile::Empty; BOARD_WIDTH]; BOARD_HEIGHT];
+
+		let mut all_coords = (0..BOARD_HEIGHT)
+			.flat_map(|row| (0..BOARD_WIDTH).map(move |column| Coord { column, row }))
+			.filter(|coord| !(coord.column == 0 && coord.row == 0))
+			.collect::<Vec<Coord>>();
+		let mut rng = rand::rng();
+		all_coords.shuffle(&mut rng);
+
+		buffer[0][0] = Tile::Player;
+
+		let LevelConfig {
+			block_count,
+			static_block_count,
+			common_beast_count,
+		} = level.get_level_config();
+
+		for _ in 0..block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more blocks than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::Block;
+		}
+
+		for _ in 0..static_block_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more static blocks than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::StaticBlock;
+		}
+
+		let mut beasts = Vec::with_capacity(common_beast_count);
+		for _ in 0..common_beast_count {
+			let coord = all_coords.pop().expect(
+				"We tried to place more common beasts than there were available spaces on the board",
+			);
+			buffer[coord.row][coord.column] = Tile::CommonBeast;
+			beasts.push(CommonBeast::new(coord));
+		}
+
+		(Self { buffer }, beasts)
+	}
+
+	pub fn render(&self) -> String {
+		let mut output = format!(
+			"{ANSI_YELLOW}▛{}▜{ANSI_RESET}\n",
+			"▀".repeat(BOARD_WIDTH * TILE_SIZE)
+		);
+
+		for rows in self.buffer {
+			output.push_str(&format!("{ANSI_YELLOW}▌{ANSI_RESET}"));
+			for tile in rows {
+				match tile {
+					Tile::Empty => output.push_str("  "),
+					Tile::Player => {
+						output.push_str(&format!("{ANSI_CYAN}◀▶{ANSI_RESET}"))
+					},
+					Tile::Block => {
+						output.push_str(&format!("{ANSI_GREEN}░░{ANSI_RESET}"))
+					},
+					Tile::StaticBlock => {
+						output.push_str(&format!("{ANSI_YELLOW}▓▓{ANSI_RESET}"))
+					},
+					Tile::CommonBeast => {
+						output.push_str(&format!("{ANSI_RED}├┤{ANSI_RESET}"))
+					},
+				}
+			}
+			output.push_str(&format!("{ANSI_YELLOW}▐{ANSI_RESET}\n"));
+		}
+		output.push_str(&format!(
+			"{ANSI_YELLOW}▙{}▟{ANSI_RESET}",
+			"▄".repeat(BOARD_WIDTH * TILE_SIZE)
+		));
+
+		output
+	}
+}
+```
+
+In our `Game` struct we now need to pass in the first level when starting the game:
+
+```rust {data-file="game.rs", data-fold="['1-25', '48-174']", hl_lines=[27]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::{AdvanceEffect, Player},
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new(&Level::One);
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		'game_loop: loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				let advance_effect = match byte as char {
+					'w' => self.player.advance(&self.board, &Direction::Up),
+					'd' => self.player.advance(&self.board, &Direction::Right),
+					's' => self.player.advance(&self.board, &Direction::Down),
+					'a' => self.player.advance(&self.board, &Direction::Left),
+					'q' => {
+						println!("Good bye");
+						return;
+					},
+					_ => AdvanceEffect::Stay,
+				};
+
+				match advance_effect {
+					AdvanceEffect::Stay => {},
+					AdvanceEffect::MoveIntoTile(player_position) => {
+						if self.board[&player_position] == Tile::CommonBeast {
+							self.player.lives -= 1;
+							if self.player.lives > 0 {
+								let new_position = self.player.respawn(&self.board);
+								self.board[&self.player.position] = Tile::Empty;
+								self.player.position = new_position;
+								self.board[&self.player.position] = Tile::Player;
+							} else {
+								self.board[&self.player.position] = Tile::Empty;
+							}
+						} else {
+							self.board[&self.player.position] = Tile::Empty;
+							self.player.position = player_position;
+							self.board[&self.player.position] = Tile::Player;
+						}
+					},
+					AdvanceEffect::MoveAndPushBlock {
+						player_to,
+						block_to,
+					} => {
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_to;
+						self.board[&self.player.position] = Tile::Player;
+						self.board[&block_to] = Tile::Block;
+					},
+					AdvanceEffect::SquishBeast {
+						player_to,
+						beast_at,
+					} => {
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_to;
+						self.board[&self.player.position] = Tile::Player;
+						self.beasts.retain_mut(|beast| beast.position != beast_at);
+						self.board[&beast_at] = Tile::Block;
+					},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+								self.player.lives -= 1;
+
+								if self.player.lives > 0 {
+									let new_position = self.player.respawn(&self.board);
+									self.player.position = new_position;
+									self.board[&self.player.position] = Tile::Player;
+								}
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+
+			if self.player.lives == 0 {
+				println!("Game Over");
+				break 'game_loop;
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
+Now the code compiles again and we can use our `new` method on the `Board` struct for other levels too.
+Let's make one more adjustment to help us when detecting the end of a level.
+Instead of checking the level directly and hardcoding if there are more levels after this one, let's implement a `next`
+method on the `Level` enum itself that returns an Option.
+This is how Rust likes to do things and will make the rest of the code very smooth.
+
+```rust {data-file="level.rs", data-fold="['1-44']", hl_lines=["45-51"]}
+pub struct LevelConfig {
+	pub block_count: usize,
+	pub static_block_count: usize,
+	pub common_beast_count: usize,
+}
+
+#[derive(Debug)]
+pub enum Level {
+	One,
+	Two,
+	Three,
+}
+
+impl std::fmt::Display for Level {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		match self {
+			Level::One => write!(f, "1"),
+			Level::Two => write!(f, "2"),
+			Level::Three => write!(f, "3"),
+		}
+	}
+}
+
+impl Level {
+	pub fn get_level_config(&self) -> LevelConfig {
+		match self {
+			Level::One => LevelConfig {
+				block_count: 30,
+				static_block_count: 5,
+				common_beast_count: 3,
+			},
+			Level::Two => LevelConfig {
+				block_count: 20,
+				static_block_count: 10,
+				common_beast_count: 5,
+			},
+			Level::Three => LevelConfig {
+				block_count: 12,
+				static_block_count: 20,
+				common_beast_count: 15,
+			},
+		}
+	}
+
+	pub fn next(&self) -> Option<Level> {
+		match self {
+			Level::One => Some(Level::Two),
+			Level::Two => Some(Level::Three),
+			Level::Three => None,
+		}
+	}
+}
+```
+
+That way we keep anything to do with levels in the same place and if we ever want to add more levels, we can just do
+that in this file.
+
+Now we're ready to check for the end of the game in our game loop:
+
+```rust {data-file="game.rs", data-fold="['1-7', '15-144', '158-187']", hl_lines=[9, "146-157"]}
+use std::{
+	io::{Read, stdin},
+	sync::mpsc,
+	thread,
+	time::{Duration, Instant},
+};
+
+use crate::{
+	BOARD_HEIGHT, BOARD_WIDTH, Coord, Direction, TILE_SIZE, Tile,
+	beasts::{Beast, CommonBeast},
+	board::Board,
+	level::Level,
+	player::{AdvanceEffect, Player},
+};
+
+#[derive(Debug)]
+pub struct Game {
+	board: Board,
+	player: Player,
+	level: Level,
+	beasts: Vec<CommonBeast>,
+	input_receiver: mpsc::Receiver<u8>,
+}
+
+impl Game {
+	pub fn new() -> Self {
+		let (board, beasts) = Board::new(&Level::One);
+		let (input_sender, input_receiver) = mpsc::channel::<u8>();
+		let stdin = stdin();
+		thread::spawn(move || {
+			let mut lock = stdin.lock();
+			let mut buffer = [0_u8; 1];
+			while lock.read_exact(&mut buffer).is_ok() {
+				if input_sender.send(buffer[0]).is_err() {
+					break;
+				}
+			}
+		});
+
+		Self {
+			board,
+			player: Player::new(),
+			level: Level::One,
+			beasts,
+			input_receiver,
+		}
+	}
+
+	pub fn play(&mut self) {
+		let mut last_tick = Instant::now();
+		println!("{}", self.render(false));
+
+		'game_loop: loop {
+			if let Ok(byte) = self.input_receiver.try_recv() {
+				let advance_effect = match byte as char {
+					'w' => self.player.advance(&self.board, &Direction::Up),
+					'd' => self.player.advance(&self.board, &Direction::Right),
+					's' => self.player.advance(&self.board, &Direction::Down),
+					'a' => self.player.advance(&self.board, &Direction::Left),
+					'q' => {
+						println!("Good bye");
+						return;
+					},
+					_ => AdvanceEffect::Stay,
+				};
+
+				match advance_effect {
+					AdvanceEffect::Stay => {},
+					AdvanceEffect::MoveIntoTile(player_position) => {
+						if self.board[&player_position] == Tile::CommonBeast {
+							self.player.lives -= 1;
+							if self.player.lives > 0 {
+								let new_position = self.player.respawn(&self.board);
+								self.board[&self.player.position] = Tile::Empty;
+								self.player.position = new_position;
+								self.board[&self.player.position] = Tile::Player;
+							} else {
+								self.board[&self.player.position] = Tile::Empty;
+							}
+						} else {
+							self.board[&self.player.position] = Tile::Empty;
+							self.player.position = player_position;
+							self.board[&self.player.position] = Tile::Player;
+						}
+					},
+					AdvanceEffect::MoveAndPushBlock {
+						player_to,
+						block_to,
+					} => {
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_to;
+						self.board[&self.player.position] = Tile::Player;
+						self.board[&block_to] = Tile::Block;
+					},
+					AdvanceEffect::SquishBeast {
+						player_to,
+						beast_at,
+					} => {
+						self.board[&self.player.position] = Tile::Empty;
+						self.player.position = player_to;
+						self.board[&self.player.position] = Tile::Player;
+						self.beasts.retain_mut(|beast| beast.position != beast_at);
+						self.board[&beast_at] = Tile::Block;
+					},
+				}
+
+				println!("{}", self.render(true));
+			}
+
+			if last_tick.elapsed() > Duration::from_millis(1000) {
+				last_tick = Instant::now();
+				for beast in self.beasts.iter_mut() {
+					if let Some(new_position) =
+						beast.advance(&self.board, &self.player.position)
+					{
+						match self.board[&new_position] {
+							Tile::Empty => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+							},
+							Tile::Player => {
+								self.board[&beast.position] = Tile::Empty;
+								beast.position = new_position;
+								self.board[&new_position] = Tile::CommonBeast;
+								self.player.lives -= 1;
+
+								if self.player.lives > 0 {
+									let new_position = self.player.respawn(&self.board);
+									self.player.position = new_position;
+									self.board[&self.player.position] = Tile::Player;
+								}
+							},
+							_ => {},
+						}
+					}
+				}
+				println!("{}", self.render(true));
+			}
+
+			if self.player.lives == 0 {
+				println!("Game Over");
+				break 'game_loop;
+			}
+
+			if self.beasts.is_empty() {
+				if let Some(level) = self.level.next() {
+					let (board, beasts) = Board::new(&level);
+					self.board = board;
+					self.beasts = beasts;
+					self.level = level;
+					self.player.position = Coord { column: 0, row: 0 };
+				} else {
+					println!("You won");
+					break 'game_loop;
+				}
+			}
+		}
+	}
+
+	fn render(&self, reset: bool) -> String {
+		const BORDER_SIZE: usize = 1;
+		const FOOTER_SIZE: usize = 1;
+		const FOOTER_LENGTH: usize = 11;
+
+		let mut board = if reset {
+			format!(
+				"\x1B[{}F",
+				BORDER_SIZE + BOARD_HEIGHT + BORDER_SIZE + FOOTER_SIZE
+			)
+		} else {
+			String::new()
+		};
+
+		board.push_str(&format!(
+			"{board}\n{footer:>width$}{level}  Lives: {lives}",
+			board = self.board.render(),
+			footer = "Level: ",
+			level = self.level,
+			lives = self.player.lives,
+			width =
+				BORDER_SIZE + BOARD_WIDTH * TILE_SIZE + BORDER_SIZE - FOOTER_LENGTH,
+		));
+
+		board
+	}
+}
+```
+
+Within our game loop we check if there are any beasts left and if there aren't we:
+- get the next level
+- generate a new board which will also return the new beast instances
+- set the player position to top left because that's what we assume in the terrain generation
+
+If the `next` method on the `Level` returns `None` then we know we're at the end of the game and can stop the game loop.
+
+We've done it!
+The game is complete and ready to be played.
+You stuck it out till the very end and now we got a game you can take to new heights from here!
+
+The way I learn is to write code myself so I think, to push yourself a little now and take ownership of what we got I
+left a couple things open for you to implement yourself.
+
+## Ideas For What's Next
+
+We haven't implemented scoring yet but you have everything you need to do that yourself.
+You could decide how many points one gets when you squish a beast, complete a level or push blocks.
+Maybe there are little gems the player has to collect to make points too?
+You could display the score in the footer.
+
+The original game also had different types of beasts that came out in the later levels.
+The SuperBeast looked like this ╟╢ and had better path finding and you have to squish it against a static block.
+It also came with eggs ○○ that would lay dormant for a while until they hatched into HatchedBeasts ╬╬ which were able
+to push blocks and tried to not just kill you by catching you but also try to squish you.
+We do have that nice beast trait you could use to build out those other beasts and are totally free to come up with your
+own beasts.
+
+I've seen people be even more creative with one person implementing a limit on how many blocks the player can push which
+changed to fewer and fewer for later levels making it harder for you to move around the board and squish beasts.
+
+There are lots of ideas you could let loose on this game now that you understand how we built it.
+
+I hope this tutorial was helpful for learning Rust.
+
+Until next time...
 
 <br><br><br>
 ![A cheerful cartoon crab, representing the Rust mascot Ferris, holding a sign that reads ‘Don’t be shellfish! Share
