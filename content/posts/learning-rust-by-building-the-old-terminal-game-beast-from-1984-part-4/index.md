@@ -1,8 +1,6 @@
 ---
 title: 'Learning Rust By Building The Old Terminal Game Beast From 1984, Part 4'
 date: '2025-07-04T08:37:20+10:00'
-draft: false
-visibility: false
 summary: >
   In the last post we added path-finding to our beasts and a game loop.
   In this post we will finish the game by squishing beasts and moving through levels.
@@ -11,7 +9,7 @@ description: >
   This is the fourth part in which we finish our game by squishing beasts and finishing levels.
 toc: true
 readTime: true
-tags: ["rust", "terminal", "game development", "tutorial"]
+tags: ["rust", "terminal", "game development", "tutorial", "finishing"]
 showTags: true
 hideBackToTop: false
 header: assets/header.jpg
@@ -52,7 +50,9 @@ We ended the last part with this code:
 ```
 
 <details class="where_we_left_off">
-<summary>Show all files</summary>
+<summary>Show all files from previous part</summary>
+
+<a href="https://github.com/dominikwilkowski/tutorial_beast/archive/refs/tags/part3.zip">Download all files here</a>
 
 ```toml {data-file="Cargo.toml", data-fold="[]", hl_lines=[]}
 [package]
@@ -5385,12 +5385,11 @@ Within our game loop we check if there are any beasts left and if there aren't w
 
 If the `next` method on the `Level` returns `None` then we know we're at the end of the game and can stop the game loop.
 
+![A screen recording of the game with three beasts chasing the player and the player squishing the beasts one by one until all are gone and the screen moves to the next level with more bests and new terrain](assets/final.svg)
+
 We've done it!
 The game is complete and ready to be played.
 You stuck it out till the very end and now we got a game you can take to new heights from here!
-
-The way I learn is to write code myself so I think, to push yourself a little now and take ownership of what we got I
-left a couple things open for you to implement yourself.
 
 ## Ideas For What's Next
 

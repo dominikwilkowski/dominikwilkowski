@@ -1,8 +1,6 @@
 ---
 title: 'Learning Rust By Building The Old Terminal Game Beast From 1984, Part 2'
 date: '2025-06-06T20:03:35+10:00'
-draft: false
-visibility: false
 summary: >
   In the last post we set up our board and made the player walk around.
   In this post we will generate terrain for each level and implement a way for the player to push blocks.
@@ -11,7 +9,7 @@ description: >
   This is the second part in which we generate our terrain and learn how to push blocks.
 toc: true
 readTime: true
-tags: ["rust", "terminal", "game development", "tutorial"]
+tags: ["rust", "terminal", "game development", "tutorial", "randomness"]
 showTags: true
 hideBackToTop: false
 header: assets/header.jpg
@@ -41,7 +39,9 @@ We ended the last part with this code:
 ```
 
 <details class="where_we_left_off">
-<summary>Show all files</summary>
+<summary>Show all files from previous part</summary>
+
+<a href="https://github.com/dominikwilkowski/tutorial_beast/archive/refs/tags/part1.zip">Download all files here</a>
 
 ```toml {data-file="Cargo.toml"}
 [package]

@@ -1,8 +1,6 @@
 ---
 title: 'Learning Rust By Building The Old Terminal Game Beast From 1984, Part 1'
 date: '2025-05-21T21:11:29+10:00'
-draft: false
-visibility: false
 summary: >
   You just read the Rust book and now want to apply your new skills to something real.
   Let's build the terminal game I grew up with to harden your new skills and in the process learn how the terminal works
@@ -12,7 +10,7 @@ description: >
   This is the first part in which we setup our board and learn how to move our player.
 toc: true
 readTime: true
-tags: ["rust", "terminal", "game development", "tutorial"]
+tags: ["rust", "terminal", "game development", "tutorial", "ANSI"]
 showTags: true
 hideBackToTop: false
 header: assets/header.jpg

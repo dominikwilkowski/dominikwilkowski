@@ -1,8 +1,6 @@
 ---
 title: 'Learning Rust By Building The Old Terminal Game Beast From 1984, Part 3'
 date: '2025-06-17T14:38:49+10:00'
-draft: false
-visibility: false
 summary: >
   In the last post we setup our board and made the player push blocks around.
   In this post we will add path-finding to our beasts and add a game loop.
@@ -11,7 +9,7 @@ description: >
   This is the third part in which we add our beasts, learn about path-finding and implement a game loop.
 toc: true
 readTime: true
-tags: ["rust", "terminal", "game development", "tutorial"]
+tags: ["rust", "terminal", "game development", "tutorial", "path-finding"]
 showTags: true
 hideBackToTop: false
 header: assets/header.jpg
@@ -45,7 +43,9 @@ We ended the last part with this code:
 ```
 
 <details class="where_we_left_off">
-<summary>Show all files</summary>
+<summary>Show all files from previous part</summary>
+
+<a href="https://github.com/dominikwilkowski/tutorial_beast/archive/refs/tags/part2.zip">Download all files here</a>
 
 ```toml {data-file="Cargo.toml"}
 [package]
