@@ -29,10 +29,11 @@
 	);
 
 	/* Typography */
-	--font-body: "Literata", Georgia, Cambria, "Noto Serif", "Droif Serif",
-		ui-serif, serif;
-	--font-mono: ui-monospace, monospace, Menlo, Consolas, Monaco,
-		Liberation Mono, Lucida Console;
+	--font-body:
+		"Literata", Georgia, Cambria, "Noto Serif", "Droif Serif", ui-serif, serif;
+	--font-mono:
+		ui-monospace, monospace, Menlo, Consolas, Monaco, Liberation Mono,
+		Lucida Console;
 
 	--h1-margin-top: 2rem;
 	--h1-margin-bottom: 1.5rem;
@@ -49,7 +50,7 @@
 	--h2-font-size: 1.5em;
 	--hx-font-size: 1.3em;
 	--p-font-size: 1em;
-	--p-line-height: 1.6;
+	--p-line-height: 1.8;
 	--caption-font-size: 0.8em;
 
 	/* Lists */

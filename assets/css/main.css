@@ -329,11 +329,14 @@ div.goat.svg-container {
 	table pre {
 		display: grid;
 		margin: 0.5rem 0;
+		min-width: 2.1rem;
 	}
 
 	table tr td:first-child code > span,
+	table tr td:first-child code > span span,
 	table tr td:first-child code details > span {
 		padding-left: 0.75rem !important;
+		padding-right: 0.5rem !important;
 	}
 
 	table tr td:first-child code > span > span {
