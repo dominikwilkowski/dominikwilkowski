@@ -2,6 +2,7 @@
 title: '{{ replace .File.ContentBaseName `-` ` ` | title }}'
 date: '{{ .Date }}'
 draft: true
+visibility: false
 summary: "TODO"
 description: "TODO"
 tags: ["TODO"]

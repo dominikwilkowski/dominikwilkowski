@@ -17,6 +17,18 @@ header: assets/placeholder.png
 
 <div class="ribbon"><img alt="Certified organic content, no AI used" src="/img/stamp.svg"></div>
 
+## Serve
+
+```sh
+rm -rf public && hugo --gc --ignoreCache && hugo server --buildDrafts --disableFastRender
+```
+
+## Add new page
+
+```sh
+hugo new content posts/name-of-page
+```
+
 ## Code Blocks
 
 Normal Rust code:
