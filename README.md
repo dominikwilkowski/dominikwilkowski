@@ -9,7 +9,7 @@
             █▄▀ █▄█ █ ▀ █ █ █ ▀█ █ █ █
 ```
 
-> The great thing about knowledge is that you can give it away and still have it.
+> The great thing about knowledge is that you can give it away and still have it.<br>
 > – Dennis E. Taylor, Bobiverse
 
 More at [dominikwilkowski.com](https://dominikwilkowski.com)
