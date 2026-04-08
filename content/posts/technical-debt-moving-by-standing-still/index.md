@@ -7,7 +7,7 @@ summary: |
   Sometimes progress looks like standing still.
   In software, that pause, the decision to improve what already exists rather than chase what’s next, is often the difference between systems that endure and those that collapse under their own weight.<br>
   This post explores why slowing down to strengthen the foundation is one of the most powerful moves a technology company can make.
-description: A reflection on why addressing technical debt matters more than flashy features, and how steady, boring progress builds resilient software.
+description: A reflection on why addressing technical debt matters more than flashy features and how steady, boring progress builds resilient software.
 tags: ["Management", "Technical Debt"]
 toc: true
 autonumber: false
@@ -25,8 +25,8 @@ header: assets/header.jpg
 In 2009, Apple took an unorthodox approach with its Mac operating system.
 Instead of dazzling customers with flashy new features, it decided to focus on
 something less glamorous but arguably more important: the foundation.
-The release was called Snow Leopard, and its primary goal was to streamline
-performance, improve stability, and shore up the platform's underpinnings rather
+The release was called Snow Leopard and its primary goal was to streamline
+performance, improve stability and shore up the platform's underpinnings rather
 than chase the next attention-grabbing headline.
 It was a deliberate pause, an invitation to fine-tune what already existed and
 bolster long-term health over short-term excitement.
@@ -58,15 +58,15 @@ cards and deposits within draft orders, expanding the customization and
 consistency of checkout experiences via Shopify Functions and Checkout Blocks,
 and adding chat capabilities to checkouts.
 Retailers can now leverage Shop Pay Installments for their Shop Pay Component,
-optimize fulfillment using location metafields, and enrich customer accounts
+optimize fulfillment using location metafields and enrich customer accounts
 with extensions and apps, particularly beneficial for B2B buyers.
 
 Additionally, they've introduced segmentation for Google Ads audiences,
 integrated session recordings and heat-maps into Pixels, offered new analytics
-and discount extension capabilities, and broadened Shop Campaigns beyond Plus
+and discount extension capabilities and broadened Shop Campaigns beyond Plus
 merchants.
 On the developer side, Shopify is elevating GraphQL as the primary admin API,
-introducing more flexible theme blocks, and rolling out Sidekick, an AI
+introducing more flexible theme blocks and rolling out Sidekick, an AI
 assistant, to more brands.
 But, as mentioned, I believe this is only scratching the surface of the true
 improvements.
@@ -96,7 +96,7 @@ back.
 ## The cost of neglecting technical debt
 
 When you neglect technical debt, it compounds.
-The interest takes the form of slower development cycles, fragile systems, and
+The interest takes the form of slower development cycles, fragile systems and
 increasing costs of adding new features.
 Here's an example: imagine you build an e-commerce platform and skip writing
 automated tests to hit an aggressive launch date.
@@ -192,14 +192,14 @@ That's how you ensure that your systems remain a foundation for growth, not a
 barrier to it.
 
 In the end, software is a living, breathing entity.
-It needs constant care, attention, and iteration to stay relevant.
+It needs constant care, attention and iteration to stay relevant.
 Keeping an eye on technical debt is one of the most effective ways to keep your
-software, and your company, alive and healthy.
+software and your company, alive and healthy.
 As a CTO, this is 90% of my job: making decisions today that ensure you'll still
 be thriving years from now.
 
 Technical debt isn't a monster to fear, but a tool to wield carefully.<br>
-Manage it with intent, and it will serve you well.<br>
-Ignore it, and it will consume you.<br>
+Manage it with intent and it will serve you well.<br>
+Ignore it and it will consume you.<br>
 Don't fear the snow leopard.<br>
 Make it your friend.

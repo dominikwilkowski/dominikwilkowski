@@ -12,6 +12,7 @@ showTags: true
 
 ## Focus
 My focus will always be the core business.
+I thrive on change but will always work on bringing order to the chaos.
 I return to first principles and stay grounded in business realities.
 However, my bias is product: creating something that customers love and want to come back for.
 
@@ -37,7 +38,7 @@ However it's important to me to be able to shift tone as there are times when we
 
 ## Leading teams
 I work hard to embrace people's strengths but I'll also seek out lost causes and weed out toxicity to prevent wasted effort on either side.
-I lead from the front and will get hands-on when needed to unblock teams, raise standards, and build momentum all while making sure I don't become the bottle neck for teams or a disrupter their velocity.
+I lead from the front and will get hands-on when needed to unblock teams, raise standards and build momentum all while making sure I don't become the bottle neck for teams or a disrupter their velocity.
 Sometimes I teach new languages or concepts as I get excited about new things as much as others.
 The best teams are the teams who love solving problems, so I foster curiosity and everyone's inner nerd.
 I create a transparent environment and give people the option to know more if they so choose.

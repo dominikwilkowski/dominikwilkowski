@@ -60,7 +60,7 @@ language.
 ## What We're Building
 
 [BEAST](https://en.wikipedia.org/wiki/Beast_(video_game)) is a terminal-based action game developed for MS-DOS by Dan
-Baker, Alan Brown, Mark Hamilton, and Derrick Shadel.
+Baker, Alan Brown, Mark Hamilton and Derrick Shadel.
 It was distributed as shareware in 1984.
 
 It's a game I grew up with back when I was young _(everything was still black and white, there were no mobile phones,
@@ -115,7 +115,7 @@ This will create a new Rust project named `beast` with a
 ```
 
 Cargo has two [entry points](https://doc.rust-lang.org/stable/cargo/reference/cargo-targets.html#cargo-targets)
-for its crates, and you can choose either or both in your project:
+for its crates and you can choose either or both in your project:
 - a binary, the `main.rs` file with a `main()` function which executes when you run the program
 - a library, the `lib.rs` file which can be imported by other crates
 
@@ -765,7 +765,7 @@ OK, our game is getting closer:
 ```console
 cargo run
 <span style="font-weight:bold;color:lime;">   Compiling</span> beast v0.1.0 (/Users/dominik/beast)
-<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">: variants `Player`, `Block`, and `StaticBlock` are never constructed</span>
+<span style="font-weight:bold;color:yellow;">warning</span><span style="font-weight:bold;">: variants `Player`, `Block` and `StaticBlock` are never constructed</span>
   <span style="font-weight:bold;color:#3333FF;">--&gt; </span>src/main.rs:8:2
    <span style="font-weight:bold;color:#3333FF;">|</span>
 <span style="font-weight:bold;color:#3333FF;">6</span>  <span style="font-weight:bold;color:#3333FF;">|</span> enum Tile {
@@ -923,7 +923,7 @@ How do you add color to the output if all you have is a pipe that expects a stri
 This is where [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code) come in.<br>
 From Wikipedia:
 
-> ANSI escape sequences are a standard for in-band signaling to control cursor location, color, font styling, and other options on video text terminals and terminal emulators. Certain sequences of bytes, most starting with an ASCII escape character and a bracket character, are embedded into text.
+> ANSI escape sequences are a standard for in-band signaling to control cursor location, color, font styling and other options on video text terminals and terminal emulators. Certain sequences of bytes, most starting with an ASCII escape character and a bracket character, are embedded into text.
 
 The syntax of them is: `ESCAPE` `[` `CODE` and when you print this to most terminals it will be interpreted as a command
 rather than as text.
@@ -1043,7 +1043,7 @@ You still only have `println!("My output");` though so how would you do somethin
 
 The answer again is ANSI escape sequences.
 If you look at [our sequences for cursor movements](#cursor) then we spot our ability to move the cursor to the start
-of a line which means we can print a thing, reset the cursor to the start of that line, and print again over the
+of a line which means we can print a thing, reset the cursor to the start of that line and print again over the
 previous output, slowly changing what we print, frame by frame, to make an animation.
 
 ```rust {data-file="main.rs", data-fold="['1-51']", hl_lines=["55-56"]}
@@ -1500,7 +1500,7 @@ one byte and use the [`read_exact`](https://doc.rust-lang.org/std/io/trait.Read.
 it.
 `read_exact` returns a [`Result`](https://doc.rust-lang.org/std/io/type.Result.html) because reading from the stream
 could fail.
-While it doesn't fail, and the `Result` is `Ok`, we loop over the input and match against the byte we're getting back.
+While it doesn't fail and the `Result` is `Ok`, we loop over the input and match against the byte we're getting back.
 Since it's easier to read characters than bytes I convert the byte into a `char` and then match against it.
 
 > [!Note]
