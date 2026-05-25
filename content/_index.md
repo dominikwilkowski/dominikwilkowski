@@ -14,7 +14,7 @@ consultancies, Westpac, one of Australia's four largest banks and the federal go
 Eventually, my passion for building great software led me to build great teams as a manager, where I've held various
 engineering leadership roles at companies like Shopify.
 I currently serve as the <abbr title="Chief Technology Officer">CTO</abbr> at
-<a href="https://www.theworkingparty.com.au" target="_blank">The Working Party</a>.
+<a href="https://homhero.com.au/" target="_blank">Homhero</a>.
 
 As I've transitioned into leadership, I've remained deeply connected to coding, dedicating time daily to personal
 projects and technical exploration.
